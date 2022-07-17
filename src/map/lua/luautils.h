@@ -327,6 +327,11 @@ namespace luautils
 
     // Retrive the first itemId that matches a name
     uint16 GetItemIDByName(std::string const& name);
+
+    /**
+    *\brief Posts a server message to all users connected to the server.
+    */
+    void PostServerMessage(std::string const& message);
 }; // namespace luautils
 
 #endif // _LUAUTILS_H -

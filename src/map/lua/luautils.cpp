@@ -73,6 +73,7 @@
 #include "../packets/action.h"
 #include "../packets/char_emotion.h"
 #include "../packets/char_update.h"
+#include "../packets/chat_message.h"
 #include "../packets/entity_update.h"
 #include "../packets/entity_visual.h"
 #include "../packets/menu_raisetractor.h"
@@ -180,6 +181,8 @@ namespace luautils
         lua.set_function("GetCachedInstanceScript", &luautils::GetCachedInstanceScript);
         lua.set_function("GetItemIDByName", &luautils::GetItemIDByName);
         lua.set_function("SendLuaFuncStringToZone", &luautils::SendLuaFuncStringToZone);
+
+        lua.set_function("PostServerMessage", &luautils::PostServerMessage);
 
         // This binding specifically exists to forcefully crash the server.
         // clang-format off
@@ -4790,5 +4793,18 @@ namespace luautils
         }
 
         return id;
+    }
+
+    void PostServerMessage(std::string const& message)
+    {
+        ShowInfo("Server Announcement: \"%s\"\n", message);
+
+        auto msg = std::string(" ").append(message);
+
+        zoneutils::ForEachZone([&msg](CZone* zone) -> void {
+            zone->ForEachChar([&msg](CCharEntity* c) -> void {
+                c->pushPacket(std::make_unique<CChatMessagePacket>(c, MESSAGE_SYSTEM_2, msg));
+            });
+        });
     }
 }; // namespace luautils
