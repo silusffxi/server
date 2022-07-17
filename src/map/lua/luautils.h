@@ -483,6 +483,13 @@ int32 invokeBattlefieldEvent(uint16 battlefieldId, const std::string& eventName,
 auto GetSynergyRecipeByID(uint32 id) -> sol::table;
 auto GetSynergyRecipeByTrade(CLuaTradeContainer luaTradeContainer) -> sol::table;
 
+// Retrive the first itemId that matches a name
+uint16 GetItemIDByName(std::string const& name);
+
+/**
+*\brief Posts a server message to all users connected to the server.
+*/
+void PostServerMessage(std::string const& message);
 }; // namespace luautils
 
 // template impl

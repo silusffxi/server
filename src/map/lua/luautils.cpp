@@ -365,6 +365,9 @@ void init(IPP mapIPP, bool isRunningInCI)
     lua.set_function("ProgressFishingContest", &luautils::ProgressFishingContest);
     lua.set_function("InitializeFishingContestSystem", &luautils::InitializeFishingContestSystem);
 
+    // Server Functions
+    lua.set_function("PostServerMessage", &luautils::PostServerMessage);
+
     // This binding specifically exists to forcefully crash the server.
     lua.set_function(
         "ForceCrash",
@@ -6185,6 +6188,19 @@ auto GetSynergyRecipeByTrade(CLuaTradeContainer luaTradeContainer) -> sol::table
     table["resultName"]            = result.resultName;
 
     return table;
+}
+
+void PostServerMessage(std::string const& message)
+{
+    ShowInfo("Server Announcement: \"%s\"\n", message);
+
+    auto msg = std::string(" ").append(message);
+
+    zoneutils::ForEachZone([&msg](CZone* zone) -> void {
+        zone->ForEachChar([&msg](CCharEntity* c) -> void {
+            c->pushPacket(std::make_unique<CChatMessagePacket>(c, MESSAGE_SYSTEM_2, msg));
+        });
+    });
 }
 
 }; // namespace luautils
