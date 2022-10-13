@@ -1,7 +1,9 @@
 -----------------------------------
 -- Global file for Apollyopn and Temenos
 -----------------------------------
+require("scripts/globals/battlefield")
 require("scripts/globals/keyitems")
+require('scripts/globals/interaction/container')
 require("scripts/globals/status")
 require("scripts/globals/zone")
 -----------------------------------
@@ -25,9 +27,7 @@ function xi.limbus.setupArmouryCrates(bfid, hide)
     local ID
     if
         bfid == 1290 or
-        bfid == 1291 or
         bfid == 1292 or
-        bfid == 1293 or
         bfid == 1294 or
         bfid == 1296
     then
@@ -50,22 +50,6 @@ function xi.limbus.setupArmouryCrates(bfid, hide)
             GetNPCByID(ID.npc.APOLLYON_NW_CRATE[5]):setStatus(xi.status.DISAPPEAR)
         end,
 
-        -- SW Apollyon
-        [1291] = function()
-            for i = 1, 2 do
-                for j = 0, 2 do
-                    GetNPCByID(ID.npc.APOLLYON_SW_CRATE[i] + j):setStatus(xi.status.DISAPPEAR)
-                end
-            end
-
-            for i = 0, 9 do
-                GetNPCByID(ID.npc.APOLLYON_SW_CRATE[3]+i):setUntargetable(false)
-                GetNPCByID(ID.npc.APOLLYON_SW_CRATE[3]+i):setStatus(xi.status.NORMAL)
-            end
-
-            GetNPCByID(ID.npc.APOLLYON_SW_CRATE[4]):setStatus(xi.status.DISAPPEAR)
-        end,
-
         -- NE Apollyon
         [1292] = function()
             for i = 1, 4 do
@@ -77,18 +61,6 @@ function xi.limbus.setupArmouryCrates(bfid, hide)
             end
 
             GetNPCByID(ID.npc.APOLLYON_NE_CRATE[5]):setStatus(xi.status.DISAPPEAR)
-        end,
-
-        -- SE Apollyon
-        [1293] = function()
-            for i = 1, 3 do
-                for j = 0, 2 do
-                    GetNPCByID(ID.npc.APOLLYON_SE_CRATE[i] + j):setStatus(xi.status.DISAPPEAR)
-                end
-            end
-
-            GetNPCByID(ID.mob.APOLLYON_SE_MOB[4]):setStatus(xi.status.NORMAL)
-            GetNPCByID(ID.npc.APOLLYON_SE_CRATE[4]):setStatus(xi.status.DISAPPEAR)
         end,
 
         -- CS Apollyon
@@ -232,7 +204,7 @@ function xi.limbus.handleDoors(battlefield, open, door)
         -- SE Apollyon
         [1293] = function()
             for i = 1, 3 do
-                GetNPCByID(ID.npc.APOLLYON_SE_PORTAL[i]):setAnimation(animation)
+                GetNPCByID(ID.SE_APOLLYON.npc.PORTAL[i]):setAnimation(animation)
             end
         end,
 
@@ -492,4 +464,222 @@ function xi.limbus.spawnRandomCrate(npc, battlefield, var, mask, canMimic)
 
         return
     end
+end
+
+function xi.limbus.showRecoverCrate(crateID)
+    local crate = GetMobByID(crateID)
+    crate:setAnimationSub(8)
+    crate:setStatus(xi.status.NORMAL)
+    crate:setUntargetable(false)
+    crate:resetLocalVars()
+end
+
+function xi.limbus.hideCrate(crate)
+    crate:setStatus(xi.status.DISAPPEAR)
+    crate:setUntargetable(true)
+    crate:resetLocalVars()
+end
+
+function xi.limbus.spawnFrom(mob, crateID)
+    local crate = GetNPCByID(crateID)
+    crate:setPos(mob:getXPos(), mob:getYPos(), mob:getZPos(), mob:getRotPos())
+    crate:setStatus(xi.status.NORMAL)
+    crate:setUntargetable(false)
+    crate:setAnimationSub(8)
+end
+
+function xi.limbus.spawnRecoverFrom(mob, crateID)
+    local crate = GetMobByID(crateID)
+    crate:setPos(mob:getXPos(), mob:getYPos(), mob:getZPos(), mob:getRotPos())
+    xi.limbus.showRecoverCrate(crateID)
+end
+
+function xi.limbus.openDoor(battlefield, doorID)
+    local door = GetNPCByID(doorID)
+    local ID = zones[door:getZoneID()]
+    local remaining = battlefield:getRemainingTime() / 60
+
+    for i, player in pairs(battlefield:getPlayers()) do
+        player:messageSpecial(ID.text.GATE_OPEN)
+        player:messageSpecial(ID.text.TIME_LEFT, remaining)
+    end
+    door:setAnimation(xi.animation.OPEN_DOOR)
+end
+
+Limbus = setmetatable({ }, { __index = Battlefield })
+Limbus.__index = Limbus
+Limbus.__eq = function(m1, m2)
+    return m1.name == m2.name
+end
+
+Limbus.name = ""
+Limbus.serverVar = ""
+
+-- Creates a new Limbus Battlefield interaction
+-- Data takes the additional following keys:
+--  - name: The name of the Limbus area
+function Limbus:new(data)
+    data.createsWornItem = false
+    local obj = Battlefield:new(data)
+    setmetatable(obj, self)
+    obj.name = data.name
+    obj.ID = zones[obj.zoneId][obj.name]
+    obj.serverVar = "[" .. obj.name .. "]Time"
+    return obj
+end
+
+function Limbus:register()
+    Battlefield.register(self)
+
+    -- Add recover crates that are technically "mobs"
+    table.insert(self.groups, { mobIds = self.ID.npc.RECOVER_CRATES })
+
+    return self
+end
+
+function Limbus:onEventFinishEnter(player, csid, option)
+    Battlefield.onEventFinishEnter(self, player, csid, option)
+
+    local battlefield = player:getBattlefield()
+    local initiatorId, _ = battlefield:getInitiator()
+    if player:getID() == initiatorId then
+        local ID = zones[player:getZoneID()]
+        local alliance = player:getAlliance()
+        for _, member in pairs(alliance) do
+            if member:getZoneID() == player:getZoneID() then
+                member:messageSpecial(ID.text.HUM)
+            end
+        end
+    end
+end
+
+function Limbus:onBattlefieldInitialise(battlefield)
+    Battlefield.onBattlefieldInitialise(self, battlefield)
+    SetServerVariable(self.serverVar, battlefield:getTimeLimit() / 60)
+
+    xi.limbus.handleDoors(battlefield)
+
+    local ID = zones[battlefield:getZoneID()][self.name]
+    -- Setup Item Crates
+    for i, crateID in ipairs(ID.npc.ITEM_CRATES) do
+        local crate = GetNPCByID(crateID)
+        xi.limbus.hideCrate(crate)
+        crate:removeListener("TRIGGER_ITEM_CRATE")
+        crate:addListener("ON_TRIGGER", "TRIGGER_ITEM_CRATE", utils.bind(self.handleOpenItemCrate, self))
+    end
+
+    -- Setup Time Crates
+    for i, crateID in ipairs(ID.npc.TIME_CRATES) do
+        local crate = GetNPCByID(crateID)
+        xi.limbus.hideCrate(crate)
+        crate:removeListener("TRIGGER_TIME_CRATE")
+        crate:addListener("ON_TRIGGER", "TRIGGER_TIME_CRATE", utils.bind(self.handleOpenTimeCrate, self))
+    end
+
+    -- Setup Recover Crates
+    -- Recover crates are special in that they are mobs that perform a skill on the player when triggered
+    for i, crateID in ipairs(ID.npc.RECOVER_CRATES) do
+        local crate = GetMobByID(crateID)
+        xi.limbus.hideCrate(crate)
+        crate:removeListener("TRIGGER_RECOVER_CRATE")
+        crate:addListener("ON_TRIGGER", "TRIGGER_RECOVER_CRATE", utils.bind(self.handleOpenRecoverCrate, self))
+    end
+
+    -- Setup Winning Loot Crate
+    local crate = GetNPCByID(ID.npc.LOOT_CRATE)
+    crate:resetLocalVars()
+    crate:removeListener("TRIGGER_LOOT_CRATE")
+    crate:addListener("ON_TRIGGER", "TRIGGER_LOOT_CRATE", utils.bind(self.handleOpenLootCrate, self))
+
+    -- Setup Linked Crates (can only open one)
+    if ID.LINKED_CRATES then
+        for crateID, _ in pairs(ID.LINKED_CRATES) do
+            local mainCrate = GetNPCByID(crateID)
+            if mainCrate == nil then
+                mainCrate = GetMobByID(crateID)
+            end
+            mainCrate:removeListener("TRIGGER_LINKED_CRATE")
+            mainCrate:addListener("ON_TRIGGER", "TRIGGER_LINKED_CRATE", utils.bind(self.handleLinkedCrate, self))
+        end
+    end
+end
+
+function Limbus:onBattlefieldTick(battlefield, tick)
+    Battlefield.onBattlefieldTick(self, battlefield, tick)
+    if battlefield:getRemainingTime() % 60 == 0 then
+        SetServerVariable(self.serverVar, battlefield:getRemainingTime() / 60)
+    end
+end
+
+function Limbus:onBattlefieldRegister(player, battlefield)
+end
+
+function Limbus:onBattlefieldEnter(player, battlefield)
+    Battlefield.onBattlefieldEnter(self, player, battlefield)
+    player:setCharVar("Cosmo_Cleanse_TIME", os.time())
+end
+
+function Limbus:onBattlefieldDestroy(battlefield)
+    xi.limbus.handleDoors(battlefield, true)
+    SetServerVariable(self.serverVar, 0)
+end
+
+function Limbus:onBattlefieldLeave(player, battlefield, leavecode)
+    Battlefield.onBattlefieldLeave(self, player, battlefield, leavecode)
+    local ID = zones[battlefield:getZoneID()]
+    player:messageSpecial(ID.text.HUM + 1)
+end
+
+function Limbus:extendTimeLimit(ID, battlefield, amount)
+    local timeLimit = battlefield:getTimeLimit()
+    battlefield:setTimeLimit(timeLimit + amount * 60)
+    local remaining = battlefield:getRemainingTime() / 60
+
+    for _, player in pairs(battlefield:getPlayers()) do
+        player:messageSpecial(ID.text.TIME_EXTENDED, amount)
+        player:messageSpecial(ID.text.TIME_LEFT, remaining)
+    end
+end
+
+function Limbus:handleOpenItemCrate(player, npc)
+    npcUtil.openCrate(npc, function()
+        self:handleLootRolls(player:getBattlefield(), self.loot[npc:getID()], npc)
+    end)
+end
+
+function Limbus:handleOpenTimeCrate(player, npc)
+    npcUtil.openCrate(npc, function()
+        self:extendTimeLimit(zones[self.zoneId], player:getBattlefield(), self.ID.TIME_EXTENSIONS[npc:getID()])
+    end)
+end
+
+function Limbus:handleOpenRecoverCrate(player, npc)
+    npcUtil.openCrate(npc, function()
+        -- Use wz_recover_all to heal players
+        npc:useMobAbility(1531, player)
+    end)
+end
+
+function Limbus:handleOpenLootCrate(player, npc)
+    npcUtil.openCrate(npc, function()
+        local battlefield = player:getBattlefield()
+        self:handleLootRolls(battlefield, self.loot[self.ID.npc.LOOT_CRATE], npc)
+        battlefield:setLocalVar("cutsceneTimer", self.delayToExit)
+        battlefield:setStatus(xi.battlefield.status.WON)
+    end)
+end
+
+function Limbus:handleLinkedCrate(player, npc)
+    for _, crateID in ipairs(self.ID.LINKED_CRATES[npc:getID()]) do
+        local crate = GetNPCByID(crateID)
+        if crate == nil then
+            crate = GetMobByID(crateID)
+        end
+        crate:setLocalVar("opened", 1)
+        npcUtil.disappearCrate(crate)
+    end
+end
+
+function Limbus:openDoor(battlefield, doorId)
+    xi.limbus.openDoor(battlefield, doorId)
 end

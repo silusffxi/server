@@ -1,4 +1,4 @@
-/*
+﻿/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -23,6 +23,7 @@
 
 #include <cmath>
 
+#include "../battlefield.h"
 #include "../grades.h"
 #include "../items/item_weapon.h"
 #include "../lua/luautils.h"
@@ -543,6 +544,10 @@ namespace mobutils
         {
             SetupDungeonMob(PMob);
         }
+        else if (zoneType == ZONE_TYPE::LIMBUS)
+        {
+            SetupLimbusMob(PMob);
+        }
         else if (zoneType == ZONE_TYPE::BATTLEFIELD || PMob->m_Type & MOBTYPE_BATTLEFIELD)
         {
             SetupBattlefieldMob(PMob);
@@ -550,10 +555,6 @@ namespace mobutils
         else if (zoneType == ZONE_TYPE::DYNAMIS)
         {
             SetupDynamisMob(PMob);
-        }
-        else if (zoneType == ZONE_TYPE::LIMBUS)
-        {
-            SetupLimbusMob(PMob);
         }
 
         if (PMob->m_Type & MOBTYPE_NOTORIOUS)
@@ -756,6 +757,11 @@ namespace mobutils
             PMob->setMobMod(MOBMOD_ROAM_DISTANCE, 5);
             PMob->setMobMod(MOBMOD_ROAM_TURNS, 1);
         }
+
+        if (PMob->m_roamFlags & ROAMFLAG_SCRIPTED)
+        {
+            PMob->setMobMod(MOBMOD_ROAM_RESET_FACING, 1);
+        }
     }
 
     void SetupPetSkills(CMobEntity* PMob)
@@ -843,8 +849,16 @@ namespace mobutils
 
         // never despawn
         PMob->SetDespawnTime(0s);
+
+        // Stop early if this is a new battlefield
+        if (PMob->PBattlefield != nullptr && PMob->PBattlefield->isInteraction())
+        {
+            return;
+        }
+
         // do not roam around
-        PMob->m_roamFlags |= ROAMFLAG_EVENT;
+        PMob->m_roamFlags |= ROAMFLAG_SCRIPTED;
+        PMob->setMobMod(MOBMOD_ROAM_RESET_FACING, 1);
         PMob->m_maxRoamDistance = 0.5f;
         if ((PMob->m_bcnmID != 864) && (PMob->m_bcnmID != 704) && (PMob->m_bcnmID != 706))
         {
@@ -862,7 +876,8 @@ namespace mobutils
     void SetupEventMob(CMobEntity* PMob)
     {
         // event mob types will always have custom roaming
-        PMob->m_roamFlags |= ROAMFLAG_EVENT;
+        PMob->m_roamFlags |= ROAMFLAG_SCRIPTED;
+        PMob->setMobMod(MOBMOD_ROAM_RESET_FACING, 1);
         PMob->m_maxRoamDistance = 0.5f; // always go back to spawn
 
         PMob->setMobMod(MOBMOD_NO_DESPAWN, 1);

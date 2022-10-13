@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(server CXX)
+project(server C CXX)
 
 set_property(GLOBAL PROPERTY CXX_STANDARD 20)
 set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
@@ -44,6 +44,10 @@ find_package(ZeroMQ REQUIRED)
 
 # Find LuaJIT
 find_package(LuaJIT REQUIRED)
+
+if(UNIX AND NOT APPLE)
+    find_package(Binutils REQUIRED)
+endif()
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)

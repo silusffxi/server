@@ -10,24 +10,29 @@ zones[xi.zone.APOLLYON] =
 {
     text =
     {
-        ITEM_CANNOT_BE_OBTAINED = 6384, -- You cannot obtain the <item>. Come back after sorting your inventory.
-        ITEM_OBTAINED           = 6390, -- Obtained: <item>.
-        GIL_OBTAINED            = 6391, -- Obtained <number> gil.
-        KEYITEM_OBTAINED        = 6393, -- Obtained key item: <keyitem>.
-        CARRIED_OVER_POINTS     = 7001, -- You have carried over <number> login point[/s].
-        LOGIN_CAMPAIGN_UNDERWAY = 7002, -- The [/January/February/March/April/May/June/July/August/September/October/November/December] <number> Login Campaign is currently underway!<space>
-        LOGIN_NUMBER            = 7003, -- In celebration of your most recent login (login no. <number>), we have provided you with <number> points! You currently have a total of <number> points.
-        TIME_EXCEEDED           = 7062, -- You have exceeded the time limit. Exiting Limbus now.
-        CONDITION_FOR_LIMBUS    = 7063, -- You have clearance to enter Limbus, but cannot enter while you or a party member is engaged in battle.
-        HUM                     = 7075, -- You hear a faint hum.
-        NO_KEY                  = 7080, -- There are several six-sided indentations and a thin slot in the center of the circular dais here.
-        WIPE_KICK               = 7355, -- All party members in Limbus have fallen in battle. Exiting now.
-        WIPE                    = 7363, -- All party members in Limbus have fallen in battle. Exiting in <number> [minute/minutes].
-        CHIP_TRADE              = 7369, -- The light in the <item> has grown dim.
-        TIME_EXTENDED           = 7371, -- our time in Limbus has been extended <number> [minute/minutes].
-        TIME_LEFT               = 7372, -- ou have <number> [minute/minutes] left in Limbus.
-        CONQUEST_BASE           = 7374, -- Tallying conquest results...
-        GATE_OPEN               = 7553, -- <space>vortex materializes...
+        ITEM_CANNOT_BE_OBTAINED       = 6384, -- You cannot obtain the <item>. Come back after sorting your inventory.
+        ITEM_OBTAINED                 = 6390, -- Obtained: <item>.
+        GIL_OBTAINED                  = 6391, -- Obtained <number> gil.
+        KEYITEM_OBTAINED              = 6393, -- Obtained key item: <keyitem>.
+        CARRIED_OVER_POINTS           = 7001, -- You have carried over <number> login point[/s].
+        LOGIN_CAMPAIGN_UNDERWAY       = 7002, -- The [/January/February/March/April/May/June/July/August/September/October/November/December] <number> Login Campaign is currently underway!
+        LOGIN_NUMBER                  = 7003, -- In celebration of your most recent login (login no. <number>), we have provided you with <number> points! You currently have a total of <number> points.
+        MEMBERS_LEVELS_ARE_RESTRICTED = 7023, -- Your party is unable to participate because certain members' levels are restricted.
+        TIME_IN_THE_BATTLEFIELD_IS_UP = 7065, -- You have exceeded the time limit. Exiting Limbus now.
+        PARTY_MEMBERS_ARE_ENGAGED     = 7066, -- You have clearance to enter Limbus, but cannot enter while you or a party member is engaged in battle.
+        HUM                           = 7078, -- You hear a faint hum.
+        NO_BATTLEFIELD_ENTRY          = 7083, -- There are several six-sided indentations and a thin slot in the center of the circular dais here.
+        MEMBERS_OF_YOUR_PARTY         = 7332, -- Currently, <number> party members in this area have clearance to enter Limbus.
+        TIME_LIMIT_FOR_THIS_BATTLE_IS = 7335, -- ou may stay in Limbus for <number> [minute/minutes].
+        PARTY_MEMBERS_HAVE_FALLEN     = 7358, -- All party members in Limbus have fallen in battle. Exiting now.
+        THE_PARTY_WILL_BE_REMOVED     = 7366, -- All party members in Limbus have fallen in battle. Exiting in <number> [minute/minutes].
+        YOU_INSERT_THE_CARD_POLISHED  = 7371, -- You insert the <keyitem> polished with <keyitem> into the slot!
+        CHIP_TRADE                    = 7372, -- The light in the <item> has grown dim.
+        TIME_EXTENDED                 = 7374, -- our time in Limbus has been extended <number> [minute/minutes].
+        TIME_LEFT                     = 7375, -- ou have <number> [minute/minutes] left in Limbus.
+        CONQUEST_BASE                 = 7377, -- Tallying conquest results...
+        ENTERING_THE_BATTLEFIELD_FOR  = 7548, -- You have entered [SW Apollyon/NW Apollyon/SE Apollyon/NE Apollyon/Central Apollyon/CS Apollyon/CS Apollyon/Central Apollyon].
+        GATE_OPEN                     = 7556, -- vortex materializes...
     },
     mob =
     {
@@ -45,13 +50,6 @@ zones[xi.zone.APOLLYON] =
             16932963,
             16932976,
             16932985,
-        },
-        APOLLYON_SE_MOB =
-        {
-            16932992,
-            16933006,
-            16933020,
-            16933032,
         },
         APOLLYON_NE_MOB =
         {
@@ -92,19 +90,6 @@ zones[xi.zone.APOLLYON] =
             16933233, -- ne 3>4
             16933237, -- ne 4>5
         },
-        APOLLYON_SE_PORTAL =
-        {
-            16933239, -- se 1>2
-            16933238, -- se 2>3
-            16933241, -- se 3>4
-        },
-        APOLLYON_SW_CRATE =
-        {
-            16932865,
-            16932878,
-            16932899,
-            16932909,
-        },
         APOLLYON_NW_CRATE =
         {
             [1] =
@@ -140,13 +125,6 @@ zones[xi.zone.APOLLYON] =
                 16932983,
             },
             [5] = 16932984,
-        },
-        APOLLYON_SE_CRATE =
-        {
-            16932989,
-            16933003,
-            16933017,
-            16933031,
         },
         APOLLYON_NE_CRATE =
         {
@@ -187,6 +165,176 @@ zones[xi.zone.APOLLYON] =
         APOLLYON_CS_CRATE = 16933126,
         APOLLYON_CENTRAL_CRATE = 16933123,
     },
+
+    SW_APOLLYON =
+    {
+        mob =
+        {
+            JIDRA_BOSS = 16932881,
+            AIR_ELEMENTAL =
+            {
+                16932910,
+                16932918,
+                16932926,
+            },
+
+            DARK_ELEMENTAL =
+            {
+                16932911,
+                16932919,
+                16932927,
+            },
+
+            EARTH_ELEMENTAL =
+            {
+                16932912,
+                16932920,
+                16932928,
+            },
+
+            FIRE_ELEMENTAL =
+            {
+                16932913,
+                16932921,
+                16932929,
+            },
+
+            ICE_ELEMENTAL =
+            {
+                16932914,
+                16932922,
+                16932930,
+            },
+
+            LIGHT_ELEMENTAL =
+            {
+                16932915,
+                16932923,
+                16932931,
+            },
+
+            WATER_ELEMENTAL =
+            {
+                16932916,
+                16932924,
+                16932932,
+            },
+
+            THUNDER_ELEMENTAL =
+            {
+                16932917,
+                16932925,
+                16932933,
+            },
+        },
+
+        npc =
+        {
+            ITEM_CRATES =
+            {
+                16932865,
+                16932878,
+                16932896,
+            },
+
+            RECOVER_CRATES =
+            {
+                16932867,
+                16932880,
+                16932898,
+            },
+
+            TIME_CRATES =
+            {
+                16932866,
+                16932879,
+                16932897,
+            },
+
+            LOOT_CRATE = 16932909,
+        },
+
+        TIME_EXTENSIONS =
+        {
+            [16932866] = 10,
+            [16932879] = 10,
+            [16932897] = 10,
+        },
+
+        LINKED_CRATES =
+        {
+            [16932865] = { 16932866, 16932867 },
+            [16932866] = { 16932865, 16932867 },
+            [16932867] = { 16932865, 16932866 },
+            [16932878] = { 16932879, 16932880 },
+            [16932879] = { 16932878, 16932880 },
+            [16932880] = { 16932878, 16932879 },
+        },
+    },
+
+    SE_APOLLYON =
+    {
+        mob =
+        {
+            TIEHOLTSODI = 16933006,
+            ADAMANTSHELL =
+            {
+                16933007,
+                16933008,
+                16933009,
+                16933010,
+                16933011,
+                16933012,
+                16933013,
+                16933014,
+            },
+            FLYING_SPEAR =
+            {
+                16933033,
+                16933034,
+                16933035,
+                16933036,
+                16933037,
+                16933038,
+                16933039,
+                16933040,
+            }
+        },
+        npc =
+        {
+            PORTAL =
+            {
+                16933239, -- Floor 1 -> 2
+                16933238, -- Floor 2 -> 3
+                16933241, -- Floor 3 -> 4
+            },
+            ITEM_CRATES =
+            {
+                16932991,
+                16933005,
+                16933019,
+            },
+            RECOVER_CRATES =
+            {
+                16932990,
+                16933004,
+                16933018,
+            },
+            TIME_CRATES =
+            {
+                16932989,
+                16933003,
+                16933017,
+            },
+            LOOT_CRATE = 16933031,
+        },
+        TIME_EXTENSIONS =
+        {
+            [16932989] = 10,
+            [16933003] = 10,
+            [16933017] = 10,
+        }
+    }
 }
 
 return zones[xi.zone.APOLLYON]

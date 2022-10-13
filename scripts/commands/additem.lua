@@ -11,7 +11,7 @@ cmdprops =
 
 function error(player, msg)
     player:PrintToPlayer(msg)
-    player:PrintToPlayer("!additem <itemId> {quantity} {aug1} {v1} {aug2} {v2} {aug3} {v3} {aug4} {v4} {trial}")
+    player:PrintToPlayer("!additem <itemId> (quantity) (aug1) (v1) (aug2) (v2) (aug3) (v3) (aug4) (v4) (trial)")
 end
 
 function onTrigger(player, item, quantity, aug0, aug0val, aug1, aug1val, aug2, aug2val, aug3, aug3val, trialId)
@@ -47,9 +47,14 @@ function onTrigger(player, item, quantity, aug0, aug0val, aug1, aug1val, aug2, a
         return
     end
 
+    -- TODO: check qty and stack size + remaining inventory space instead of hardcoded == 0 check
     -- Ensure the GM has room to obtain the item...
     if player:getFreeSlotsCount() == 0 then
-        player:messageSpecial(ID.text.ITEM_CANNOT_BE_OBTAINED, item)
+        if quantity > 1 then
+            player:messageSpecial(ID.text.ITEM_CANNOT_BE_OBTAINED + 1, itemToGet)
+        else
+            player:messageSpecial(ID.text.ITEM_CANNOT_BE_OBTAINED, itemToGet)
+        end
         return
     end
 

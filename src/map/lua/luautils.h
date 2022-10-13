@@ -122,10 +122,11 @@ namespace luautils
     int32 init();
     int32 garbageCollectStep();
     int32 garbageCollectFull();
+    void  cleanup();
 
     void ReloadFilewatchList();
 
-    std::vector<std::string> GetQuestAndMissionFilenamesList();
+    std::vector<std::string> GetContainerFilenamesList();
 
     // Cache helpers
     auto getEntityCachedFunction(CBaseEntity* PEntity, std::string funcName) -> sol::function;
@@ -234,6 +235,7 @@ namespace luautils
 
     int32 OnItemUse(CBaseEntity* PUser, CBaseEntity* PTarget, CItem* PItem);                                                                                     // triggers when item is used
     auto  OnItemCheck(CBaseEntity* PTarget, CItem* PItem, ITEMCHECK param = ITEMCHECK::NONE, CBaseEntity* PCaster = nullptr) -> std::tuple<int32, int32, int32>; // check to see if item can be used
+    int32 OnItemDrop(CBaseEntity* PUser, CItem* PItem);                                                                                                          // trigger when an item is dropped
     int32 CheckForGearSet(CBaseEntity* PTarget);                                                                                                                 // check for gear sets
 
     int32 OnMagicCastingCheck(CBaseEntity* PChar, CBaseEntity* PTarget, CSpell* PSpell);                                                       // triggers when a player attempts to cast a spell
@@ -242,6 +244,7 @@ namespace luautils
     auto  OnMobMagicPrepare(CBattleEntity* PCaster, CBattleEntity* PTarget, std::optional<SpellID> startingSpellId) -> std::optional<SpellID>; // triggered when monster wants to use a spell on target
     int32 OnMagicHit(CBattleEntity* PCaster, CBattleEntity* PTarget, CSpell* PSpell);                                                          // triggered when spell cast on monster
     int32 OnWeaponskillHit(CBattleEntity* PMob, CBaseEntity* PAttacker, uint16 PWeaponskill);                                                  // Triggered when Weaponskill strikes monster
+    bool  OnTrustSpellCastCheckBattlefieldTrusts(CBattleEntity* PCaster);                                                                      // Triggered if spell is a trust spell during onCast to determine to interrupt spell or not
 
     int32 OnMobInitialize(CBaseEntity* PMob); // Used for passive trait
     int32 ApplyMixins(CBaseEntity* PMob);
@@ -266,6 +269,7 @@ namespace luautils
 
     void OnBattlefieldEnter(CCharEntity* PChar, CBattlefield* PBattlefield);                  // triggers when enter a bcnm
     void OnBattlefieldLeave(CCharEntity* PChar, CBattlefield* PBattlefield, uint8 LeaveCode); // see battlefield.h BATTLEFIELD_LEAVE_CODE
+    void OnBattlefieldKick(CCharEntity* PChar);
 
     void OnBattlefieldRegister(CCharEntity* PChar, CBattlefield* PBattlefield); // triggers when successfully registered a bcnm
     void OnBattlefieldDestroy(CBattlefield* PBattlefield);                      // triggers when BCNM is destroyed
@@ -282,6 +286,9 @@ namespace luautils
     int32 OnPetAbility(CBaseEntity* PTarget, CPetEntity* PPet, CPetSkill* PMobSkill, CBaseEntity* PPetMaster, action_t* action);                                                                // triggers when pet uses an ability, specialized for pets
     auto  OnUseWeaponSkill(CBattleEntity* PUser, CBaseEntity* PMob, CWeaponSkill* wskill, uint16 tp, bool primary, action_t& action, CBattleEntity* taChar) -> std::tuple<int32, uint8, uint8>; // returns: damage, tphits landed, extra hits landed
     int32 OnUseAbility(CBattleEntity* PUser, CBattleEntity* PTarget, CAbility* PAbility, action_t* action);                                                                                     // triggers when job ability is used
+    int32 OnSteal(CBattleEntity* PChar, CBattleEntity* PTarget, CAbility* PAbility, action_t* action);
+
+    bool OnCanUseSpell(CBattleEntity* PChar, CSpell* Spell); // triggers when CanUseSpell is invoked on spell.cpp for PCs only
 
     auto GetCachedInstanceScript(uint16 instanceId) -> sol::table;
 
@@ -308,6 +315,7 @@ namespace luautils
     int32 additionalEffectSpikes(CBattleEntity* PDefender, CBattleEntity* PAttacker, CItemEquipment* PItem, actionTarget_t* Action, int32 baseAttackDamage); // for armor with spikes
 
     auto NearLocation(sol::table const& table, float radius, float theta) -> sol::table;
+    auto GetFurthestValidPosition(CLuaBaseEntity* fromTarget, float distance, float theta) -> sol::table;
 
     void OnPlayerDeath(CCharEntity* PChar);
     void OnPlayerLevelUp(CCharEntity* PChar);
@@ -339,6 +347,41 @@ namespace luautils
     *\brief Posts a server message to all users connected to the server.
     */
     void PostServerMessage(std::string const& message);
+
+    template <typename... Targs>
+    int32 invokeBattlefieldEvent(uint16 battlefieldId, const std::string& eventName, Targs... args)
+    {
+        // Calls the Battlefield event through the interaction object if it can find it
+        sol::table contents = lua["xi"]["battlefield"]["contents"];
+        if (!contents.valid())
+        {
+            return -1;
+        }
+
+        auto battlefield = contents[battlefieldId];
+        if (!battlefield.valid())
+        {
+            return -1;
+        }
+
+        auto content = battlefield.get<sol::table>();
+        auto handler = content[eventName];
+        if (!handler.valid())
+        {
+            return -1;
+        }
+
+        auto result = handler.get<sol::protected_function>()(content, args...);
+        if (!result.valid())
+        {
+            sol::error err = result;
+            ShowError("luautils::%s: %s", eventName, err.what());
+            return -1;
+        }
+
+        return 0;
+    }
+
 }; // namespace luautils
 
 #endif // _LUAUTILS_H -

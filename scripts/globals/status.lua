@@ -84,7 +84,7 @@ xi.race =
 xi.status =
 {
     NORMAL          =  0,
-    UPDATE          =  1,
+    MOB             =  1,
     DISAPPEAR       =  2,
     INVISIBLE       =  3,
     STATUS_4        =  4,
@@ -774,7 +774,7 @@ xi.effect =
     NEGATE_VIRUS             = 608,
     NEGATE_CURSE             = 609,
     NEGATE_CHARM             = 610,
-    MAGIC_EVASION_BOOST_II   = 611,
+    MAGIC_EVASION_BOOST      = 611,
     COLURE_ACTIVE            = 612,
     MUMORS_RADIANCE          = 613,
     ULLEGORES_GLOOM          = 614,
@@ -864,35 +864,36 @@ xi.effect =
 
 xi.effectFlag =
 {
-    NONE            = 0x0000,
-    DISPELABLE      = 0x0001,
-    ERASABLE        = 0x0002,
-    ATTACK          = 0x0004,
-    EMPATHY         = 0x0008,
-    DAMAGE          = 0x0010,
-    DEATH           = 0x0020,
-    MAGIC_BEGIN     = 0x0040,
-    MAGIC_END       = 0x0080,
-    ON_ZONE         = 0x0100,
-    NO_LOSS_MESSAGE = 0x0200,
-    INVISIBLE       = 0x0400,
-    DETECTABLE      = 0x0800,
-    NO_REST         = 0x1000,
-    PREVENT_ACTION  = 0x2000,
-    WALTZABLE       = 0x4000,
-    FOOD            = 0x8000,
-    SONG            = 0x10000,
-    ROLL            = 0x20000,
-    SYNTH_SUPPORT   = 0x40000,
-    CONFRONTATION   = 0x80000,
-    LOGOUT          = 0x100000,
-    BLOODPACT       = 0x200000,
-    ON_JOBCHANGE    = 0x400000,
-    NO_CANCEL       = 0x800000,
-    INFLUENCE       = 0x1000000,
-    OFFLINE_TICK    = 0x2000000,
-    AURA            = 0x4000000,
-    HIDE_TIMER      = 0x8000000,
+    NONE            = 0x00000000,
+    DISPELABLE      = 0x00000001,
+    ERASABLE        = 0x00000002,
+    ATTACK          = 0x00000004,
+    EMPATHY         = 0x00000008,
+    DAMAGE          = 0x00000010,
+    DEATH           = 0x00000020,
+    MAGIC_BEGIN     = 0x00000040,
+    MAGIC_END       = 0x00000080,
+    ON_ZONE         = 0x00000100,
+    NO_LOSS_MESSAGE = 0x00000200,
+    INVISIBLE       = 0x00000400,
+    DETECTABLE      = 0x00000800,
+    NO_REST         = 0x00001000,
+    PREVENT_ACTION  = 0x00002000,
+    WALTZABLE       = 0x00004000,
+    FOOD            = 0x00008000,
+    SONG            = 0x00010000,
+    ROLL            = 0x00020000,
+    SYNTH_SUPPORT   = 0x00040000,
+    CONFRONTATION   = 0x00080000,
+    LOGOUT          = 0x00100000,
+    BLOODPACT       = 0x00200000,
+    ON_JOBCHANGE    = 0x00400000,
+    NO_CANCEL       = 0x00800000,
+    INFLUENCE       = 0x01000000,
+    OFFLINE_TICK    = 0x02000000,
+    AURA            = 0x04000000,
+    HIDE_TIMER      = 0x08000000,
+    ON_ZONE_PATHOS  = 0x10000000,
 }
 
 -----------------------------------
@@ -1178,6 +1179,8 @@ xi.mod =
     TRIPLE_ATTACK                   = 302,
     TRIPLE_ATTACK_DMG               = 1039, -- Increases "Triple Attack" damage/"Triple Attack" damage + (in percents, e.g. +20 = +20% damage)
     TREASURE_HUNTER                 = 303,
+    TREASURE_HUNTER_PROC            = 1048, -- TODO: Increases Treasure Hunter proc rate (percent)
+    TREASURE_HUNTER_CAP             = 1049, -- TODO: Increases the Treasure Hunter Cap (e.g. THF JP Gift)
     TAME                            = 304,
     RECYCLE                         = 305,
     ZANSHIN                         = 306,
@@ -1241,6 +1244,16 @@ xi.mod =
     DEFENDER_DURATION               = 956,  -- Defender Duration
     ENHANCES_RESTRAINT              = 1045, -- Enhances "Restraint" effect/"Restraint" + (Increases the damage bonus of Restraint by XXX%)
     ENHANCES_BLOOD_RAGE             = 1046, -- Enhances "Blood Rage" effect/"Blood Rage" duration +
+
+    -- Paladin
+    ENHANCES_CHIVALRY               = 1061, -- Enhances "Chivalry" effect (increases the base TP modifier by the provided value / 100, e.g. mod value 5 = +0.05)
+    ENHANCES_DIVINE_EMBLEM          = 1062, -- Enhances "Divine Emblem" effect/"Divine Emblem" + (increases the ability's special enmity bonus by the provided value)
+    ENHANCES_FEALTY                 = 1063, -- Enhances "Fealty" effect (increases Fealty's duration by 4 seconds per Fealty merit)
+    ENHANCES_IRON_WILL              = 1064, -- Enhances "Iron Will" effect (adds +3% Fast Cast per Iron Will merit to Rampart)
+    ENHANCES_GUARDIAN               = 1065, -- Enhances "Guardian" effect (increases Sentinel's duration by 2 seconds per Guardian merit)
+    PALISADE_BLOCK_BONUS            = 1066, -- Increases base block rate while under the effects of Palisade (additive, not multiplicative)
+    REPRISAL_BLOCK_BONUS            = 1067, -- Increases block rate while under the effects of Reprisal (multiplicative, not additive)
+    REPRISAL_SPIKES_BONUS           = 1068, -- Increases Reprisal spikes damage by percentage (e.g. mod value of 50 will increase spikes damage by 50%)
 
     -- Dragoon
     WYVERN_LVL_BONUS                = 1043, -- Wyvern: Lv.+ (Increases wyvern's base level above 99)
@@ -1320,8 +1333,15 @@ xi.mod =
     HIGH_JUMP_ENMITY_REDUCTION      = 363,
     REWARD_HP_BONUS                 = 364,
     SNAP_SHOT                       = 365,
-    MAIN_DMG_RATING                 = 366,
-    SUB_DMG_RATING                  = 367,
+
+    DMG_RATING                      = 287, -- adds damage rating to weapon (+DMG augments, maneater/blau dolch etc hidden effects)
+    MAIN_DMG_RATING                 = 366, -- adds damage rating to mainhand weapon
+    SUB_DMG_RATING                  = 367, -- adds damage rating to off hand weapon
+    RANGED_DMG_RATING               = 376, -- adds damage rating to ranged weapon
+    MAIN_DMG_RANK                   = 377, -- adds weapon rank to main weapon http://wiki.bluegartr.com/bg/Weapon_Rank
+    SUB_DMG_RANK                    = 378, -- adds weapon rank to sub weapon
+    RANGED_DMG_RANK                 = 379, -- adds weapon rank to ranged weapon
+
     REGAIN                          = 368,
     REFRESH                         = 369,
     REGEN                           = 370,
@@ -1331,7 +1351,7 @@ xi.mod =
     CURE_POTENCY                    = 374,
     CURE_POTENCY_II                 = 260, -- % cure potency II | bonus from gear is capped at 30
     CURE_POTENCY_RCVD               = 375,
-    RANGED_DMG_RATING               = 376,
+    CURE_POTENCY_BONUS              = 1051, -- TODO: Increases amount healed by Cure spells (fixed amount)
     DELAYP                          = 380,
     RANGED_DELAYP                   = 381,
     EXP_BONUS                       = 382,
@@ -1451,6 +1471,7 @@ xi.mod =
 
     MAGIC_ABSORB                    = 475, -- Occasionally absorbs magic damage taken, in percents
     MAGIC_NULL                      = 476, -- Occasionally annuls magic damage taken, in percents
+    NULL_RANGED_DAMAGE              = 239, -- Occasionally annuls ranged damage taken, in percents
     PHYS_ABSORB                     = 512, -- Occasionally absorbs physical damage taken, in percents
     ABSORB_DMG_TO_MP                = 516, -- Unlike PLD gear mod, works on all damage types (Ethereal Earring)
 
@@ -1498,10 +1519,11 @@ xi.mod =
     EAT_RAW_FISH                    = 412, --
     EAT_RAW_MEAT                    = 413, --
 
-    ENHANCES_CURSNA_RCVD            = 67,  -- Potency of "Cursna" effects received
-    ENHANCES_CURSNA                 = 310, -- Raises success rate of Cursna when removing effect (like Doom) that are not 100% chance to remove
-    ENHANCES_HOLYWATER              = 495, -- Used by gear with the "Enhances Holy Water" or "Holy Water+" attribute
-    ENHANCES_PROT_SHELL_RCVD        = 977, -- Enhances Protect and Shell Effects Received (Binary MOD)
+    ENHANCES_CURSNA_RCVD            = 67,   -- Potency of "Cursna" effects received
+    ENHANCES_CURSNA                 = 310,  -- Raises success rate of Cursna when removing effect (like Doom) that are not 100% chance to remove
+    ENHANCES_HOLYWATER              = 495,  -- Used by gear with the "Enhances Holy Water" or "Holy Water+" attribute
+    ENHANCES_PROT_SHELL_RCVD        = 977,  -- Enhances Protect and Shell Effects Received (Binary MOD)
+    ENHANCES_PROT_RCVD              = 1050, -- TODO: Enhances Protect Received (Percent)
 
     RETALIATION                     = 414, -- Increases damage of Retaliation hits
     THIRD_EYE_COUNTER_RATE          = 508, -- Adds counter to 3rd eye anticipates & if using Seigan counter rate is increased by 15%
@@ -1652,6 +1674,7 @@ xi.mod =
     SMITE                           = 898, -- Att increase with H2H or 2H weapons
     TACTICAL_GUARD                  = 899, -- Tp gain increase when guarding
     GUARD_PERCENT                   = 976, -- Guard Percent
+    COUNTER_DAMAGE                  = 1047, -- TODO: Increases Damage from Counter Attacks (Percent)
     FENCER_TP_BONUS                 = 903, -- TP Bonus to weapon skills from Fencer Trait
     FENCER_CRITHITRATE              = 904, -- Increased Crit chance from Fencer Trait
     SHIELD_DEF_BONUS                = 905, -- Shield Defense Bonus
@@ -1684,10 +1707,6 @@ xi.mod =
     PELICAN_RING_EFFECT   = 154, -- adds extra skillup roll for fishing
     FISHING_SKILL_GAIN    = 155, -- food increase for fishing skill ups
 
-    MAIN_DMG_RANK                = 377, -- adds weapon rank to main weapon http://wiki.bluegartr.com/bg/Weapon_Rank
-    SUB_DMG_RANK                 = 378, -- adds weapon rank to sub weapon
-    RANGED_DMG_RANK              = 379, -- adds weapon rank to ranged weapon
-
     BLOOD_BOON                   = 913, -- Occasionally cuts down MP cost of Blood Pact abilities. Does not affect abilities that require Astral Flow.
     EXPERIENCE_RETAINED          = 914, -- Experience points retained upon death (this is a percentage)
     CAPACITY_BONUS               = 915, -- Capacity point bonus granted
@@ -1712,6 +1731,17 @@ xi.mod =
     AUGMENT_BLOOD_BOON     = 1035, -- Percent chance to deal extra damage based on Blood Boon Amount (SMN AF3 Sets)
     AUGMENT_BLU_MAGIC      = 1036, -- Percent chance for BLU magic to receive 3x WSC value for spell (BLU AF3 Sets)
     GEOMANCY_MP_NO_DEPLETE = 1037, -- Percent chance for Geomancy to cost 0 MP (GEO AF3 Sets)
+
+    -- Job Point Gifts
+    SIC_READY_RECAST        = 1052, -- TODO: SIC/Ready recast reduction (seconds)
+    TRUE_SHOT_EFFECT        = 1053, -- TODO: True Shot Ranged Damage increase (percent)
+    DEAD_AIM_EFFECT         = 1054, -- TODO: Dead Aim Critical Damage increase (percent)
+    THIRD_EYE_BONUS         = 1055, -- TODO: Bonus Third Eye Evasions (count)
+    WYVERN_ATTRIBUTE_DA     = 1056, -- TODO: Adds an amount of Double Attack to Dragoon each time Wyverns Attributes Increase (percent)
+    DRAGOON_BREATH_RECAST   = 1057, -- TODO: Restoring/Smithing Breath Recast Reduction (seconds)
+    BLUE_JOB_TRAIT_BONUS    = 1058, -- TODO: Increases job traits gained from equipped blue magic (percent)
+    BLUE_MAGIC_EFFECT       = 1059, -- TODO: Bonus to Attribute Value of spell (percent)
+    QUICK_DRAW_RECAST       = 1060, -- TODO: Quick Draw Charge Reduction (seconds)
 
     -- IF YOU ADD ANY NEW MODIFIER HERE, ADD IT IN src/map/modifier.h ASWELL!
 
@@ -1761,7 +1791,7 @@ xi.latent =
     MOON_PHASE               = 37, -- PARAM: 0: New Moon, 1: Waxing Crescent, 2: First Quarter, 3: Waxing Gibbous, 4: Full Moon, 5: Waning Gibbous, 6: Last Quarter, 7: Waning Crescent
     JOB_MULTIPLE             = 38, -- PARAM: 0: ODD, 2: EVEN, 3-99: DIVISOR
     JOB_MULTIPLE_AT_NIGHT    = 39, -- PARAM: 0: ODD, 2: EVEN, 3-99: DIVISOR
-    -- 40 free to use
+    EQUIPPED_IN_SLOT         = 40, -- When item is equipped in the specified slot (e.g. Dweomer Knife, Erlking's Sword, etc.) PARAM: slotID
     -- 41 free to use
     -- 42 free to use
     WEAPON_DRAWN_HP_UNDER    = 43, -- PARAM: HP PERCENT
@@ -2429,7 +2459,7 @@ xi.mobMod =
     ASSIST              = 29, -- mobs will assist me
     SPECIAL_SKILL       = 30, -- give special skill (example: Gigas boulder ranged attack)
     ROAM_DISTANCE       = 31, -- distance allowed to roam from spawn
-    -- 32 Available for use
+    DONT_ROAM_HOME      = 32, -- Allow mobs to roam any distance from spawn. Useful for mobs with scripted roaming behavior.
     SPECIAL_COOL        = 33, -- cool down for special (example: Time between Gigas boulder ranged attacks)
     MAGIC_COOL          = 34, -- cool down for magic
     STANDBACK_COOL      = 35, -- cool down time for standing back (casting spell while not in attack range)
@@ -2447,7 +2477,7 @@ xi.mobMod =
     SPAWN_LEASH         = 47, -- forces a mob to not move farther from its spawn than its leash distance
     SHARE_TARGET        = 48, -- mob always targets same target as ID in this var
     CHECK_AS_NM         = 49, -- If set, a mob will check as a NM.
-    -- 50 Available for use
+    ROAM_RESET_FACING   = 50, -- Resume facing the default spawn rotation after roaming home.
     ROAM_TURNS          = 51, -- Maximum amount of turns during a roam
     ROAM_RATE           = 52, -- Roaming frequency. roam_cool - rand(roam_cool / (roam_rate / 10))
     BEHAVIOR            = 53, -- Add behaviors to mob
@@ -2468,6 +2498,7 @@ xi.mobMod =
     ALLI_HATE           = 68, -- Range around target to add alliance member to enmity list.
     NO_LINK             = 69, -- If set, mob cannot link until unset.
     NO_REST             = 70, -- Mob cannot regain hp (e.g. re-burrowing antlions during ENM).
+    LEADER              = 71, -- Used for mobs that follow a defined "leader", such as Ul'xzomit mobs.
 }
 
 -----------------------------------
@@ -2783,18 +2814,18 @@ xi.behavior =
 
 xi.roamFlag =
 {
-    NONE    = 0x000,
-    NONE0   = 0x001,
-    NONE1   = 0x002,
-    NONE2   = 0x004,
-    NONE3   = 0x008,
-    NONE4   = 0x010,
-    NONE5   = 0x020,
-    WORM    = 0x040, -- pop up and down when moving
-    AMBUSH  = 0x080, -- stays hidden until someone comes close (antlion)
-    EVENT   = 0x100, -- calls lua method for roaming logic
-    IGNORE  = 0x200, -- ignore all hate, except linking hate
-    STEALTH = 0x400, -- stays name hidden and untargetable until someone comes close (chigoe)
+    NONE     = 0x000,
+    NONE0    = 0x001,
+    NONE1    = 0x002,
+    NONE2    = 0x004,
+    NONE3    = 0x008,
+    NONE4    = 0x010,
+    NONE5    = 0x020,
+    WORM     = 0x040, -- pop up and down when moving
+    AMBUSH   = 0x080, -- stays hidden until someone comes close (antlion)
+    SCRIPTED = 0x100, -- calls lua method for roaming logic
+    IGNORE   = 0x200, -- ignore all hate, except linking hate
+    STEALTH  = 0x400, -- stays name hidden and untargetable until someone comes close (chigoe)
 }
 
 -----------------------------------
@@ -3030,3 +3061,25 @@ xi.pathflag =
     SCRIPT   = 0x08, -- don't overwrite this path before completion (except via another script)
     SLIDE    = 0x10,  -- Slide to end point if close enough (so no over shoot)
 };
+
+-- Check Lua item with:
+-- local isEx = bit.band(item:getFlag(), xi.itemFlag.EX) ~= 0
+xi.itemFlag =
+{
+    WALLHANGING  = 0x0001,
+    -- 01          = 0x0002,
+    MYSTERY_BOX  = 0x0004, -- Can be gained from Gobbie Mystery Box
+    MOG_GARDEN   = 0x0008, -- Can use in Mog Garden
+    MAIL2ACCOUNT = 0x0010, -- CanSendPOL Polutils Value
+    INSCRIBABLE  = 0x0020,
+    NOAUCTION    = 0x0040,
+    SCROLL       = 0x0080,
+    LINKSHELL    = 0x0100, -- Linkshell Polutils Value
+    CANUSE       = 0x0200,
+    CANTRADENPC  = 0x0400,
+    CANEQUIP     = 0x0800,
+    NOSALE       = 0x1000,
+    NODELIVERY   = 0x2000,
+    EX           = 0x4000, -- NoTradePC Polutils Value
+    RARE         = 0x8000,
+}

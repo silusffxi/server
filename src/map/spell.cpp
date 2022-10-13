@@ -171,6 +171,11 @@ bool CSpell::isNa()
     return (static_cast<uint16>(m_ID) >= 14 && static_cast<uint16>(m_ID) <= 20) || m_ID == SpellID::Erase;
 }
 
+bool CSpell::isRaise()
+{
+    return (static_cast<uint16>(m_ID) >= 12 && static_cast<uint16>(m_ID) <= 13) || m_ID == SpellID::Raise_III || m_ID == SpellID::Arise;
+}
+
 bool CSpell::isSevere()
 {
     return m_ID == SpellID::Death || m_ID == SpellID::Impact || m_ID == SpellID::Meteor || m_ID == SpellID::Meteor_II || m_ID == SpellID::Comet;
@@ -286,6 +291,8 @@ uint16 CSpell::getAoEMessage() const
 {
     switch (m_message)
     {
+        case 7: // recovers HP
+            return 367;
         case 93: // vanishes
             return 273;
         case 85: // resists
@@ -682,9 +689,16 @@ namespace spell
                 return true;
             }
 
-            if (PCaster->objtype == TYPE_PC && spell->getSpellGroup() == SPELLGROUP_TRUST)
+            if (PCaster->objtype == TYPE_PC)
             {
-                return true; // every PC can use trusts
+                if (spell->getSpellGroup() == SPELLGROUP_TRUST)
+                {
+                    return true; // every PC can use trusts
+                }
+                else if (luautils::OnCanUseSpell(PCaster, spell))
+                {
+                    return true;
+                }
             }
 
             if (PCaster->GetMLevel() >= JobMLVL)

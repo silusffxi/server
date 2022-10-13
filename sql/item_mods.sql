@@ -3365,6 +3365,7 @@ INSERT INTO `item_mods` VALUES (10806,1,35);     -- DEF: 35
 INSERT INTO `item_mods` VALUES (10806,160,-500); -- DMG: -500
 INSERT INTO `item_mods` VALUES (10806,375,15);   -- CURE_POTENCY_RCVD: 15
 INSERT INTO `item_mods` VALUES (10806,958,20);   -- STATUSRES: 20
+INSERT INTO `item_mods` VALUES (10806,1067,1);   -- REPRISAL_BLOCK_BONUS: 1
 
 -- Mandraguard
 INSERT INTO `item_mods` VALUES (10807,1,1);  -- DEF: 1
@@ -17458,6 +17459,7 @@ INSERT INTO `item_mods` VALUES (13657,27,-6); -- ENMITY: -6
 -- Shadow Mantle
 INSERT INTO `item_mods` VALUES (13658,1,15);  -- DEF: 15
 INSERT INTO `item_mods` VALUES (13658,416,6); -- NULL_PHYSICAL_DAMAGE: 6
+INSERT INTO `item_mods` VALUES (13658,239,6); -- NULL_RANGED_DAMAGE: 6
 
 -- Mercenary Mantle
 INSERT INTO `item_mods` VALUES (13659,1,2); -- DEF: 2
@@ -54125,6 +54127,7 @@ INSERT INTO `item_mods` VALUES (25758,1,1); -- DEF: 1
 -- Rhapsody Shirt +1
 INSERT INTO `item_mods` VALUES (25759,1,2);   -- DEF: 2
 INSERT INTO `item_mods` VALUES (25759,416,1); -- NULL_PHYSICAL_DAMAGE: 1
+INSERT INTO `item_mods` VALUES (25759,239,1); -- NULL_RANGED_DAMAGE: 6
 INSERT INTO `item_mods` VALUES (25759,476,1); -- MAGIC_NULL: 1
 INSERT INTO `item_mods` VALUES (25759,530,1); -- NO_SPELL_MP_DEPLETION: 1
 
@@ -56177,6 +56180,9 @@ INSERT INTO `item_mods` VALUES (26406,135,3); -- COOK: 3
 
 -- Diamond buckler
 INSERT INTO `item_mods` VALUES (26410,1,1);   -- DEF: 1
+
+-- Kam'lanaut's Shield
+INSERT INTO `item_mods` VALUES (26412,1,1);   -- DEF: 1
 
 -- Ammurapi Shield
 INSERT INTO `item_mods` VALUES (26419,1,47);   -- DEF: 47
@@ -67267,6 +67273,10 @@ INSERT INTO `item_mods` VALUES (27600,23,20);  -- ATT: 20
 INSERT INTO `item_mods` VALUES (27600,68,-10); -- EVA: -10
 INSERT INTO `item_mods` VALUES (27600,302,2);  -- TRIPLE_ATTACK: 2
 
+-- Aptitude Mantle
+INSERT INTO `item_mods` VALUES (27603,1,13);   -- DEF: 13
+INSERT INTO `item_mods` VALUES (27603,915,25); -- CAPACITY_BONUS: 25
+
 -- Aptitude Mantle +1
 INSERT INTO `item_mods` VALUES (27604,1,14);   -- DEF: 14
 INSERT INTO `item_mods` VALUES (27604,915,30); -- CAPACITY_BONUS: 30
@@ -78148,6 +78158,8 @@ INSERT INTO `item_mods` VALUES (28648,1,65);     -- DEF: 65
 INSERT INTO `item_mods` VALUES (28648,2,30);     -- HP: 30
 INSERT INTO `item_mods` VALUES (28648,109,112);  -- SHIELD: 112
 INSERT INTO `item_mods` VALUES (28648,160,-600); -- DMG: -600
+INSERT INTO `item_mods` VALUES (28648,1067,1);   -- REPRISAL_BLOCK_BONUS: 1
+INSERT INTO `item_mods` VALUES (28648,1068,50);  -- REPRISAL_SPIKES_BONUS: 50
 
 -- Rinda Shield
 INSERT INTO `item_mods` VALUES (28649,1,62);     -- DEF: 62

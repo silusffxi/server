@@ -341,10 +341,11 @@ namespace battleutils
      ************************************************************************/
     void FreePetSkillList()
     {
-        for (auto iter = g_PPetSkillList.begin(); iter != g_PPetSkillList.end();)
+        for (auto& petskill : g_PPetSkillList)
         {
-            g_PPetSkillList.erase(iter);
+            delete petskill.second;
         }
+        g_PPetSkillList.clear();
     }
 
     /************************************************************************
@@ -904,20 +905,6 @@ namespace battleutils
                     if (Action->reaction == REACTION::BLOCK)
                     {
                         PAttacker->takeDamage(spikesDamage, PDefender, ATTACK_TYPE::MAGICAL, DAMAGE_TYPE::LIGHT);
-                        auto* PEffect = PDefender->StatusEffectContainer->GetStatusEffect(EFFECT_REPRISAL);
-                        if (PEffect)
-                        {
-                            // Subpower is the remaining damage that can be reflected. When it reaches 0 the effect ends
-                            int remainingReflect = PEffect->GetSubPower();
-                            if (remainingReflect - abs(damage) <= 0) // abs to account for absorbed reprisal
-                            {
-                                PDefender->StatusEffectContainer->DelStatusEffect(EFFECT_REPRISAL);
-                            }
-                            else
-                            {
-                                PEffect->SetSubPower(remainingReflect - abs(damage));
-                            }
-                        }
                     }
                     else
                     {
@@ -1785,28 +1772,29 @@ namespace battleutils
     }
 
     /***********************************************************************
-            Calculates the block rate of the defender
+    Calculates the block rate of the defender
     Incorporates testing and data from:
     http://www.ffxiah.com/forum/topic/21671/paladin-faq-info-and-trade-studies/34/#2581818
     https://docs.google.com/spreadsheet/ccc?key=0AkX3maplDraRdFdCZHI2OU93aVgtWlZhN3ozZEtnakE#gid=0
     http://www.ffxionline.com/forums/paladin/55139-shield-data-size-2-vs-size-3-a.html
-
-    Formula is:
-    ShieldBaseRate + (DefenderShieldSkill - AttackerCombatSkill) * SkillModifier
-
-    Skill Modifier appears to be 0.215 based on the data available.
+    https://www.bg-wiki.com/ffxi/Shield_Skill - Base calculations
+    https://www.ffxiah.com/forum/topic/53625/make-paladin-great-again/6/#3434884 - Palisade +base block rate
 
     Base block rates are (small to large shield type) 55% -> 50% -> 45% -> 30%
     Aegis is a special case, having the base block rate of a size 2 type.
     ************************************************************************/
     uint8 GetBlockRate(CBattleEntity* PAttacker, CBattleEntity* PDefender)
     {
-        int8   shieldSize   = 3;
-        int32  base         = 0;
-        float  blockRateMod = (100.0f + PDefender->getMod(Mod::SHIELDBLOCKRATE)) / 100.0f;
-        auto*  weapon       = dynamic_cast<CItemWeapon*>(PAttacker->m_Weapons[SLOT_MAIN]);
-        uint16 attackskill  = PAttacker->GetSkill((SKILLTYPE)(weapon ? weapon->getSkillType() : 0));
-        uint16 blockskill   = PDefender->GetSkill(SKILL_SHIELD);
+        int8   base          = 0;
+        int8   shieldSize    = 3;
+        int8   blockRate     = 0;
+        int8   skillModifier = 0;
+        int16  blockRateMod  = PDefender->getMod(Mod::SHIELDBLOCKRATE);
+        int16  palisadeMod   = PDefender->getMod(Mod::PALISADE_BLOCK_BONUS);
+        float  reprisalMult  = 1.0f;
+        auto*  weapon        = dynamic_cast<CItemWeapon*>(PAttacker->m_Weapons[SLOT_MAIN]);
+        uint16 attackSkill   = PAttacker->GetSkill((SKILLTYPE)(weapon ? weapon->getSkillType() : 0));
+        uint16 blockSkill    = PDefender->GetSkill(SKILL_SHIELD);
 
         if (PDefender->objtype == TYPE_PC)
         {
@@ -1825,6 +1813,7 @@ namespace battleutils
         else if (PDefender->objtype == TYPE_MOB && PDefender->GetMJob() == JOB_PLD)
         {
             CMobEntity* PMob = (CMobEntity*)PDefender;
+
             if (PMob->m_EcoSystem != ECOSYSTEM::UNDEAD && PMob->m_EcoSystem != ECOSYSTEM::BEASTMAN)
             {
                 return 0;
@@ -1832,15 +1821,16 @@ namespace battleutils
         }
         else if (PDefender->objtype == TYPE_PET && static_cast<CPetEntity*>(PDefender)->getPetType() == PET_TYPE::AUTOMATON && PDefender->GetMJob() == JOB_PLD)
         {
-            float skillmodifier = (PDefender->GetSkill(SKILL_AUTOMATON_MELEE) - attackskill) * 0.215f;
-            base                = PDefender->getMod(Mod::SHIELDBLOCKRATE);
+            skillModifier = (int8)((PDefender->GetSkill(SKILL_AUTOMATON_MELEE) - attackSkill) * 0.215f);
+            base          = PDefender->getMod(Mod::SHIELDBLOCKRATE);
+
             if (base <= 0)
             {
                 return 0;
             }
             else
             {
-                return base + (int32)skillmodifier;
+                return base + skillModifier;
             }
         }
         else
@@ -1850,29 +1840,55 @@ namespace battleutils
 
         switch (shieldSize)
         {
-            case 1: // buckler
+            case 1: // Buckler
                 base = 55;
                 break;
-            case 2: // round
-            case 5: // aegis and srivatsa
-                base = 50;
+            case 2: // Round
+                base = 40;
                 break;
-            case 3: // kite
+            case 3: // Kite
                 base = 45;
                 break;
-            case 4: // tower
+            case 4: // Tower
                 base = 30;
                 break;
-            case 6: // ochain
+            case 5: // Aegis and Srivatsa
+                base = 50;
+                break;
+            case 6: // Ochain
                 base = 110;
                 break;
             default:
                 return 0;
         }
 
-        float skillmodifier = (blockskill - attackskill) * 0.215f;
-        return (int8)std::clamp((int32)((base + (int32)skillmodifier) * blockRateMod), 5,
-                                (shieldSize == 6 ? 100 : std::max<int32>((int32)(65 * blockRateMod), 100)));
+        // Check for Reprisal and adjust skill and block rate bonus multiplier
+        if (PDefender->StatusEffectContainer->HasStatusEffect(EFFECT_REPRISAL))
+        {
+            blockSkill   = (uint16)(blockSkill * 1.15f);
+            reprisalMult = 1.5f; // Default is 1.5x
+
+            // Adamas and Priwen set the multiplier to 3.0x while equipped
+            if (PDefender->getMod(Mod::REPRISAL_BLOCK_BONUS) > 0)
+            {
+                reprisalMult = 3.0f;
+            }
+        }
+
+        skillModifier = (int16)((blockSkill - attackSkill) * 0.2325f);
+
+        // Add skill and Palisade bonuses
+        base += skillModifier + palisadeMod;
+        // Multiply by Reprisal's bonus
+        base = (int8)(base * reprisalMult);
+        // Add Chance of Successful Block
+        base += blockRateMod;
+
+        // Apply the lower and upper caps
+        blockRate = (base < 5) ? 5 : base;
+        blockRate = (base > 100) ? 100 : base;
+
+        return blockRate;
     }
 
     uint8 GetParryRate(CBattleEntity* PAttacker, CBattleEntity* PDefender)
@@ -2089,20 +2105,24 @@ namespace battleutils
                     }
 
                     // Reprisal
-                    if ((damage > 0) && PDefender->StatusEffectContainer->HasStatusEffect(EFFECT_REPRISAL))
+                    if (damage > 0 && PDefender->StatusEffectContainer->HasStatusEffect(EFFECT_REPRISAL))
                     {
                         // Reflect a portion of the blocked damage back. This is calculated before Stoneskin, Phalanx, Sentinel or Invincible
-                        // Subpower is the remaining damage that can be reflected. When it reaches 0 the effect ends
                         CStatusEffect* reprisalEffect = PDefender->StatusEffectContainer->GetStatusEffect(EFFECT_REPRISAL);
+                        float          spikesBonus    = 1.f + (PDefender->getMod(Mod::REPRISAL_SPIKES_BONUS) / 100.f);
+                        int16          effectPower    = (int16)(reprisalEffect->GetPower() * spikesBonus);
                         int32          blockedDamage  = (damage * (100 - absorb)) / 100;
+                        int32          spikesDamage   = 0;
+
                         if (PDefender->StatusEffectContainer->HasStatusEffect({ EFFECT_INVINCIBLE, EFFECT_SENTINEL }))
                         {
                             blockedDamage = (baseDamage * (100 - absorb)) / 100;
                         }
-                        // Subpower is the remaining damage that can be reflected. When it reaches 0 the effect ends
+
+                        spikesDamage = blockedDamage * (effectPower / 100);
+
                         // Set Reprisal spike damage
-                        PDefender->setModifier(Mod::SPIKES_DMG,
-                                               std::clamp<int16>((blockedDamage * (reprisalEffect->GetPower())) / 100, 0, reprisalEffect->GetSubPower()));
+                        PDefender->setModifier(Mod::SPIKES_DMG, spikesDamage);
                     }
                 }
 
@@ -5319,7 +5339,7 @@ namespace battleutils
         {
             damage = -damage;
         }
-        else if (xirand::GetRandomNumber(100) < PDefender->getMod(Mod::NULL_PHYSICAL_DAMAGE))
+        else if (xirand::GetRandomNumber(100) < PDefender->getMod(Mod::NULL_RANGED_DAMAGE))
         {
             damage = 0;
         }
@@ -5594,6 +5614,13 @@ namespace battleutils
 
     uint8 GetSpellAoEType(CBattleEntity* PCaster, CSpell* PSpell)
     {
+        // Majesty turns the Cure and Protect spell families into AoE when active
+        if (PCaster->StatusEffectContainer->HasStatusEffect(EFFECT_MAJESTY) &&
+            (PSpell->getSpellFamily() == SPELLFAMILY_CURE || PSpell->getSpellFamily() == SPELLFAMILY_PROTECT))
+        {
+            return SPELLAOE_RADIAL;
+        }
+
         if (PSpell->getAOE() == SPELLAOE_RADIAL_ACCE) // Divine Veil goes here because -na spells have AoE w/ Accession
         {
             if (PCaster->StatusEffectContainer->HasStatusEffect(EFFECT_ACCESSION) ||
@@ -5607,6 +5634,7 @@ namespace battleutils
                 return SPELLAOE_NONE;
             }
         }
+
         if (PSpell->getAOE() == SPELLAOE_RADIAL_MANI)
         {
             if (PCaster->StatusEffectContainer->HasStatusEffect(EFFECT_MANIFESTATION))
@@ -5618,6 +5646,7 @@ namespace battleutils
                 return SPELLAOE_NONE;
             }
         }
+
         if (PSpell->getAOE() == SPELLAOE_PIANISSIMO)
         {
             if (PCaster->StatusEffectContainer->HasStatusEffect(EFFECT_PIANISSIMO))
@@ -5630,6 +5659,7 @@ namespace battleutils
                 return SPELLAOE_RADIAL;
             }
         }
+
         if (PSpell->getAOE() == SPELLAOE_DIFFUSION)
         {
             if (PCaster->StatusEffectContainer->HasStatusEffect(EFFECT_DIFFUSION))
@@ -6395,6 +6425,7 @@ namespace battleutils
         }
         return std::clamp<int16>(cost, 0, 9999);
     }
+
     uint32 CalculateSpellRecastTime(CBattleEntity* PEntity, CSpell* PSpell)
     {
         if (PSpell == nullptr)
@@ -6402,22 +6433,26 @@ namespace battleutils
             return 0;
         }
 
-        bool   applyArts = true;
-        uint32 base      = PSpell->getRecastTime();
-        int32  recast    = base;
+        uint32 base   = PSpell->getRecastTime();
+        int32  recast = base;
 
-        // Apply Fast Cast
-        recast = (int32)(recast * ((100.0f - std::clamp((float)PEntity->getMod(Mod::FASTCAST) / 2.0f, 0.0f, 25.0f)) / 100.0f));
+        // get Fast Cast reduction, caps at 80%/2 = 40% reduction in recast -- https://www.bg-wiki.com/ffxi/Fast_Cast
+        float fastCastReduction = std::clamp(static_cast<float>(PEntity->getMod(Mod::FASTCAST)) / 2.0f, 0.0f, 40.0f);
+        // no known cap (limited by Inspiration merits + Futhark Trousers augment for a total retail cap value of 60%/2 = 30%)
+        float inspirationRecastReduction = static_cast<float>(PEntity->getMod(Mod::INSPIRATION_FAST_CAST)) / 2.0f;
+
+        // Apply Fast Cast & Inspiration
+        recast = static_cast<int32>(recast * ((100.0f - (fastCastReduction + inspirationRecastReduction)) / 100.0f));
 
         // Apply Haste (Magic and Gear)
-        int16 haste = PEntity->getMod(Mod::HASTE_MAGIC) + PEntity->getMod(Mod::HASTE_GEAR);
-        recast -= (int32)(recast * haste / 10000.f);
+        int32 haste = PEntity->getMod(Mod::HASTE_MAGIC) + PEntity->getMod(Mod::HASTE_GEAR);
+        recast      = static_cast<int32>(recast * ((10000.0f - haste) / 10000.0f));
 
         if (PSpell->getSpellGroup() == SPELLGROUP_SONG)
         {
             if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_NIGHTINGALE))
             {
-                recast = (int32)(recast * 0.5f);
+                recast = static_cast<int32>(recast * 0.5f);
             }
             // The following modifiers are not multiplicative - as such they must be applied last.
             // ShowDebug("Recast before reduction: %u", recast);
@@ -6439,17 +6474,17 @@ namespace battleutils
 
         if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_COMPOSURE))
         {
-            recast = (int32)(recast * 1.25f);
+            recast = static_cast<int32>(recast * 1.25f);
         }
 
         if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_HASSO, EFFECT_SEIGAN }))
         {
-            recast = (int32)(recast * 1.5f);
+            recast = static_cast<int32>(recast * 1.5f);
         }
 
-        recast = std::max<int32>(recast, (int32)(base * 0.2f));
+        recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f));
 
-        // Light/Dark arts recast bonus/penalties applies after the 80% cap
+        // Light/Dark arts recast bonus/penalties applies after other bonuses
         if (PSpell->getSpellGroup() == SPELLGROUP_BLACK)
         {
             if (PSpell->getAOE() == SPELLAOE_RADIAL_MANI && PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_MANIFESTATION))
@@ -6462,30 +6497,32 @@ namespace battleutils
                 {
                     recast *= 3;
                 }
-                applyArts = false;
             }
+            else if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_DARK_ARTS, EFFECT_ADDENDUM_BLACK }))
+            {
+                // Add any "Grimoire: Reduces spellcasting time" bonuses + Dark Arts bonus
+                recast = static_cast<int32>(recast * ((100.0f + PEntity->getMod(Mod::BLACK_MAGIC_RECAST) + PEntity->getMod(Mod::GRIMOIRE_SPELLCASTING)) / 100.0f));
+            }
+            else
+            {
+                recast = static_cast<int32>(recast * ((100.0f + PEntity->getMod(Mod::BLACK_MAGIC_RECAST)) / 100.0f));
+            }
+
+            recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f)); // recap to 80%
+
+            // https://www.bg-wiki.com/ffxi/Alacrity
             if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_ALACRITY))
             {
-                uint16 bonus = 0;
-                // Only apply Alacrity/celerity mod if the spell element matches the weather.
-                if (battleutils::WeatherMatchesElement(battleutils::GetWeather(PEntity, false), (uint8)PSpell->getElement()))
-                {
-                    bonus = PEntity->getMod(Mod::ALACRITY_CELERITY_EFFECT);
-                }
-                recast = (int32)(recast * ((50 - bonus) / 100.0f));
+                recast = static_cast<int32>(recast * 0.60);                        // 40% reduction from Alacrity alone
+                recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f)); // recap to 80%
 
-                applyArts = false;
-            }
-            if (applyArts)
-            {
-                if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_DARK_ARTS, EFFECT_ADDENDUM_BLACK }))
+                // Only apply bonus mod if the spell element matches the weather, this is allowed to go over the 80% cap to a 90% cap.
+                if (battleutils::WeatherMatchesElement(battleutils::GetWeather(PEntity, false), static_cast<uint8>(PSpell->getElement())))
                 {
-                    // Add any "Grimoire: Reduces spellcasting time" bonuses
-                    recast = (int32)(recast * (1.0f + (PEntity->getMod(Mod::BLACK_MAGIC_RECAST) + PEntity->getMod(Mod::GRIMOIRE_SPELLCASTING)) / 100.0f));
-                }
-                else
-                {
-                    recast = (int32)(recast * (1.0f + PEntity->getMod(Mod::BLACK_MAGIC_RECAST) / 100.0f));
+                    uint16 bonus = PEntity->getMod(Mod::ALACRITY_CELERITY_EFFECT);
+
+                    recast = static_cast<int32>(recast * ((100 - bonus) / 100.0f));
+                    recast = std::max<int32>(recast, static_cast<int32>(base * 0.1f)); // cap to 90% reduction
                 }
             }
         }
@@ -6501,35 +6538,38 @@ namespace battleutils
                 {
                     recast *= 3;
                 }
-                applyArts = false;
             }
+
+            if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_LIGHT_ARTS, EFFECT_ADDENDUM_WHITE }))
+            {
+                // Add any "Grimoire: Reduces spellcasting time" bonuses + Light Arts bonus
+                recast = static_cast<int32>(recast * ((100.f + PEntity->getMod(Mod::WHITE_MAGIC_RECAST) + PEntity->getMod(Mod::GRIMOIRE_SPELLCASTING)) / 100.0f));
+            }
+            else
+            {
+                recast = static_cast<int32>(recast * ((100.0f + PEntity->getMod(Mod::WHITE_MAGIC_RECAST)) / 100.0f));
+            }
+
+            recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f)); // recap to 80%
+
+            // https://www.bg-wiki.com/ffxi/Celerity
             if (PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_CELERITY))
             {
-                uint16 bonus = 0;
-                // Only apply Alacrity/celerity mod if the spell element matches the weather.
-                if (battleutils::WeatherMatchesElement(battleutils::GetWeather(PEntity, true), (uint8)PSpell->getElement()))
-                {
-                    bonus = PEntity->getMod(Mod::ALACRITY_CELERITY_EFFECT);
-                }
-                recast = (int32)(recast * ((50 - bonus) / 100.0f));
+                recast = static_cast<int32>(recast * 0.60);                        // 40% reduction from Celerity alone
+                recast = std::max<int32>(recast, static_cast<int32>(base * 0.2f)); // recap to 80%
 
-                applyArts = false;
-            }
-            if (applyArts)
-            {
-                if (PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_LIGHT_ARTS, EFFECT_ADDENDUM_WHITE }))
+                // Only apply bonus mod if the spell element matches the weather, this is allowed to go over the 80% cap to a 90% cap.
+                if (battleutils::WeatherMatchesElement(battleutils::GetWeather(PEntity, false), static_cast<uint8>(PSpell->getElement())))
                 {
-                    // Add any "Grimoire: Reduces spellcasting time" bonuses
-                    recast = (int32)(recast * (1.0f + (PEntity->getMod(Mod::WHITE_MAGIC_RECAST) + PEntity->getMod(Mod::GRIMOIRE_SPELLCASTING)) / 100.0f));
-                }
-                else
-                {
-                    recast = (int32)(recast * (1.0f + PEntity->getMod(Mod::WHITE_MAGIC_RECAST) / 100.0f));
+                    uint16 bonus = PEntity->getMod(Mod::ALACRITY_CELERITY_EFFECT);
+
+                    recast = static_cast<int32>(recast * ((100 - bonus) / 100.0f));
+                    recast = std::max<int32>(recast, static_cast<int32>(base * 0.1f)); // cap to 90% reduction
                 }
             }
         }
 
-        recast = std::max(recast, 0);
+        recast = std::max<int32>(recast, 0);
 
         return recast / 1000;
     }

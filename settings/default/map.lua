@@ -132,9 +132,13 @@ xi.settings.map =
     -- Enable/disable skill-ups from bloodpacts
     SKILLUP_BLOODPACT = true,
 
-    -- Adjust rate of TP gain for mobs, and players. Acts as a multiplier, so default is 1.
+    -- Adjust rate of TP gain for mobs, pets (includes charmed pets), fellows, trusts and players.
+    -- Acts as a multiplier, so default is 1.
     MOB_TP_MULTIPLIER    = 1.0,
+    PET_TP_MULTIPLIER    = 1.0,
     PLAYER_TP_MULTIPLIER = 1.0,
+    TRUST_TP_MULTIPLIER  = 1.0,
+    FELLOW_TP_MULTIPLIER = 1.0,
 
     -- Adjust max HP pool for NMs, regular mobs, players, and trusts/fellows. Acts as a multiplier, so default is 1.
     NM_HP_MULTIPLIER        = 1.0,
@@ -210,6 +214,9 @@ xi.settings.map =
 
     -- Minimum time between uses of yell command (in seconds).
     YELL_COOLDOWN = 30,
+
+    -- Prevent players from sending tells to hidden GMs. You will still receive them from other GMs.
+    BLOCK_TELL_TO_HIDDEN_GM = false,
 
     -- Command Audit [logging] commands with lower permission than this will not be logged.
     -- Zero for no logging at all. Commands given to non GMs are not logged.

@@ -330,7 +330,7 @@ std::optional<CLuaBaseEntity> CLuaZone::insertDynamicEntity(sol::table table)
         PMob->spawnAnimation = static_cast<SPAWN_ANIMATION>(table["specialSpawnAnimation"].get_or(false) ? 1 : 0);
 
         // Ensure mobs get a function for onMobDeath
-        auto onMobDeath = table["onMobDeath"].get_or<sol::function>(sol::lua_nil);
+        auto onMobDeath = table["onMobDeath"].get<sol::function>();
         if (!onMobDeath.valid())
         {
             cacheEntry["onMobDeath"] = []() {}; // Empty func
@@ -421,29 +421,13 @@ auto CLuaZone::getBackgroundMusicNight()
 
 sol::table CLuaZone::queryEntitiesByName(std::string const& name)
 {
-    TracyZoneScoped;
+    const QueryByNameResult_t& entities = m_pLuaZone->queryEntitiesByName(name);
 
     auto table = lua.create_table();
-
-    // TODO: Make work for instances
-    // TODO: Replace with a constant-time lookup
-    // clang-format off
-    m_pLuaZone->ForEachNpc([&](CNpcEntity* PNpc)
+    for (CBaseEntity* entity : entities)
     {
-        if (std::string((const char*)PNpc->GetName()) == name)
-        {
-            table.add(CLuaBaseEntity(PNpc));
-        }
-    });
-
-    m_pLuaZone->ForEachMob([&](CMobEntity* PMob)
-    {
-        if (std::string((const char*)PMob->GetName()) == name)
-        {
-            table.add(CLuaBaseEntity(PMob));
-        }
-    });
-    // clang-format on
+        table.add(CLuaBaseEntity(entity));
+    }
 
     if (table.empty())
     {
