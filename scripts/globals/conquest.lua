@@ -597,9 +597,10 @@ xi.conquest.toggleRegionalNPCs = function(zone)
             { GetNationRank(xi.nation.WINDURST), xi.zone.WINDURST_WOODS },
         }
 
-        table.sort(rankings, function (a, b) return a[1] > b[1] end)
+        table.sort(rankings, function (a, b) return a[1] < b[1] end)
 
         local firstPlaceZone = rankings[1][2]
+        local secondPlaceZone = rankings[2][2]
 
         if firstPlaceZone == zone:getID() then
             print("Making regional conquest NPCs available in: " .. zone:getName())
@@ -615,7 +616,11 @@ xi.conquest.toggleRegionalNPCs = function(zone)
 
                     -- If there is a clear winner, and not a tie,
                     -- show the NPCs
-                    if id == firstPlaceZone and not IsConquestAlliance() then
+                    if
+                        id == firstPlaceZone and
+                        not (IsConquestAlliance() or
+                        (firstPlaceZone == secondPlaceZone))
+                    then
                         entity:setStatus(xi.status.NORMAL)
                     end
                 end
@@ -1345,7 +1350,7 @@ xi.conquest.teleporterOnEventUpdate = function(player, csid, option, teleporterE
     if csid == teleporterEvent then
         local region = option - 1073741829
         local fee = xi.conquest.outpostFee(player, region)
-        local cpFee = fee/10
+        local cpFee = fee / 10
 
         player:updateEvent(player:getGil(), fee, 0, cpFee, player:getCP())
     end
@@ -1365,7 +1370,7 @@ xi.conquest.teleporterOnEventFinish = function(player, csid, option, teleporterE
         -- TELEPORT WITH CP
         elseif option >= 1029 and option <= 1047 then
             local region = option - 1029
-            local cpFee = xi.conquest.outpostFee(player, region)/10
+            local cpFee = xi.conquest.outpostFee(player, region) / 10
 
             if xi.conquest.canTeleportToOutpost(player, region) and player:getCP() >= cpFee then
                 player:delCP(cpFee)

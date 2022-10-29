@@ -603,10 +603,13 @@ xi.treasure.treasureInfo =
                 misc =
                 {
                     {
-                        test = function(player) return player:getCharVar("needs_crawler_blood") == 1 end,
+                        test = function(player)
+                            return xi.quest.getVar(player, xi.quest.log_id.SANDORIA, xi.quest.id.sandoria.ENVELOPED_IN_DARKNESS, 'Prog') >= 2 and
+                                xi.quest.getVar(player, xi.quest.log_id.SANDORIA, xi.quest.id.sandoria.ENVELOPED_IN_DARKNESS, 'Time') == 0 and
+                                not player:hasKeyItem(xi.ki.CRAWLER_BLOOD)
+                        end,
                         code = function(player)
                             npcUtil.giveKeyItem(player, xi.ki.CRAWLER_BLOOD)
-                            player:setCharVar("needs_crawler_blood", 0)
                         end,
                     },
                 },
@@ -1341,7 +1344,7 @@ local function spawnMimic(player, npc)
 
     if mimicId then
         GetMobByID(mimicId):setSpawn(npc:getXPos(), npc:getYPos(), npc:getZPos(), npc:getRotPos())
-        npcUtil.popFromQM(player, npc, mimicId, { claim=true, hide=5 })
+        npcUtil.popFromQM(player, npc, mimicId, { claim = true, hide = 5 })
         moveChest(npc, zoneId, xi.treasure.type.COFFER, true)
     else
         printf("treasure.lua MIMIC id missing in zoneId %i", zoneId)

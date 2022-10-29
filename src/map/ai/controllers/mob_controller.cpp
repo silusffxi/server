@@ -80,7 +80,17 @@ bool CMobController::TryDeaggro()
             PMob->PEnmityContainer->Clear(PTarget->id);
         }
         PTarget = PMob->PEnmityContainer->GetHighestEnmity();
-        PMob->SetBattleTargetID(PTarget ? PTarget->targid : 0);
+        if (PTarget)
+        {
+            PMob->SetBattleTargetID(PTarget->targid);
+            // Reset deaggro time so that the mob is given time to actually try to path towards the new highest enmity target
+            TapDeaggroTime();
+        }
+        else
+        {
+            PMob->SetBattleTargetID(0);
+        }
+
         return TryDeaggro();
     }
 
@@ -150,7 +160,8 @@ bool CMobController::CheckDetection(CBattleEntity* PTarget)
         TapDeaggroTime();
     }
 
-    return PMob->CanDeaggro() && (m_Tick >= m_DeaggroTime + 25s);
+    auto additionalDeaggroTime = std::chrono::seconds(settings::get<uint32>("map.MOB_ADDITIONAL_TIME_TO_DEAGGRO"));
+    return PMob->CanDeaggro() && (m_Tick >= m_DeaggroTime + 25s + additionalDeaggroTime);
 }
 
 void CMobController::TryLink()
@@ -226,8 +237,9 @@ bool CMobController::CanDetectTarget(CBattleEntity* PTarget, bool forceSight)
         return false;
     }
 
-    auto detects         = PMob->m_Detects;
-    auto currentDistance = distance(PTarget->loc.p, PMob->loc.p) + PTarget->getMod(Mod::STEALTH);
+    int16 detection       = PMob->getMobMod(MOBMOD_DETECTION);
+    auto  detects         = detection != 0 ? detection : PMob->m_Detects;
+    auto  currentDistance = distance(PTarget->loc.p, PMob->loc.p) + PTarget->getMod(Mod::STEALTH);
 
     bool detectSight  = (detects & DETECT_SIGHT) || forceSight;
     bool hasInvisible = false;
@@ -651,6 +663,7 @@ void CMobController::Move()
             if (currentDistance >= PMob->GetMeleeRange() * 2 && battleutils::DrawIn(PTarget, PMob, PMob->GetMeleeRange() - 0.2f))
             {
                 FaceTarget();
+                return;
             }
         }
         if (PMob->speed != 0 && PMob->getMobMod(MOBMOD_NO_MOVE) == 0 && m_Tick >= m_LastSpecialTime)
@@ -669,12 +682,23 @@ void CMobController::Move()
             }
             else if (CanMoveForward(currentDistance))
             {
-                if (!PMob->PAI->PathFind->IsFollowingPath() || distanceSquared(PMob->PAI->PathFind->GetDestination(), PTarget->loc.p) > 10)
+                if (!PMob->PAI->PathFind->IsFollowingPath())
                 {
-                    // path to the target if we don't have a path already
+                    // out of melee range, try to path towards
+                    if (currentDistance > PMob->GetMeleeRange())
+                    {
+                        // try to find path towards target
+                        PMob->PAI->PathFind->PathInRange(PTarget->loc.p, attack_range - 0.2f, PATHFLAG_WALLHACK | PATHFLAG_RUN);
+                    }
+                }
+                else if (distanceSquared(PMob->PAI->PathFind->GetDestination(), PTarget->loc.p) > 10)
+                {
+                    // try to find path towards target
                     PMob->PAI->PathFind->PathInRange(PTarget->loc.p, attack_range - 0.2f, PATHFLAG_WALLHACK | PATHFLAG_RUN);
                 }
+
                 PMob->PAI->PathFind->FollowPath(m_Tick);
+
                 if (!PMob->PAI->PathFind->IsFollowingPath())
                 {
                     bool needToMove = false;

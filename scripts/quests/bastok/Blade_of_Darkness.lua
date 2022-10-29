@@ -55,10 +55,12 @@ quest.sections =
             onZoneIn =
             {
                 function(player, prevZone)
-                    if quest:getVar(player, 'Prog') == 0 then
-                        return 130
-                    elseif not player:hasItem(xi.items.CHAOSBRINGER) then
-                        return 131
+                    if prevZone == xi.zone.PALBOROUGH_MINES then
+                        if quest:getVar(player, 'Prog') == 0 then
+                            return 130
+                        elseif not player:hasItem(xi.items.CHAOSBRINGER) then
+                            return 131
+                        end
                     end
                 end,
             },

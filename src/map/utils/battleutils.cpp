@@ -894,10 +894,11 @@ namespace battleutils
                     break;
 
                 case SPIKE_REPRISAL:
-                    if (Action->reaction == REACTION::BLOCK)
+                    if ((Action->reaction & REACTION::BLOCK) == REACTION::BLOCK)
                     {
                         PAttacker->takeDamage(spikesDamage, PDefender, ATTACK_TYPE::MAGICAL, DAMAGE_TYPE::LIGHT);
                     }
+
                     else
                     {
                         // only works on shield blocks
@@ -1769,24 +1770,24 @@ namespace battleutils
     http://www.ffxiah.com/forum/topic/21671/paladin-faq-info-and-trade-studies/34/#2581818
     https://docs.google.com/spreadsheet/ccc?key=0AkX3maplDraRdFdCZHI2OU93aVgtWlZhN3ozZEtnakE#gid=0
     http://www.ffxionline.com/forums/paladin/55139-shield-data-size-2-vs-size-3-a.html
-    https://www.bg-wiki.com/ffxi/Shield_Skill - Base calculations
+    https://www.bg-wiki.com/ffxi/Shield_Skill - Base calculations - does not floor
     https://www.ffxiah.com/forum/topic/53625/make-paladin-great-again/6/#3434884 - Palisade +base block rate
 
     Base block rates are (small to large shield type) 55% -> 50% -> 45% -> 30%
     Aegis is a special case, having the base block rate of a size 2 type.
     ************************************************************************/
-    uint8 GetBlockRate(CBattleEntity* PAttacker, CBattleEntity* PDefender)
+    float GetBlockRate(CBattleEntity* PAttacker, CBattleEntity* PDefender)
     {
-        int8   base          = 0;
+        float  base          = 0;
         int8   shieldSize    = 3;
-        int8   blockRate     = 0;
-        int8   skillModifier = 0;
+        float  blockRate     = 0;
+        float  skillModifier = 0;
         int16  blockRateMod  = PDefender->getMod(Mod::SHIELDBLOCKRATE);
         int16  palisadeMod   = PDefender->getMod(Mod::PALISADE_BLOCK_BONUS);
         float  reprisalMult  = 1.0f;
         auto*  weapon        = dynamic_cast<CItemWeapon*>(PAttacker->m_Weapons[SLOT_MAIN]);
         uint16 attackSkill   = PAttacker->GetSkill((SKILLTYPE)(weapon ? weapon->getSkillType() : 0));
-        uint16 blockSkill    = PDefender->GetSkill(SKILL_SHIELD);
+        float  blockSkill    = PDefender->GetSkill(SKILL_SHIELD);
 
         if (PDefender->objtype == TYPE_PC)
         {
@@ -1802,27 +1803,55 @@ namespace battleutils
                 return 0;
             }
         }
-        else if (PDefender->objtype == TYPE_MOB && PDefender->GetMJob() == JOB_PLD)
+        else if (PDefender->objtype != TYPE_PC)
         {
-            CMobEntity* PMob = (CMobEntity*)PDefender;
+            CMobEntity* PEntity = (CMobEntity*)PDefender;
+            if (PEntity->getMobMod(MOBMOD_CAN_SHIELD_BLOCK) > 0)
+            {
+                base = PDefender->getMod(Mod::SHIELDBLOCKRATE);
+                if (PDefender->objtype == TYPE_PET)
+                {
+                    skillModifier = (int8)((PDefender->GetSkill(SKILL_AUTOMATON_MELEE) - attackSkill) * 0.215f);
+                    if (base <= 0)
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        return base + skillModifier;
+                    }
+                }
+                else
+                {
+                    // TODO: check trust type for ilvl > 99 when implemented
+                    blockSkill = GetMaxSkill(SKILLTYPE::SKILL_SHIELD, PDefender->GetMJob(), PDefender->GetMLevel() > 99 ? 99 : PDefender->GetMLevel());
 
-            if (PMob->m_EcoSystem != ECOSYSTEM::UNDEAD && PMob->m_EcoSystem != ECOSYSTEM::BEASTMAN)
-            {
-                return 0;
-            }
-        }
-        else if (PDefender->objtype == TYPE_PET && static_cast<CPetEntity*>(PDefender)->getPetType() == PET_TYPE::AUTOMATON && PDefender->GetMJob() == JOB_PLD)
-        {
-            skillModifier = (int8)((PDefender->GetSkill(SKILL_AUTOMATON_MELEE) - attackSkill) * 0.215f);
-            base          = PDefender->getMod(Mod::SHIELDBLOCKRATE);
+                    // Check for Reprisal and adjust skill and block rate bonus multiplier
+                    if (PDefender->StatusEffectContainer->HasStatusEffect(EFFECT_REPRISAL))
+                    {
+                        blockSkill   = blockSkill * 1.15f;
+                        reprisalMult = 1.5f; // Default is 1.5x
 
-            if (base <= 0)
-            {
-                return 0;
-            }
-            else
-            {
-                return base + skillModifier;
+                        // Adamas and Priwen set the multiplier to 3.0x while equipped
+                        if (PDefender->getMod(Mod::REPRISAL_BLOCK_BONUS) > 0)
+                        {
+                            reprisalMult = 3.0f;
+                        }
+                    }
+
+                    skillModifier = (blockSkill - attackSkill) * 0.2325f;
+
+                    // Add skill and Palisade bonuses
+                    base += skillModifier + palisadeMod;
+                    // Multiply by Reprisal's bonus
+                    base = base * reprisalMult;
+
+                    // Apply the lower and upper caps
+                    blockRate = (base < 5) ? 5 : base;
+                    blockRate = (base > 100) ? 100 : base;
+
+                    return blockRate;
+                }
             }
         }
         else
@@ -1847,8 +1876,8 @@ namespace battleutils
             case 5: // Aegis and Srivatsa
                 base = 50;
                 break;
-            case 6: // Ochain
-                base = 110;
+            case 6: // Ochain -- https://www.bg-wiki.com/ffxi/Category:Shields
+                base = 108;
                 break;
             default:
                 return 0;
@@ -1857,7 +1886,7 @@ namespace battleutils
         // Check for Reprisal and adjust skill and block rate bonus multiplier
         if (PDefender->StatusEffectContainer->HasStatusEffect(EFFECT_REPRISAL))
         {
-            blockSkill   = (uint16)(blockSkill * 1.15f);
+            blockSkill   = blockSkill * 1.15f;
             reprisalMult = 1.5f; // Default is 1.5x
 
             // Adamas and Priwen set the multiplier to 3.0x while equipped
@@ -1867,12 +1896,12 @@ namespace battleutils
             }
         }
 
-        skillModifier = (int16)((blockSkill - attackSkill) * 0.2325f);
+        skillModifier = (blockSkill - attackSkill) * 0.2325f;
 
         // Add skill and Palisade bonuses
         base += skillModifier + palisadeMod;
         // Multiply by Reprisal's bonus
-        base = (int8)(base * reprisalMult);
+        base = base * reprisalMult;
         // Add Chance of Successful Block
         base += blockRateMod;
 
@@ -2078,50 +2107,62 @@ namespace battleutils
                             PDefender->addTP(PDefender->getMod(Mod::SHIELD_MASTERY_TP));
                         }
                     }
-                    else if (PDefender->objtype == TYPE_PET)
+                }
+                else if (PDefender->objtype == TYPE_PET)
+                {
+                    absorb = 50;
+
+                    // Shield Mastery
+                    if ((std::max(damage - (PDefender->getMod(Mod::PHALANX) + PDefender->getMod(Mod::STONESKIN)), 0) > 0) &&
+                        (PDefender->getMod(Mod::SHIELD_MASTERY_TP)))
                     {
-                        absorb = 50;
-
-                        // Shield Mastery
-                        if ((std::max(damage - (PDefender->getMod(Mod::PHALANX) + PDefender->getMod(Mod::STONESKIN)), 0) > 0) &&
-                            (PDefender->getMod(Mod::SHIELD_MASTERY_TP)))
-                        {
-                            // If the player blocked with a shield and has shield mastery, add shield mastery TP bonus
-                            // unblocked damage (before block but as if affected by stoneskin/phalanx) must be greater than zero
-                            PDefender->addTP(PDefender->getMod(Mod::SHIELD_MASTERY_TP));
-                        }
-                    }
-                    else
-                    {
-                        absorb = 50;
-                    }
-
-                    // Reprisal
-                    if (damage > 0 && PDefender->StatusEffectContainer->HasStatusEffect(EFFECT_REPRISAL))
-                    {
-                        // Reflect a portion of the blocked damage back. This is calculated before Stoneskin, Phalanx, Sentinel or Invincible
-                        CStatusEffect* reprisalEffect = PDefender->StatusEffectContainer->GetStatusEffect(EFFECT_REPRISAL);
-
-                        if (reprisalEffect != nullptr)
-                        {
-                            float spikesBonus   = 1.f + (PDefender->getMod(Mod::REPRISAL_SPIKES_BONUS) / 100.f);
-                            int16 effectPower   = (int16)(reprisalEffect->GetPower() * spikesBonus);
-                            int32 blockedDamage = (damage * (100 - absorb)) / 100;
-                            int32 spikesDamage  = 0;
-
-                            if (PDefender->StatusEffectContainer->HasStatusEffect({ EFFECT_INVINCIBLE, EFFECT_SENTINEL }))
-                            {
-                                blockedDamage = (baseDamage * (100 - absorb)) / 100;
-                            }
-
-                            spikesDamage = blockedDamage * (effectPower / 100);
-
-                            // Set Reprisal spike damage
-                            PDefender->setModifier(Mod::SPIKES_DMG, spikesDamage);
-                        }
+                        // If the pet blocked with a shield and has shield mastery, add shield mastery TP bonus
+                        // unblocked damage (before block but as if affected by stoneskin/phalanx) must be greater than zero
+                        PDefender->addTP(PDefender->getMod(Mod::SHIELD_MASTERY_TP));
                     }
                 }
+                else if (PDefender->objtype == TYPE_TRUST)
+                {
+                    absorb = 50;
 
+                    // Shield Mastery
+                    if ((std::max(damage - (PDefender->getMod(Mod::PHALANX) + PDefender->getMod(Mod::STONESKIN)), 0) > 0) &&
+                        (PDefender->getMod(Mod::SHIELD_MASTERY_TP)))
+                    {
+                        // If the trust blocked with a shield and has shield mastery, add shield mastery TP bonus
+                        // unblocked damage (before block but as if affected by stoneskin/phalanx) must be greater than zero
+                        PDefender->addTP(PDefender->getMod(Mod::SHIELD_MASTERY_TP));
+                    }
+                }
+                else
+                {
+                    absorb = 50;
+                }
+
+                // Reprisal
+                if (damage > 0 && PDefender->StatusEffectContainer->HasStatusEffect(EFFECT_REPRISAL))
+                {
+                    // Reflect a portion of the blocked damage back. This is calculated before Stoneskin, Phalanx, Sentinel or Invincible
+                    CStatusEffect* reprisalEffect = PDefender->StatusEffectContainer->GetStatusEffect(EFFECT_REPRISAL);
+
+                    if (reprisalEffect != nullptr)
+                    {
+                        float spikesBonus   = 1.f + (PDefender->getMod(Mod::REPRISAL_SPIKES_BONUS) / 100.f);
+                        int16 effectPower   = (int16)(reprisalEffect->GetPower() * spikesBonus);
+                        int32 blockedDamage = (damage * (100 - absorb)) / 100;
+                        int32 spikesDamage  = 0;
+
+                        if (PDefender->StatusEffectContainer->HasStatusEffect({ EFFECT_INVINCIBLE, EFFECT_SENTINEL }))
+                        {
+                            blockedDamage = (baseDamage * (100.f - absorb)) / 100.f;
+                        }
+
+                        spikesDamage = blockedDamage * (effectPower / 100.f);
+
+                        // Set Reprisal spike damage
+                        PDefender->setModifier(Mod::SPIKES_DMG, spikesDamage);
+                    }
+                }
                 damage = (damage * absorb) / 100;
             }
         }
