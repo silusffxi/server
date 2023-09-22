@@ -28,11 +28,10 @@ end
 
 -- Add container handlers found for the added zones
 function InteractionGlobal.loadContainers(shouldReloadRequires)
-
     -- Convert from zero-index to one-index
     local zoneIds = {}
     for zoneId, _ in pairs(InteractionGlobal.zones) do
-       zoneIds[#zoneIds + 1] = zoneId
+        zoneIds[#zoneIds + 1] = zoneId
     end
 
     local interactionContainersPath = 'scripts/globals/interaction_containers'
@@ -46,6 +45,7 @@ function InteractionGlobal.loadContainers(shouldReloadRequires)
         containers[i] = utils.prequire(containerFiles[i])
         containers[i].filename = containerFiles[i]
     end
+
     InteractionGlobal.lookup:addContainers(containers, zoneIds)
 end
 
@@ -57,7 +57,7 @@ function InteractionGlobal.loadDefaultActions(shouldReloadRequires)
 end
 
 local function fileExists(path)
-    local f = io.open(path, "r")
+    local f = io.open(path, 'r')
     return f ~= nil and io.close(f)
 end
 
@@ -65,7 +65,7 @@ end
 function InteractionGlobal.loadDefaultActionsForZone(zoneId, shouldReloadRequires)
     local zoneName = InteractionGlobal.zones[zoneId]
     if not zoneName then
-        printf("Unable to load default actions for zone %d, since it hasn't been initialized.", zoneId)
+        printf('Unable to load default actions for zone %d, since it hasn\'t been initialized.', zoneId)
         return
     end
 
@@ -76,12 +76,12 @@ function InteractionGlobal.loadDefaultActionsForZone(zoneId, shouldReloadRequire
     end
 
     -- Only add default handlers if DefaultActions file is found in zone directory
-    if fileExists(defaultActionPath .. ".lua") then
+    if fileExists(defaultActionPath .. '.lua') then
         local ok, res = pcall(require, defaultActionPath)
         if ok then
             InteractionGlobal.lookup:addDefaultHandlers(zoneId, res)
         else
-            printf("Error while loading default actions for %s: %s", zoneName, res)
+            printf('Error while loading default actions for %s: %s', zoneName, res)
             return
         end
     end
@@ -123,12 +123,12 @@ function InteractionGlobal.onZoneOut(player, fallbackFn)
     return InteractionGlobal.lookup:onZoneOut(player, fallbackFn)
 end
 
-function InteractionGlobal.onRegionEnter(player, region, fallbackFn)
-    return InteractionGlobal.lookup:onRegionEnter(player, region, fallbackFn)
+function InteractionGlobal.onTriggerAreaEnter(player, triggerArea, fallbackFn)
+    return InteractionGlobal.lookup:onTriggerAreaEnter(player, triggerArea, fallbackFn)
 end
 
-function InteractionGlobal.onRegionLeave(player, region, fallbackFn)
-    return InteractionGlobal.lookup:onRegionLeave(player, region, fallbackFn)
+function InteractionGlobal.onTriggerAreaLeave(player, triggerArea, fallbackFn)
+    return InteractionGlobal.lookup:onTriggerAreaLeave(player, triggerArea, fallbackFn)
 end
 
 function InteractionGlobal.onEventFinish(player, csid, option, npc, fallbackFn)

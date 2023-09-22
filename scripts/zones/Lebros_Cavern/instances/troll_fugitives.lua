@@ -1,8 +1,7 @@
 -----------------------------------
 -- Assault: Troll Fugitives
 -----------------------------------
-require("scripts/globals/instance")
-local ID = require("scripts/zones/Lebros_Cavern/IDs")
+local ID = zones[xi.zone.LEBROS_CAVERN]
 -----------------------------------
 local instanceObject = {}
 
@@ -13,7 +12,6 @@ instanceObject.afterInstanceRegister = function(player)
 end
 
 instanceObject.onInstanceCreated = function(instance)
-
     for i, v in pairs(ID.mob[23]) do
         SpawnMob(v, instance)
     end
@@ -22,7 +20,6 @@ instanceObject.onInstanceCreated = function(instance)
     local box = GetNPCByID(ID.npc.ANCIENT_LOCKBOX, instance)
     rune:setPos(-376.272, -9.893, 89.189, 0)
     box:setPos(-384.097, -10, 84.954, 49)
-
 end
 
 instanceObject.onInstanceCreatedCallback = function(player, instance)
@@ -37,7 +34,6 @@ instanceObject.onInstanceTimeUpdate = function(instance, elapsed)
 end
 
 instanceObject.onInstanceFailure = function(instance)
-
     local chars = instance:getChars()
 
     for i, v in pairs(chars) do
@@ -47,15 +43,12 @@ instanceObject.onInstanceFailure = function(instance)
 end
 
 instanceObject.onInstanceProgressUpdate = function(instance, progress)
-
     if progress >= 15 then
         instance:complete()
     end
-
 end
 
 instanceObject.onInstanceComplete = function(instance)
-
     local chars = instance:getChars()
 
     for i, v in pairs(chars) do
@@ -66,13 +59,12 @@ instanceObject.onInstanceComplete = function(instance)
     local box = GetNPCByID(ID.npc.ANCIENT_LOCKBOX, instance)
     rune:setStatus(xi.status.NORMAL)
     box:setStatus(xi.status.NORMAL)
-
 end
 
-instanceObject.onEventUpdate = function(player, csid, option)
+instanceObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-instanceObject.onEventFinish = function(player, csid, option)
+instanceObject.onEventFinish = function(player, csid, option, npc)
 end
 
 return instanceObject

@@ -2,44 +2,51 @@
 -- func: changejob
 -- desc: Changes the players current job.
 -----------------------------------
+local commandObj = {}
 
-require("scripts/globals/status")
-
-cmdprops =
+commandObj.cmdprops =
 {
     permission = 1,
-    parameters = "si"
+    parameters = 'sii'
 }
 
-function error(player, msg)
+local function error(player, msg)
     player:PrintToPlayer(msg)
-    player:PrintToPlayer("!changejob <jobID> (level)")
+    player:PrintToPlayer('!changejob <jobID> (level) (master: 0/1)')
 end
 
-function onTrigger(player, jobId, level)
+commandObj.onTrigger = function(player, jobId, level, master)
     -- validate jobId
-    if (jobId == nil) then
-        error(player, "You must enter a job short-name, e.g. WAR, or its equivalent numeric ID.")
+    if jobId == nil then
+        error(player, 'You must enter a job short-name, e.g. WAR, or its equivalent numeric ID.')
         return
     end
+
     jobId = tonumber(jobId) or xi.job[string.upper(jobId)]
-    if (jobId == nil or jobId <= 0 or jobId >= xi.MAX_JOB_TYPE) then
-        error(player, "Invalid jobID.  Use job short name, e.g. WAR, or its equivalent numeric ID.")
+    if jobId == nil or jobId <= 0 or jobId >= xi.MAX_JOB_TYPE then
+        error(player, 'Invalid jobID.  Use job short name, e.g. WAR, or its equivalent numeric ID.')
         return
     end
 
     -- validate level
-    if (level ~= nil) then
-        if (level < 1 or level > 99) then
-            error(player, "Invalid level. Level must be between 1 and 99!")
+    if level ~= nil then
+        if level < 1 or level > 99 then
+            error(player, 'Invalid level. Level must be between 1 and 99!')
             return
         end
     end
 
     -- change job and (optionally) level
     player:changeJob(jobId)
-    if (level ~= nil) then
+    if level ~= nil then
         player:setLevel(level)
+    end
+
+    -- master the job if addition params passed
+    local masterJob = false
+    if master and master == 1 then
+        masterJob = true
+        player:masterJob()
     end
 
     -- invert xi.job table
@@ -49,5 +56,8 @@ function onTrigger(player, jobId, level)
     end
 
     -- output new job to player
-    player:PrintToPlayer(string.format("You are now a %s%i/%s%i.", jobNameByNum[player:getMainJob()], player:getMainLvl(), jobNameByNum[player:getSubJob()], player:getSubLvl()))
+    local masterStr = masterJob and ' (Mastered)' or ''
+    player:PrintToPlayer(string.format('You are now a %s%i/%s%i%s.', jobNameByNum[player:getMainJob()], player:getMainLvl(), jobNameByNum[player:getSubJob()], player:getSubLvl(), masterStr))
 end
+
+return commandObj

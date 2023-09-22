@@ -2,17 +2,12 @@
 -- Area: Beaucedine Glacier
 --   NM: Humbaba
 -----------------------------------
-require("scripts/globals/hunts")
-require("scripts/globals/status")
-require("scripts/globals/magic")
-require("scripts/globals/msg")
------------------------------------
 local entity = {}
 
 entity.onMobInitialize = function(mob)
     mob:setMobMod(xi.mobMod.AUTO_SPIKES, 1)
     mob:addStatusEffect(xi.effect.ICE_SPIKES, 45, 0, 0)
-    mob:getStatusEffect(xi.effect.ICE_SPIKES):setFlag(xi.effectFlag.DEATH)
+    mob:getStatusEffect(xi.effect.ICE_SPIKES):setEffectFlags(xi.effectFlag.DEATH)
 end
 
 entity.onMobSpawn = function(mob)
@@ -20,20 +15,20 @@ entity.onMobSpawn = function(mob)
 end
 
 entity.onSpikesDamage = function(mob, target, damage)
-    local INT_diff = mob:getStat(xi.mod.INT) - target:getStat(xi.mod.INT)
+    local intDiff = mob:getStat(xi.mod.INT) - target:getStat(xi.mod.INT)
 
-    if INT_diff > 20 then
-        INT_diff = 20 + (INT_diff - 20) * 0.5 -- INT above 20 is half as effective.
+    if intDiff > 20 then
+        intDiff = 20 + (intDiff - 20) * 0.5 -- INT above 20 is half as effective.
     end
 
-    local dmg = (damage + INT_diff) * 0.5 -- INT adjustment and base damage averaged together.
+    local dmg = (damage + intDiff) * 0.5 -- INT adjustment and base damage averaged together.
     local params = {}
     params.bonusmab = 0
     params.includemab = false
-    dmg = addBonusesAbility(mob, xi.magic.ele.ICE, target, dmg, params)
-    dmg = dmg * applyResistanceAddEffect(mob, target, xi.magic.ele.ICE, 0)
-    dmg = adjustForTarget(target, dmg, xi.magic.ele.ICE)
-    dmg = finalMagicNonSpellAdjustments(mob, target, xi.magic.ele.ICE, dmg)
+    dmg = addBonusesAbility(mob, xi.element.ICE, target, dmg, params)
+    dmg = dmg * applyResistanceAddEffect(mob, target, xi.element.ICE, 0)
+    dmg = adjustForTarget(target, dmg, xi.element.ICE)
+    dmg = finalMagicNonSpellAdjustments(mob, target, xi.element.ICE, dmg)
 
     if dmg < 0 then
         dmg = 0

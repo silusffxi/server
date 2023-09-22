@@ -13,16 +13,8 @@
 -- '!' South Block Code : !pos 335.5 0 -136 149
 -- '!' North Block Code : !pos 163 0 -18 149
 -----------------------------------
-require('scripts/globals/items')
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/npc_util')
-require('scripts/globals/settings')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
-local southernSandoriaID = require('scripts/zones/Southern_San_dOria/IDs')
-local northernSandoriaID = require('scripts/zones/Northern_San_dOria/IDs')
+local southernSandoriaID = zones[xi.zone.SOUTHERN_SAN_DORIA]
+local northernSandoriaID = zones[xi.zone.NORTHERN_SAN_DORIA]
 -----------------------------------
 
 local mission = Mission:new(xi.mission.log_id.SANDORIA, xi.mission.id.sandoria.INFILTRATE_DAVOI)
@@ -265,13 +257,31 @@ mission.sections =
                         local xPos = npc:getXPos()
                         local zPos = npc:getZPos()
 
-                        if xPos >= 292 and xPos <= 296 and zPos >= -30 and zPos <= -26 and not player:hasKeyItem(xi.ki.EAST_BLOCK_CODE) then
+                        if
+                            xPos >= 292 and
+                            xPos <= 296 and
+                            zPos >= -30 and
+                            zPos <= -26 and
+                            not player:hasKeyItem(xi.ki.EAST_BLOCK_CODE)
+                        then
                             player:setMissionStatus(player:getNation(), missionStatus + 1)
                             return mission:keyItem(xi.ki.EAST_BLOCK_CODE):setPriority(1000)
-                        elseif xPos >= 333 and xPos <= 337 and zPos >= -138 and zPos <= -134 and not player:hasKeyItem(xi.ki.SOUTH_BLOCK_CODE) then
+                        elseif
+                            xPos >= 333 and
+                            xPos <= 337 and
+                            zPos >= -138 and
+                            zPos <= -134 and
+                            not player:hasKeyItem(xi.ki.SOUTH_BLOCK_CODE)
+                        then
                             player:setMissionStatus(player:getNation(), missionStatus + 1)
                             return mission:keyItem(xi.ki.SOUTH_BLOCK_CODE):setPriority(1000)
-                        elseif xPos >= 161 and xPos <= 165 and zPos >= -20 and zPos <= -16 and not player:hasKeyItem(xi.ki.NORTH_BLOCK_CODE) then
+                        elseif
+                            xPos >= 161 and
+                            xPos <= 165 and
+                            zPos >= -20 and
+                            zPos <= -16 and
+                            not player:hasKeyItem(xi.ki.NORTH_BLOCK_CODE)
+                        then
                             player:setMissionStatus(player:getNation(), missionStatus + 1)
                             return mission:keyItem(xi.ki.NORTH_BLOCK_CODE):setPriority(1000)
                         end

@@ -19,9 +19,9 @@
 ===========================================================================
 */
 
-#include "../common/utils.h"
-#include "../common/logging.h"
-#include "../common/md52.h"
+#include "common/utils.h"
+#include "common/logging.h"
+#include "common/md52.h"
 
 #include <algorithm>
 #include <cctype>
@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <regex>
 #include <string>
 
 #ifdef _MSC_VER
@@ -76,8 +77,8 @@ int32 checksum(unsigned char* buf, uint32 buflen, char checkhash[16])
 /// @param count Number of bytes to convert
 bool bin2hex(char* output, unsigned char* input, size_t count)
 {
-    char   toHex[] = "0123456789abcdef";
-    size_t i;
+    char        toHex[] = "0123456789abcdef";
+    std::size_t i       = 0;
 
     for (i = 0; i < count; ++i)
     {
@@ -357,7 +358,7 @@ uint64 unpackBitsBE(uint8* target, int32 byteOffset, int32 bitOffset, uint8 leng
     bitmask >>= (64 - lengthInBit);
     bitmask <<= bitOffset;
 
-    uint64 retVal;
+    uint64 retVal = 0;
 
     if ((lengthInBit + bitOffset) <= 8)
     {
@@ -401,7 +402,7 @@ uint32 packBitsLE(uint8* target, uint64 value, int32 byteOffset, int32 bitOffset
     byteOffset += (bitOffset >> 3); // correct bitOffsets >= 8
     bitOffset %= 8;
 
-    uint8 bytesNeeded; // calculate how many bytes are needed
+    uint8 bytesNeeded = 0; // calculate how many bytes are needed
     if ((bitOffset + lengthInBit) <= 8)
     {
         bytesNeeded = 1;
@@ -441,8 +442,9 @@ uint32 packBitsLE(uint8* target, uint64 value, int32 byteOffset, int32 bitOffset
     }
 
     {
-        delete[] modifiedTarget;
+        destroy_arr(modifiedTarget);
     }
+
     return ((byteOffset << 3) + bitOffset + lengthInBit);
 }
 
@@ -456,7 +458,7 @@ uint64 unpackBitsLE(const uint8* target, int32 byteOffset, int32 bitOffset, uint
     byteOffset += (bitOffset >> 3);
     bitOffset %= 8;
 
-    uint8 bytesNeeded;
+    uint8 bytesNeeded = 0;
     if ((bitOffset + lengthInBit) <= 8)
     {
         bytesNeeded = 1;
@@ -479,7 +481,7 @@ uint64 unpackBitsLE(const uint8* target, int32 byteOffset, int32 bitOffset, uint
         return 0;
     }
 
-    uint64 retVal;
+    uint64 retVal = 0;
 
     uint8* modifiedTarget = new uint8[bytesNeeded];
 
@@ -499,18 +501,17 @@ uint64 unpackBitsLE(const uint8* target, int32 byteOffset, int32 bitOffset, uint
     }
 
     {
-        delete[] modifiedTarget;
+        destroy_arr(modifiedTarget);
     }
     return retVal;
 }
 
-void EncodeStringLinkshell(int8* signature, int8* target)
+void EncodeStringLinkshell(const std::string& signature, char* target)
 {
-    uint8 encodedSignature[LinkshellStringLength];
-    memset(&encodedSignature, 0, sizeof encodedSignature);
-    uint8 chars    = 0;
-    uint8 leftover = 0;
-    auto  length   = std::min<size_t>(20u, strlen((const char*)signature));
+    uint8 encodedSignature[LinkshellStringLength] = {};
+    uint8 chars                                   = 0;
+    uint8 leftover                                = 0;
+    auto  length                                  = std::min<size_t>(20u, signature.size());
 
     for (std::size_t currChar = 0; currChar < length; ++currChar)
     {
@@ -535,19 +536,18 @@ void EncodeStringLinkshell(int8* signature, int8* target)
     leftover = (leftover == 8 || leftover == 2 ? 6 : leftover);
     packBitsLE(encodedSignature, 0xFF, 6 * chars, leftover);
 
-    strncpy((char*)target, (const char*)encodedSignature, LinkshellStringLength);
+    strncpy(target, reinterpret_cast<const char*>(encodedSignature), LinkshellStringLength);
 }
 
-void DecodeStringLinkshell(int8* signature, int8* target)
+void DecodeStringLinkshell(const std::string& signature, char* target)
 {
-    uint8 decodedSignature[21];
-    memset(&decodedSignature, 0, sizeof decodedSignature);
-    auto length = std::min<size_t>(20u, (strlen((const char*)signature) * 8) / 6);
+    char decodedSignature[21] = {};
+    auto length               = std::min<size_t>(20u, (signature.size() * 8) / 6);
 
     for (std::size_t currChar = 0; currChar < length; ++currChar)
     {
         uint8 tempChar = '\0';
-        tempChar       = (uint8)unpackBitsLE((uint8*)signature, static_cast<uint32>(currChar * 6), 6);
+        tempChar       = (uint8)unpackBitsLE((uint8*)signature.c_str(), static_cast<uint32>(currChar * 6), 6);
         if (tempChar >= 1 && tempChar <= 26)
         {
             tempChar = 'a' - 1 + tempChar;
@@ -577,15 +577,13 @@ void DecodeStringLinkshell(int8* signature, int8* target)
         }
     }
 
-    strncpy((char*)target, (const char*)decodedSignature, LinkshellStringLength);
+    strncpy(target, decodedSignature, LinkshellStringLength);
 }
 
-int8* EncodeStringSignature(int8* signature, int8* target)
+std::string EncodeStringSignature(const std::string& signature, char* target)
 {
-    uint8 encodedSignature[SignatureStringLength];
-    memset(&encodedSignature, 0, sizeof encodedSignature);
-    uint8 chars  = 0;
-    auto  length = std::min<size_t>(15u, strlen((const char*)signature));
+    uint8 encodedSignature[SignatureStringLength] = {};
+    auto  length                                  = std::min<size_t>(15u, signature.size());
 
     for (std::size_t currChar = 0; currChar < length; ++currChar)
     {
@@ -603,18 +601,17 @@ int8* EncodeStringSignature(int8* signature, int8* target)
             tempChar = signature[currChar] - 'a' + 37;
         }
         packBitsLE(encodedSignature, tempChar, static_cast<uint32>(6 * currChar), 6);
-        chars++;
     }
 
-    return (int8*)strncpy((char*)target, (const char*)encodedSignature, SignatureStringLength);
+    return strncpy(target, reinterpret_cast<const char*>(encodedSignature), SignatureStringLength);
 }
 
-void DecodeStringSignature(int8* signature, int8* target)
+void DecodeStringSignature(const std::string& signature, char* target)
 {
-    uint8 decodedSignature[PacketNameLength + 1] = { 0 };
+    char decodedSignature[PacketNameLength + 1] = {};
     for (uint8 currChar = 0; currChar < PacketNameLength; ++currChar)
     {
-        uint8 tempChar = (uint8)unpackBitsLE((uint8*)signature, currChar * 6, 6);
+        char tempChar = unpackBitsLE((uint8*)signature.c_str(), currChar * 6, 6);
         if (tempChar >= 1 && tempChar <= 10)
         {
             tempChar = '0' - 1 + tempChar;
@@ -630,7 +627,7 @@ void DecodeStringSignature(int8* signature, int8* target)
 
         decodedSignature[currChar] = tempChar;
     }
-    strncpy((char*)target, (const char*)decodedSignature, SignatureStringLength);
+    strncpy(target, decodedSignature, SignatureStringLength);
 }
 
 // Take a regular string of 8-bit wide chars and packs it down into an
@@ -697,8 +694,8 @@ std::string UnpackSoultrapperName(uint8 input[])
     uint8       remainder = 0;
     uint8       shift     = 1;
     uint8       maxSize   = 13; // capped at 13 based on examples like GoblinBountyH
-    char        indexChar;
-    std::string output = "";
+    char        indexChar = 0;
+    std::string output    = "";
 
     // Unpack and shift 7-bit to 8-bit
     for (uint8 i = 0; i <= maxSize; ++i)
@@ -715,7 +712,7 @@ std::string UnpackSoultrapperName(uint8 input[])
         indexChar = (char)(tempLeft | remainder);
         if (indexChar >= '0' && indexChar <= 'z')
         {
-            output = output + (char)(tempLeft | remainder);
+            output += (char)(tempLeft | remainder);
         }
 
         remainder = tempRight << (7 - shift);
@@ -728,7 +725,7 @@ std::string UnpackSoultrapperName(uint8 input[])
         {
             if (char(remainder) >= '0' && char(remainder) <= 'z')
             {
-                output = output + char(remainder);
+                output += char(remainder);
             }
             remainder = 0;
             shift     = 1;
@@ -761,19 +758,20 @@ std::string escape(std::string const& s)
 std::vector<std::string> split(std::string const& s, std::string const& delimiter)
 {
     std::size_t pos_start = 0;
-    std::size_t pos_end, delim_len = delimiter.length();
-    std::string token;
+    std::size_t pos_end   = 0;
+    std::size_t delim_len = delimiter.length();
+    std::string token     = "";
 
-    std::vector<std::string> res;
+    std::vector<std::string> res{};
 
     while ((pos_end = s.find(delimiter, pos_start)) != std::string::npos)
     {
         token     = s.substr(pos_start, pos_end - pos_start);
         pos_start = pos_end + delim_len;
-        res.push_back(token);
+        res.emplace_back(token);
     }
 
-    res.push_back(s.substr(pos_start));
+    res.emplace_back(s.substr(pos_start));
     return res;
 }
 
@@ -818,6 +816,81 @@ std::string trim(std::string const& str, std::string const& whitespace)
     return str.substr(strBegin, strRange);
 }
 
+// Returns true if the given str matches the given pattern.
+// Wildcards can be used in the pattern to match "any character"
+// e.g: %anto% matches Shantotto or Canto-Ranto
+// Modification of https://www.geeksforgeeks.org/wildcard-character-matching/
+bool matches(std::string const& target, std::string const& pattern, std::string const& wildcard)
+{
+    auto matchesRecur = [&](const char* target, const char* pattern, const char* wildcard, auto&& matchesRecur)
+    {
+        // This should never happen as we call this lambda from std::strings converted to const char*,
+        // but good to be safe.
+        if (pattern == nullptr || target == nullptr)
+        {
+            return false;
+        }
+
+        // If we reach at the end of both strings, we are done
+        if (*pattern == '\0' && *target == '\0')
+        {
+            return true;
+        }
+
+        // Make sure to eliminate consecutive '*'
+        if (*pattern == *wildcard)
+        {
+            while (*(pattern + 1) == '*')
+            {
+                pattern++;
+            }
+        }
+
+        // Make sure that the characters after '*' are present
+        // in target string.
+        if (*pattern == *wildcard && *(pattern + 1) != '\0' && *target == '\0')
+        {
+            return false;
+        }
+
+        // If the current characters of both strings match
+        if (*pattern == *target)
+        {
+            return matchesRecur(target + 1, pattern + 1, wildcard, matchesRecur);
+        }
+
+        // If there is *, then there are two possibilities
+        // a) We consider current character of target string
+        // b) We ignore current character of target string.
+        if (*pattern == *wildcard)
+        {
+            return matchesRecur(target + 1, pattern, wildcard, matchesRecur) || matchesRecur(target, pattern + 1, wildcard, matchesRecur);
+        }
+
+        return false;
+    };
+
+    return matchesRecur(target.c_str(), pattern.c_str(), wildcard.c_str(), matchesRecur);
+}
+
+bool starts_with(std::string const& target, std::string const& pattern)
+{
+    return target.rfind(pattern, 0) != std::string::npos;
+}
+
+std::string replace(std::string const& target, std::string const& search, std::string const& replace)
+{
+    try
+    {
+        return std::regex_replace(target, std::regex(search), replace);
+    }
+    catch (std::exception& ex)
+    {
+        ShowError(ex.what());
+    }
+    return "";
+}
+
 look_t stringToLook(std::string str)
 {
     look_t out{};
@@ -838,7 +911,7 @@ look_t stringToLook(std::string str)
     // A 16-bit number is represented by *4* string characters
     // Iterate in groups of 4
     std::vector<uint16> hex(str.size() / 4, 0);
-    uint16              value;
+    uint16              value = 0;
     for (std::size_t i = 0; i < str.size() / 4; i++)
     {
         auto begin = str.data() + (i * 4);
@@ -899,7 +972,7 @@ bool definitelyLessThan(float a, float b)
 
 void crash()
 {
-    int* volatile ptr = 0;
+    int* volatile ptr = nullptr;
     // cppcheck-suppress nullPointer
     *ptr = 0xDEAD;
 }

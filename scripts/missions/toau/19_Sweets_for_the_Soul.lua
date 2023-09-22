@@ -4,14 +4,6 @@
 -----------------------------------
 -- !addmission 4 18
 -----------------------------------
-require("scripts/globals/besieged")
-require('scripts/globals/items')
-require('scripts/globals/missions')
-require('scripts/globals/npc_util')
-require('scripts/globals/keyitems')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.TOAU, xi.mission.id.toau.SWEETS_FOR_THE_SOUL)
 
@@ -30,9 +22,9 @@ mission.sections =
 
         [xi.zone.AHT_URHGAN_WHITEGATE] =
         {
-            onRegionEnter =
+            onTriggerAreaEnter =
             {
-                [5] = function(player, region)
+                [5] = function(player, triggerArea)
                     return mission:progressEvent(3092)
                 end,
             },

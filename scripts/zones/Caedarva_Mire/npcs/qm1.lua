@@ -3,13 +3,15 @@
 --  NPC: ??? (Spawn Verdelet(ZNM T2))
 -- !pos 417 -19 -69 79
 -----------------------------------
-local ID = require("scripts/zones/Caedarva_Mire/IDs")
-require("scripts/globals/npc_util")
+local ID = zones[xi.zone.CAEDARVA_MIRE]
 -----------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
-    if npcUtil.tradeHas(trade, 2599) and npcUtil.popFromQM(player, npc, ID.mob.VERDELET) then -- Trade Mint Drop
+    if
+        npcUtil.tradeHas(trade, xi.item.MINT_DROP) and
+        npcUtil.popFromQM(player, npc, ID.mob.VERDELET)
+    then
         player:confirmTrade()
         player:messageSpecial(ID.text.DRAWS_NEAR)
     end
@@ -19,10 +21,10 @@ entity.onTrigger = function(player, npc)
     player:messageSpecial(ID.text.SICKLY_SWEET)
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

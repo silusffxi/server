@@ -2,11 +2,10 @@
 -- Area: Temple of Uggalepih
 --   NM: Crimson-toothed Pawberry
 -----------------------------------
-require("scripts/globals/hunts")
 mixins =
 {
-    require("scripts/mixins/families/tonberry"),
-    require("scripts/mixins/job_special")
+    require('scripts/mixins/families/tonberry'),
+    require('scripts/mixins/job_special')
 }
 -----------------------------------
 local entity = {}
@@ -17,17 +16,17 @@ entity.onMobSpawn = function(mob)
     local avatarMob = GetMobByID(avatarID)
     if avatarMob then
         -- Remove the original listener set from mixins/families/avatar
-        avatarMob:removeListener("AVATAR_SPAWN")
+        avatarMob:removeListener('AVATAR_SPAWN')
 
         -- Replace with a similar listener which is hardcoded to use Carbuncle
-        avatarMob:addListener("SPAWN", "AVATAR_SPAWN", function(mobArg)
+        avatarMob:addListener('SPAWN', 'AVATAR_SPAWN', function(mobArg)
             local modelId = 791 -- Carbuncle
             mobArg:setModelId(modelId)
             mobArg:hideName(false)
             mobArg:setUntargetable(true)
             mobArg:setUnkillable(true)
-            mobArg:SetAutoAttackEnabled(false)
-            mobArg:SetMagicCastingEnabled(false)
+            mobArg:setAutoAttackEnabled(false)
+            mobArg:setMagicCastingEnabled(false)
 
             -- If something goes wrong, the avatar will clean itself up in 5s
             mobArg:timer(5000, function(mobTimerArg)

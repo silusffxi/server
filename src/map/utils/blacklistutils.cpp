@@ -20,11 +20,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 */
 
 #include "blacklistutils.h"
-#include "../entities/charentity.h"
-#include "../map.h"
 #include "common/utils.h"
+#include "entities/charentity.h"
+#include "map.h"
 
-#include "../packets/stop_downloading.h"
+#include "packets/stop_downloading.h"
 
 namespace blacklistutils
 {
@@ -75,7 +75,7 @@ namespace blacklistutils
         while (sql->NextRow() == SQL_SUCCESS)
         {
             uint32      accid_target = sql->GetUIntData(0);
-            std::string targetName   = (const char*)(sql->GetData(1));
+            std::string targetName   = sql->GetStringData(1);
 
             blacklist.emplace_back(accid_target, targetName);
             currentCount++;

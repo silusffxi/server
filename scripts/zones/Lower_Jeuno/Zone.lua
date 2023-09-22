@@ -1,36 +1,29 @@
 -----------------------------------
 -- Zone: Lower_Jeuno (245)
 -----------------------------------
-local ID = require('scripts/zones/Lower_Jeuno/IDs')
+local ID = zones[xi.zone.LOWER_JEUNO]
 local lowerJeunoGlobal = require('scripts/zones/Lower_Jeuno/globals')
-require('scripts/globals/conquest')
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/pathfind')
-require('scripts/globals/settings')
-require('scripts/globals/chocobo')
-require('scripts/globals/status')
 -----------------------------------
 local zoneObject = {}
 
 zoneObject.onInitialize = function(zone)
-    zone:registerRegion(1, 23, 0, -43, 44, 7, -39) -- Inside Tenshodo HQ. TODO: Find out if this is used other than in ZM 17 (not anymore). Remove if not.
+    zone:registerTriggerArea(1, 23, 0, -43, 44, 7, -39) -- Inside Tenshodo HQ. TODO: Find out if this is used other than in ZM 17 (not anymore). Remove if not.
     xi.chocobo.initZone(zone)
 end
 
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    local month = tonumber(os.date("%m"))
-    local day = tonumber(os.date("%d"))
+    local month = tonumber(os.date('%m'))
+    local day = tonumber(os.date('%d'))
 
     -- Retail start/end dates vary, I am going with Dec 5th through Jan 5th.
     if
         (month == 12 and day >= 5) or
         (month == 1 and day <= 5)
     then
-        player:ChangeMusic(0, 239)
-        player:ChangeMusic(1, 239)
+        player:changeMusic(0, 239)
+        player:changeMusic(1, 239)
         -- No need for an 'else' to change it back outside these dates as a re-zone will handle that.
     end
 
@@ -46,16 +39,16 @@ zoneObject.onZoneIn = function(player, prevZone)
     return cs
 end
 
-zoneObject.onConquestUpdate = function(zone, updatetype)
-    xi.conq.onConquestUpdate(zone, updatetype)
+zoneObject.onConquestUpdate = function(zone, updatetype, influence, owner, ranking, isConquestAlliance)
+    xi.conq.onConquestUpdate(zone, updatetype, influence, owner, ranking, isConquestAlliance)
 end
 
-zoneObject.onRegionEnter = function(player, region)
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
 end
 
 zoneObject.onGameHour = function(zone)
     local vanadielHour = VanadielHour()
-    local playerOnQuestId = GetServerVariable("[JEUNO]CommService")
+    local playerOnQuestId = GetServerVariable('[JEUNO]CommService')
 
     -- Community Service Quest
     -- 7AM: it's daytime. turn off all the lights
@@ -68,7 +61,7 @@ zoneObject.onGameHour = function(zone)
     -- 8PM: make quest available
     -- notify anyone in zone with membership card that zauko is recruiting
     elseif vanadielHour == 18 then
-        SetServerVariable("[JEUNO]CommService", 0)
+        SetServerVariable('[JEUNO]CommService', 0)
         local players = zone:getPlayers()
         for name, player in pairs(players) do
             if player:hasKeyItem(xi.ki.LAMP_LIGHTERS_MEMBERSHIP_CARD) then
@@ -78,7 +71,7 @@ zoneObject.onGameHour = function(zone)
 
     -- 9PM: notify the person on the quest that they can begin lighting lamps
     elseif vanadielHour == 21 then
-        local playerOnQuest = GetPlayerByID(GetServerVariable("[JEUNO]CommService"))
+        local playerOnQuest = GetPlayerByID(GetServerVariable('[JEUNO]CommService'))
         if playerOnQuest then
             playerOnQuest:startEvent(114)
         end
@@ -95,14 +88,13 @@ zoneObject.onGameHour = function(zone)
             npc:setPos(xi.path.first(lowerJeunoGlobal.lampPath))
             npc:pathThrough(lowerJeunoGlobal.lampPath, bit.bor(xi.path.flag.PATROL, xi.path.flag.WALLHACK))
         end
-
     end
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
 end
 
 return zoneObject

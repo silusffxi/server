@@ -5,12 +5,6 @@
 -- Zon-Fobun : !pos -241.293 -3 63.406 235
 -- The Mute  : !pos -166.230 -1 -73.685 147
 -----------------------------------
-require('scripts/globals/items')
-require('scripts/globals/keyitems')
-require('scripts/globals/quests')
-require('scripts/globals/zone')
-require('scripts/globals/interaction/quest')
------------------------------------
 
 local quest = Quest:new(xi.quest.log_id.BASTOK, xi.quest.id.bastok.THE_CURSE_COLLECTOR)
 
@@ -18,17 +12,17 @@ quest.reward =
 {
     fame     = 30,
     fameArea = xi.quest.fame_area.BASTOK,
-    item     = xi.items.POISON_CESTI,
+    item     = xi.item.POISON_CESTI,
 }
 
-local handleAfflictorRegion = function(player, region)
-    local regionId     = region:GetRegionID()
-    local yPos         = player:getYPos()
-    local requiredYPos = nil
+local handleAfflictorTriggerArea = function(player, triggerArea)
+    local triggerAreaId = triggerArea:GetTriggerAreaID()
+    local yPos          = player:getYPos()
+    local requiredYPos  = nil
 
-    if regionId == 4 then
+    if triggerAreaId == 4 then
         requiredYPos = 35
-    elseif regionId >= 3 then
+    elseif triggerAreaId >= 3 then
         requiredYPos = 20
     end
 
@@ -106,14 +100,14 @@ quest.sections =
                 end,
             },
 
-            onRegionEnter =
+            onTriggerAreaEnter =
             {
-                [1] = handleAfflictorRegion,
-                [2] = handleAfflictorRegion,
-                [3] = handleAfflictorRegion,
-                [4] = handleAfflictorRegion,
-                [5] = handleAfflictorRegion,
-                [6] = handleAfflictorRegion,
+                [1] = handleAfflictorTriggerArea,
+                [2] = handleAfflictorTriggerArea,
+                [3] = handleAfflictorTriggerArea,
+                [4] = handleAfflictorTriggerArea,
+                [5] = handleAfflictorTriggerArea,
+                [6] = handleAfflictorTriggerArea,
             },
         },
     },

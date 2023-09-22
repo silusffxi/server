@@ -3,9 +3,7 @@
 --  NPC: Orechiniel
 -- Type: Leathercraft Adv. Synthesis Image Support
 -----------------------------------
-require("scripts/globals/status")
-require("scripts/globals/crafting")
-local ID = require("scripts/zones/Southern_San_dOria/IDs")
+local ID = zones[xi.zone.SOUTHERN_SAN_DORIA]
 -----------------------------------
 local entity = {}
 
@@ -13,12 +11,11 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-    local guildMember = xi.crafting.isGuildMember(player, 7)
     local skillLevel = player:getSkillLevel(xi.skill.LEATHERCRAFT)
     local cost = xi.crafting.getAdvImageSupportCost(player, xi.skill.LEATHERCRAFT)
 
-    if guildMember == 1 then
-        if player:hasStatusEffect(xi.effect.LEATHERCRAFT_IMAGERY) == false then
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.LEATHERCRAFT) then
+        if not player:hasStatusEffect(xi.effect.LEATHERCRAFT_IMAGERY) then
             player:startEvent(650, cost, skillLevel, 0, 239, player:getGil(), 0, 0, 0)
         else
             player:startEvent(650, cost, skillLevel, 0, 239, player:getGil(), 28727, 0, 0)
@@ -28,10 +25,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     local cost = xi.crafting.getAdvImageSupportCost(player, xi.skill.LEATHERCRAFT)
 
     if csid == 650 and option == 1 then

@@ -1,16 +1,11 @@
 -----------------------------------
 -- Functions for Conquest system
 -----------------------------------
-require("scripts/globals/extravaganza")
-require("scripts/globals/garrison")
-require("scripts/globals/items")
-require("scripts/globals/keyitems")
-require("scripts/globals/teleports")
-require("scripts/globals/missions")
-require("scripts/globals/npc_util")
-require("scripts/globals/settings")
-require("scripts/globals/status")
-require("scripts/globals/zone")
+require('scripts/globals/extravaganza')
+require('scripts/globals/garrison')
+require('scripts/globals/teleports')
+require('scripts/globals/missions')
+require('scripts/globals/npc_util')
 -----------------------------------
 xi = xi or {}
 xi.conquest = xi.conquest or {}
@@ -62,29 +57,30 @@ end
 
 local outposts =
 {
-    [xi.region.RONFAURE]        = { zone = 100, ki = xi.ki.RONFAURE_SUPPLIES,              cp = 10, lvl = 10, fee = 100 },
-    [xi.region.ZULKHEIM]        = { zone = 103, ki = xi.ki.ZULKHEIM_SUPPLIES,              cp = 30, lvl = 10, fee = 100 },
-    [xi.region.NORVALLEN]       = { zone = 104, ki = xi.ki.NORVALLEN_SUPPLIES,             cp = 40, lvl = 15, fee = 150 },
-    [xi.region.GUSTABERG]       = { zone = 106, ki = xi.ki.GUSTABERG_SUPPLIES,             cp = 10, lvl = 10, fee = 100 },
-    [xi.region.DERFLAND]        = { zone = 109, ki = xi.ki.DERFLAND_SUPPLIES,              cp = 40, lvl = 15, fee = 150 },
-    [xi.region.SARUTABARUTA]    = { zone = 115, ki = xi.ki.SARUTABARUTA_SUPPLIES,          cp = 10, lvl = 10, fee = 100 },
-    [xi.region.KOLSHUSHU]       = { zone = 118, ki = xi.ki.KOLSHUSHU_SUPPLIES,             cp = 40, lvl = 10, fee = 100 },
-    [xi.region.ARAGONEU]        = { zone = 119, ki = xi.ki.ARAGONEU_SUPPLIES,              cp = 40, lvl = 15, fee = 150 },
-    [xi.region.FAUREGANDI]      = { zone = 111, ki = xi.ki.FAUREGANDI_SUPPLIES,            cp = 70, lvl = 35, fee = 350 },
-    [xi.region.VALDEAUNIA]      = { zone = 112, ki = xi.ki.VALDEAUNIA_SUPPLIES,            cp = 50, lvl = 40, fee = 400 },
-    [xi.region.QUFIMISLAND]     = { zone = 126, ki = xi.ki.QUFIM_SUPPLIES,                 cp = 60, lvl = 15, fee = 150 },
-    [xi.region.LITELOR]         = { zone = 121, ki = xi.ki.LITELOR_SUPPLIES,               cp = 40, lvl = 25, fee = 250 },
-    [xi.region.KUZOTZ]          = { zone = 114, ki = xi.ki.KUZOTZ_SUPPLIES,                cp = 70, lvl = 30, fee = 300 },
-    [xi.region.VOLLBOW]         = { zone = 113, ki = xi.ki.VOLLBOW_SUPPLIES,               cp = 70, lvl = 50, fee = 500 },
-    [xi.region.ELSHIMOLOWLANDS] = { zone = 123, ki = xi.ki.ELSHIMO_LOWLANDS_SUPPLIES,      cp = 70, lvl = 25, fee = 250 },
-    [xi.region.ELSHIMOUPLANDS]  = { zone = 124, ki = xi.ki.ELSHIMO_UPLANDS_SUPPLIES,       cp = 70, lvl = 35, fee = 350 },
-    [xi.region.TULIA]           = { zone = 130,                                            cp = 0,  lvl = 70, fee = 500 },
-    [xi.region.MOVALPOLOS]      = { zone =  11,                                            cp = 40, lvl = 25, fee = 250 },
-    [xi.region.TAVNAZIANARCH]   = { zone =  24, ki = xi.ki.TAVNAZIAN_ARCHIPELAGO_SUPPLIES, cp = 70, lvl = 30, fee = 300 },
+    [xi.region.RONFAURE]        = { zone = xi.zone.WEST_RONFAURE,          ki = xi.ki.RONFAURE_SUPPLIES,              cp = 10, lvl = 10, fee = 100 },
+    [xi.region.ZULKHEIM]        = { zone = xi.zone.VALKURM_DUNES,          ki = xi.ki.ZULKHEIM_SUPPLIES,              cp = 30, lvl = 10, fee = 100 },
+    [xi.region.NORVALLEN]       = { zone = xi.zone.JUGNER_FOREST,          ki = xi.ki.NORVALLEN_SUPPLIES,             cp = 40, lvl = 15, fee = 150 },
+    [xi.region.GUSTABERG]       = { zone = xi.zone.NORTH_GUSTABERG,        ki = xi.ki.GUSTABERG_SUPPLIES,             cp = 10, lvl = 10, fee = 100 },
+    [xi.region.DERFLAND]        = { zone = xi.zone.PASHHOW_MARSHLANDS,     ki = xi.ki.DERFLAND_SUPPLIES,              cp = 40, lvl = 15, fee = 150 },
+    [xi.region.SARUTABARUTA]    = { zone = xi.zone.WEST_SARUTABARUTA,      ki = xi.ki.SARUTABARUTA_SUPPLIES,          cp = 10, lvl = 10, fee = 100 },
+    [xi.region.KOLSHUSHU]       = { zone = xi.zone.BUBURIMU_PENINSULA,     ki = xi.ki.KOLSHUSHU_SUPPLIES,             cp = 40, lvl = 10, fee = 100 },
+    [xi.region.ARAGONEU]        = { zone = xi.zone.MERIPHATAUD_MOUNTAINS,  ki = xi.ki.ARAGONEU_SUPPLIES,              cp = 40, lvl = 15, fee = 150 },
+    [xi.region.FAUREGANDI]      = { zone = xi.zone.BEAUCEDINE_GLACIER,     ki = xi.ki.FAUREGANDI_SUPPLIES,            cp = 70, lvl = 35, fee = 350 },
+    [xi.region.VALDEAUNIA]      = { zone = xi.zone.XARCABARD,              ki = xi.ki.VALDEAUNIA_SUPPLIES,            cp = 50, lvl = 40, fee = 400 },
+    [xi.region.QUFIMISLAND]     = { zone = xi.zone.QUFIM_ISLAND,           ki = xi.ki.QUFIM_SUPPLIES,                 cp = 60, lvl = 15, fee = 150 },
+    [xi.region.LITELOR]         = { zone = xi.zone.THE_SANCTUARY_OF_ZITAH, ki = xi.ki.LITELOR_SUPPLIES,               cp = 40, lvl = 25, fee = 250 },
+    [xi.region.KUZOTZ]          = { zone = xi.zone.EASTERN_ALTEPA_DESERT,  ki = xi.ki.KUZOTZ_SUPPLIES,                cp = 70, lvl = 30, fee = 300 },
+    [xi.region.VOLLBOW]         = { zone = xi.zone.CAPE_TERIGGAN,          ki = xi.ki.VOLLBOW_SUPPLIES,               cp = 70, lvl = 50, fee = 500 },
+    [xi.region.ELSHIMOLOWLANDS] = { zone = xi.zone.YUHTUNGA_JUNGLE,        ki = xi.ki.ELSHIMO_LOWLANDS_SUPPLIES,      cp = 70, lvl = 25, fee = 250 },
+    [xi.region.ELSHIMOUPLANDS]  = { zone = xi.zone.YHOATOR_JUNGLE,         ki = xi.ki.ELSHIMO_UPLANDS_SUPPLIES,       cp = 70, lvl = 35, fee = 350 },
+    [xi.region.TULIA]           = { zone = xi.zone.RUAUN_GARDENS,                                                     cp = 0,  lvl = 70, fee = 500 },
+    [xi.region.MOVALPOLOS]      = { zone = xi.zone.OLDTON_MOVALPOLOS,                                                 cp = 40, lvl = 25, fee = 250 },
+    [xi.region.TAVNAZIANARCH]   = { zone = xi.zone.LUFAISE_MEADOWS,        ki = xi.ki.TAVNAZIAN_ARCHIPELAGO_SUPPLIES, cp = 70, lvl = 30, fee = 300 },
 }
 
 local function hasOutpost(player, region)
     local hasOP = player:hasTeleport(player:getNation(), region + 5)
+
     if not hasOP then
         if xi.settings.main.UNLOCK_OUTPOST_WARPS == 2 then
             hasOP = true
@@ -92,15 +88,20 @@ local function hasOutpost(player, region)
             hasOP = region <= xi.region.ELSHIMOUPLANDS
         end
     end
+
     return hasOP
 end
 
 local function setHomepointFee(player, guardNation)
     local pNation = player:getNation()
-    local fee = 0
+    local fee     = 0
 
-    if pNation ~= guardNation and not xi.conquest.areAllies(pNation, guardNation) then
+    if
+        pNation ~= guardNation and
+        not xi.conquest.areAllies(pNation, guardNation)
+    then
         local rank = player:getRank(player:getNation())
+
         if rank <= 5 then
             fee = 100 * math.pow(2, rank - 1)
         else
@@ -113,6 +114,7 @@ end
 
 local function getRegionsMask(nation)
     local mask = 0
+
     for region = xi.region.RONFAURE, xi.region.TAVNAZIANARCH do
         if GetRegionOwner(region) == nation then
             mask = bit.bor(mask, bit.lshift(1, region + 5)) -- Region bits start at 5th bit
@@ -130,6 +132,7 @@ local function getAllowedTeleports(player, nation)
     elseif xi.settings.main.UNLOCK_OUTPOST_WARPS == 1 then
         return 0x3FE0001F -- Allow all outposts except for Tulia and Tavnazia
     end
+
     for region = xi.region.RONFAURE, xi.region.TAVNAZIANARCH do
         if not xi.conquest.canTeleportToOutpost(player, region) then
             allowedTeleports = bit.bor(allowedTeleports, bit.lshift(1, region + 5)) -- Region bits start at 5th bit
@@ -147,7 +150,7 @@ end
 local function suppliesAvailableBitmask(player, nation)
     local mask = 0x7F00001F
 
-    if player:getCharVar("supplyQuest_started") == vanaDay() then
+    if player:getCharVar('supplyQuest_started') == VanadielUniqueDay() then
         mask = 0xFFFFFFFF -- Need to wait 1 vanadiel day
     end
 
@@ -160,7 +163,15 @@ local function suppliesAvailableBitmask(player, nation)
 
     if mask ~= -1 and mask ~= 0xFFFFFFFF then
         for i = 0, 18 do
-            if GetRegionOwner(i) ~= nation or i == 16 or i == 17 or (i == 18 and not player:hasCompletedMission(xi.mission.log_id.COP, xi.mission.id.cop.DARKNESS_NAMED)) then
+            if
+                GetRegionOwner(i) ~= nation or
+                i == 16 or
+                i == 17 or
+                (
+                    i == 18 and
+                    not player:hasCompletedMission(xi.mission.log_id.COP, xi.mission.id.cop.DARKNESS_NAMED)
+                )
+            then
                 mask = mask + 2^(i + 5)
             end
         end
@@ -170,10 +181,10 @@ local function suppliesAvailableBitmask(player, nation)
 end
 
 local function areSuppliesRotten(player, npc, guardType)
-    local fresh   = player:getCharVar("supplyQuest_fresh")
-    local region  = player:getCharVar("supplyQuest_region")
-    local rotten  = false
-    local text    = zones[player:getZoneID()].text
+    local fresh  = player:getCharVar('supplyQuest_fresh')
+    local region = player:getCharVar('supplyQuest_region')
+    local rotten = false
+    local text   = zones[player:getZoneID()].text
 
     if region > 0 and fresh <= os.time() then
         rotten = true
@@ -181,17 +192,18 @@ local function areSuppliesRotten(player, npc, guardType)
 
     if rotten then
         if guardType <= xi.conquest.guard.FOREIGN then
-            player:showText(npc, text.CONQUEST + 40) -- "We will dispose of those unusable supplies."
+            player:showText(npc, text.CONQUEST + 40) -- 'We will dispose of those unusable supplies.'
         else
-            player:showText(npc, text.CONQUEST - 1) -- "Hmm... These supplies you have brought us are too old to be of any use."
+            player:showText(npc, text.CONQUEST - 1) -- 'Hmm... These supplies you have brought us are too old to be of any use.'
         end
+
         local ki = outposts[region].ki
 
         player:delKeyItem(ki)
         player:messageSpecial(text.KEYITEM_LOST, ki)
-        player:setCharVar("supplyQuest_started", 0)
-        player:setCharVar("supplyQuest_region", 0)
-        player:setCharVar("supplyQuest_fresh", 0)
+        player:setCharVar('supplyQuest_started', 0)
+        player:setCharVar('supplyQuest_region', 0)
+        player:setCharVar('supplyQuest_fresh', 0)
     end
 
     return rotten
@@ -199,11 +211,11 @@ end
 
 local function canDeliverSupplies(player, guardNation, guardEvent, guardRegion)
     local delivered = false
+    local region    = player:getCharVar('supplyQuest_region')
 
-    local region = player:getCharVar("supplyQuest_region")
     if region == guardRegion and player:hasKeyItem(outposts[region].ki) then
         delivered = true
-        player:startEvent(guardEvent, 16, 0, 0, 0, 1, 0, 0, 255) -- "you have brought us supplies!"
+        player:startEvent(guardEvent, 16, 0, 0, 0, 1, 0, 0, 255) -- 'you have brought us supplies!'
     end
 
     return delivered
@@ -221,17 +233,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Ballie, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- Flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- Flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Yoshihiro, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Molting Moth, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- Flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- Flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Yoshihiro, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Molting Moth, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- Flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- Flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Kyanta-Pakyanta, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Tottoto, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- Flag
         { offset = 13, nation = xi.nation.WINDURST }, -- Flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- Flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- Flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Harvetour
+        { offset = 10, nation = xi.nation.OTHER    }, -- Harvetour
     },
     [xi.region.ZULKHEIM] =
     {
@@ -239,17 +251,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Prunilla, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Tsunashige, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Fighting Ant, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 13, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Tsunashige, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Fighting Ant, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 13, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Nyata-Mobuta, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Tebubu, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 14, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 15, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Medicine Axe
+        { offset = 10, nation = xi.nation.OTHER    }, -- Medicine Axe
     },
     [xi.region.NORVALLEN] =
     {
@@ -257,17 +269,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Taumiale, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Takamoto, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Pure Heart, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Takamoto, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Pure Heart, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Bubchu-Bibinchu, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Geruru, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Mionie
+        { offset = 10, nation = xi.nation.OTHER    }, -- Mionie
     },
     [xi.region.GUSTABERG] =
     {
@@ -275,17 +287,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Quellebie, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Shigezane, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Heavy Fog, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Shigezane, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Heavy Fog, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Kuuwari-Aori, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Butsutsu, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Kuleo
+        { offset = 10, nation = xi.nation.OTHER    }, -- Kuleo
     },
     [xi.region.DERFLAND] =
     {
@@ -293,17 +305,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Ioupie, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Souun, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Sharp Tooth, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Souun, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Sharp Tooth, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Mokto-Lankto, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Shikoko, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Tahmasp
+        { offset = 10, nation = xi.nation.OTHER    }, -- Tahmasp
     },
     [xi.region.SARUTABARUTA] =
     {
@@ -311,17 +323,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Banege, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Ryokei, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Slow Axe, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Ryokei, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Slow Axe, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Roshina-Kuleshuna, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Darumomo, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Mahien-Uhien
+        { offset = 10, nation = xi.nation.OTHER    }, -- Mahien-Uhien
     },
     [xi.region.KOLSHUSHU] =
     {
@@ -329,17 +341,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Craigine, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Ishin, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Wise Turtle, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Ishin, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Wise Turtle, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Ganemu-Punnemu, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Mashasha, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Lobho Ukipturi
+        { offset = 10, nation = xi.nation.OTHER    }, -- Lobho Ukipturi
     },
     [xi.region.ARAGONEU] =
     {
@@ -347,17 +359,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Buliame, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Akane, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Three Steps, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Akane, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Three Steps, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Donmo-Boronmo, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Daruru, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Mushosho
+        { offset = 10, nation = xi.nation.OTHER    }, -- Mushosho
     },
     [xi.region.FAUREGANDI] =
     {
@@ -365,17 +377,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Leaufetie, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Akane, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Rattling Rain, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Akane, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Rattling Rain, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Ryunchi-Pauchi, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Chopapa, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Gueriette
+        { offset = 10, nation = xi.nation.OTHER    }, -- Gueriette
     },
     [xi.region.VALDEAUNIA] =
     {
@@ -383,17 +395,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Pilcha, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Kaya, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Heavy Bear, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Kaya, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Heavy Bear, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Magumo-Yagimo, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Tememe, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Pelogrant
+        { offset = 10, nation = xi.nation.OTHER    }, -- Pelogrant
     },
     [xi.region.QUFIMISLAND] =
     {
@@ -401,17 +413,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Matica, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Sasa, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Singing Blade, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Sasa, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Singing Blade, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Tsonga-Hoponga, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Numumu, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Jiwon
+        { offset = 10, nation = xi.nation.OTHER    }, -- Jiwon
     },
     [xi.region.LITELOR] =
     {
@@ -419,17 +431,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Limion, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Calliope, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Dedden, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Calliope, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Dedden, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Ajimo-Majimo, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Ochocho, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Kasim
+        { offset = 10, nation = xi.nation.OTHER    }, -- Kasim
     },
     [xi.region.KUZOTZ] =
     {
@@ -437,17 +449,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Laimeve, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Lindgard, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Daborn, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Lindgard, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Daborn, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Variko-Njariko, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Sahgygy, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Sowande
+        { offset = 10, nation = xi.nation.OTHER    }, -- Sowande
     },
     [xi.region.VOLLBOW] =
     {
@@ -455,17 +467,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Paise, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Sarmistha, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Dultwa, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Sarmistha, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Dultwa, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Voranbo-Natanbo, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Orukeke, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Bright Moon
+        { offset = 10, nation = xi.nation.OTHER    }, -- Bright Moon
     },
     [xi.region.ELSHIMOLOWLANDS] =
     {
@@ -473,17 +485,17 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Mupia, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Mahol, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Bammiro, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Mahol, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Bammiro, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Uphra-Kophra, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Richacha, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Robino-Mobino
+        { offset = 10, nation = xi.nation.OTHER    }, -- Robino-Mobino
     },
     [xi.region.ELSHIMOUPLANDS] =
     {
@@ -491,29 +503,29 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Emila, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Mintoo, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Guddal, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Mintoo, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Guddal, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Etaj-Pohtaj, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Ghantata, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Mugha Dovajaiho
+        { offset = 10, nation = xi.nation.OTHER    }, -- Mugha Dovajaiho
     },
     [xi.region.TULIA] =
     {
         { offset =  0, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- flag
         { offset =  3, nation = xi.nation.BEASTMEN }, -- flag
     },
     [xi.region.MOVALPOLOS] =
     {
         { offset =  0, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- flag
         { offset =  3, nation = xi.nation.BEASTMEN }, -- flag
     },
@@ -523,45 +535,45 @@ local overseerOffsets =
         { offset =  7, nation = xi.nation.SANDORIA }, -- Chilaumme, R.K.
         { offset =  3, nation = xi.nation.SANDORIA }, -- flag
         { offset = 11, nation = xi.nation.SANDORIA }, -- flag
-        { offset =  1, nation = xi.nation.BASTOK },   -- Yoram, I.M.
-        { offset =  8, nation = xi.nation.BASTOK },   -- Ghost Talker, I.M.
-        { offset =  4, nation = xi.nation.BASTOK },   -- flag
-        { offset = 12, nation = xi.nation.BASTOK },   -- flag
+        { offset =  1, nation = xi.nation.BASTOK   }, -- Yoram, I.M.
+        { offset =  8, nation = xi.nation.BASTOK   }, -- Ghost Talker, I.M.
+        { offset =  4, nation = xi.nation.BASTOK   }, -- flag
+        { offset = 12, nation = xi.nation.BASTOK   }, -- flag
         { offset =  2, nation = xi.nation.WINDURST }, -- Teldo-Moroldo, W.W.
         { offset =  9, nation = xi.nation.WINDURST }, -- Cotete, W.W.
         { offset =  5, nation = xi.nation.WINDURST }, -- flag
         { offset = 13, nation = xi.nation.WINDURST }, -- flag
         { offset =  6, nation = xi.nation.BEASTMEN }, -- flag
         { offset = 14, nation = xi.nation.BEASTMEN }, -- flag
-        { offset = 10, nation = xi.nation.OTHER },    -- Jersey
+        { offset = 10, nation = xi.nation.OTHER    }, -- Jersey
     },
 }
 
 local crystals =
 {
-    [xi.items.FIRE_CRYSTAL]      = 12,
-    [xi.items.ICE_CRYSTAL]       = 12,
-    [xi.items.WIND_CRYSTAL]      = 12,
-    [xi.items.EARTH_CRYSTAL]     = 12,
-    [xi.items.LIGHTNING_CRYSTAL] = 12,
-    [xi.items.WATER_CRYSTAL]     = 12,
-    [xi.items.LIGHT_CRYSTAL]     = 16,
-    [xi.items.DARK_CRYSTAL]      = 16,
-    [xi.items.INFERNO_CRYSTAL]   = 12,
-    [xi.items.GLACIER_CRYSTAL]   = 12,
-    [xi.items.CYCLONE_CRYSTAL]   = 12,
-    [xi.items.TERRA_CRYSTAL]     = 12,
-    [xi.items.PLASMA_CRYSTAL]    = 12,
-    [xi.items.TORRENT_CRYSTAL]   = 12,
-    [xi.items.AURORA_CRYSTAL]    = 16,
-    [xi.items.TWILIGHT_CRYSTAL]  = 16,
+    [xi.item.FIRE_CRYSTAL]      = 12,
+    [xi.item.ICE_CRYSTAL]       = 12,
+    [xi.item.WIND_CRYSTAL]      = 12,
+    [xi.item.EARTH_CRYSTAL]     = 12,
+    [xi.item.LIGHTNING_CRYSTAL] = 12,
+    [xi.item.WATER_CRYSTAL]     = 12,
+    [xi.item.LIGHT_CRYSTAL]     = 16,
+    [xi.item.DARK_CRYSTAL]      = 16,
+    [xi.item.INFERNO_CRYSTAL]   = 12,
+    [xi.item.GLACIER_CRYSTAL]   = 12,
+    [xi.item.CYCLONE_CRYSTAL]   = 12,
+    [xi.item.TERRA_CRYSTAL]     = 12,
+    [xi.item.PLASMA_CRYSTAL]    = 12,
+    [xi.item.TORRENT_CRYSTAL]   = 12,
+    [xi.item.AURORA_CRYSTAL]    = 16,
+    [xi.item.TWILIGHT_CRYSTAL]  = 16,
 }
 
 local expRings =
 {
-    [xi.items.CHARIOT_BAND] = { cp = 350, charges = 7 },
-    [xi.items.EMPRESS_BAND] = { cp = 700, charges = 7 },
-    [xi.items.EMPEROR_BAND] = { cp = 600, charges = 3 },
+    [xi.item.CHARIOT_BAND] = { cp = 350, charges = 7 },
+    [xi.item.EMPRESS_BAND] = { cp = 700, charges = 7 },
+    [xi.item.EMPEROR_BAND] = { cp = 600, charges = 3 },
 }
 
 local function conquestRanking()
@@ -571,7 +583,7 @@ end
 
 xi.conquest.toggleRegionalNPCs = function(zone)
     -- Show/Hide regional NPCs
-    -- If there is a draw or a 1st place Alliance, those NPCs won't be available.
+    -- If there is a draw or a 1st place Alliance, those NPCs won't be available anywhere.
     local id = zone:getID()
     if
         id == xi.zone.PORT_BASTOK or
@@ -580,13 +592,13 @@ xi.conquest.toggleRegionalNPCs = function(zone)
     then
         local regionalNPCNames =
         {
-            "Nokkhi_Jinjahl",
-            "Ominous_Cloud",
-            "Valeriano",
-            "Mokop-Sankop",
-            "Cheh_Raihah",
-            "Nalta",
-            "Dahjal"
+            'Nokkhi_Jinjahl',
+            'Ominous_Cloud',
+            'Valeriano',
+            'Mokop-Sankop',
+            'Cheh_Raihah',
+            'Nalta',
+            'Dahjal'
         }
 
         -- TODO: Do we need to worry about beastmen's rank?
@@ -597,29 +609,35 @@ xi.conquest.toggleRegionalNPCs = function(zone)
             { GetNationRank(xi.nation.WINDURST), xi.zone.WINDURST_WOODS },
         }
 
-        table.sort(rankings, function (a, b) return a[1] < b[1] end)
+        table.sort(rankings, function(a, b)
+            return a[1] < b[1]
+        end)
 
-        local firstPlaceZone = rankings[1][2]
+        local firstPlaceZone  = rankings[1][2]
         local secondPlaceZone = rankings[2][2]
 
-        if firstPlaceZone == zone:getID() then
-            print("Making regional conquest NPCs available in: " .. zone:getName())
+        if
+            firstPlaceZone == id and
+            firstPlaceZone ~= secondPlaceZone
+        then
+            print('Showing regional conquest NPCs in: ' .. zone:getName())
+        else
+            print('Hiding regional conquest NPCs in: ' .. zone:getName())
         end
 
         for _, name in pairs(regionalNPCNames) do
             local results = zone:queryEntitiesByName(name)
+
             for _, entity in pairs(results) do
                 -- Will be the real entity if it has an X position
                 if math.abs(entity:getXPos()) > 0 then
                     -- Hide all of these NPCs by default
                     entity:setStatus(xi.status.DISAPPEAR)
 
-                    -- If there is a clear winner, and not a tie,
-                    -- show the NPCs
+                    -- If there is a clear winner, and not a tie, show the NPCs
                     if
                         id == firstPlaceZone and
-                        not (IsConquestAlliance() or
-                        (firstPlaceZone == secondPlaceZone))
+                        firstPlaceZone ~= secondPlaceZone
                     then
                         entity:setStatus(xi.status.NORMAL)
                     end
@@ -631,9 +649,9 @@ end
 
 local function getArg1(player, guardNation, guardType)
     local pNation = player:getNation()
-    local output = 0
-    local signet = 0
-    local cipher = xi.extravaganza.campaignActive() * 20 * 65536
+    local output  = 0
+    local signet  = 0
+    local cipher  = xi.extravaganza.campaignActive() * 20 * 65536
     local voucher = player:hasKeyItem(xi.ki.CONQUEST_PROMOTION_VOUCHER) and 0x20000 or 0
 
     if guardNation == xi.nation.WINDURST then
@@ -696,16 +714,16 @@ local overseerInvCommon =
     [32934] = { cp =  1000, lvl =  1, item = 15762 },             -- empress_band
     [32935] = { cp =  2000, lvl =  1, item = 15763 },             -- emperor_band
     [32936] = { cp =  5000, lvl =  1, item = 28540 },             -- warp_ring
-    [32937] = { cp =  1000, lvl =  1, item = xi.items.CIPHER_OF_TENZENS_ALTER_EGO },
-    [32938] = { cp =  1000, lvl =  1, item = xi.items.CIPHER_OF_RAHALS_ALTER_EGO },
-    [32939] = { cp =  1000, lvl =  1, item = xi.items.CIPHER_OF_KUKKIS_ALTER_EGO },
-    [32941] = { cp = 20000, lvl =  1, item = xi.items.REFINED_CHAIR_SET, rank = 10 },
-    [32942] = { cp =  1000, lvl =  1, item = xi.items.CIPHER_OF_MAKKIS_ALTER_EGO },
+    [32937] = { cp =  1000, lvl =  1, item = xi.item.CIPHER_OF_TENZENS_ALTER_EGO  },
+    [32938] = { cp =  1000, lvl =  1, item = xi.item.CIPHER_OF_RAHALS_ALTER_EGO   },
+    [32939] = { cp =  1000, lvl =  1, item = xi.item.CIPHER_OF_KUKKIS_ALTER_EGO   },
+    [32941] = { cp = 20000, lvl =  1, item = xi.item.REFINED_CHAIR_SET, rank = 10 },
+    [32942] = { cp =  1000, lvl =  1, item = xi.item.CIPHER_OF_MAKKIS_ALTER_EGO   },
 }
 
 local overseerInvNation =
 {
-    [0] = -- San d'Oria
+    [xi.nation.SANDORIA] =
     {
         [32768] = { rank =  1, cp =  1000, lvl = 10, item = 17167 },                -- royal_archers_longbow
         [32769] = { rank =  1, cp =  1000, lvl = 10, item = 16544 },                -- royal_archers_sword
@@ -766,7 +784,8 @@ local overseerInvNation =
         [32932] = {            cp =  5000, lvl =  1, item = 17583 },                -- kingdom_signet_staff
         [32940] = { rank = 10, cp = 10000, lvl =  1, item =  6377 },                -- imperial_chair_set
     },
-    [1] = -- Bastok
+
+    [xi.nation.BASTOK] =
     {
         [32768] = { rank =  1, cp =  1000, lvl = 10, item = 16433 },                -- legionnaires_knuckles
         [32769] = { rank =  1, cp =  1000, lvl = 10, item = 17223 },                -- legionnaires_crossbow
@@ -823,7 +842,8 @@ local overseerInvNation =
         [32932] = {            cp =  5000, lvl =  1, item = 17584 },                -- republic_signet_staff
         [32940] = { rank = 10, cp = 10000, lvl =  1, item =  6378 },                -- decorative_chair_set
     },
-    [2] = -- Windurst
+
+    [xi.nation.WINDURST] =
     {
         [32768] = { rank =  1, cp =  1000, lvl = 10, item = 17159 },                -- freeswords_bow
         [32769] = { rank =  1, cp =  1000, lvl = 10, item = 17028 },                -- freeswords_club
@@ -886,8 +906,52 @@ local overseerInvNation =
     },
 }
 
+local titlesGranted =
+{
+    [0] = -- San d'Oria
+    {
+        [1]  = xi.title.ROYAL_ARCHER,
+        [2]  = xi.title.ROYAL_SPEARMAN,
+        [3]  = xi.title.ROYAL_SQUIRE,
+        [4]  = xi.title.ROYAL_SWORDSMAN,
+        [5]  = xi.title.ROYAL_CAVALIER,
+        [6]  = xi.title.ROYAL_GUARD,
+        [7]  = xi.title.GRAND_KNIGHT_OF_THE_REALM,
+        [8]  = xi.title.GRAND_TEMPLE_KNIGHT,
+        [9]  = xi.title.RESERVE_KNIGHT_CAPTAIN,
+        [10] = xi.title.ELITE_ROYAL_GUARD,
+    },
+    [1] = -- Bastok
+    {
+        [1]  = xi.title.LEGIONNAIRE,
+        [2]  = xi.title.DECURION,
+        [3]  = xi.title.CENTURION,
+        [4]  = xi.title.JUNIOR_MUSKETEER,
+        [5]  = xi.title.SENIOR_MUSKETEER,
+        [6]  = xi.title.MUSKETEER_COMMANDER,
+        [7]  = xi.title.GOLD_MUSKETEER,
+        [8]  = xi.title.PRAEFECTUS,
+        [9]  = xi.title.SENIOR_GOLD_MUSKETEER,
+        [10] = xi.title.PRAEFECTUS_CASTRORUM,
+    },
+    [2] = -- Windurst
+    {
+        [1]  = xi.title.FREESWORD,
+        [2]  = xi.title.MERCENARY,
+        [3]  = xi.title.MERCENARY_CAPTAIN,
+        [4]  = xi.title.COMBAT_CASTER,
+        [5]  = xi.title.TACTICIAN_MAGICIAN,
+        [6]  = xi.title.WISE_WIZARD,
+        [7]  = xi.title.PATRIARCH_PROTECTOR,
+        [8]  = xi.title.CASTER_CAPTAIN,
+        [9]  = xi.title.MASTER_CASTER,
+        [10] = xi.title.MERCENARY_MAJOR,
+    },
+}
+
 local function getStock(player, guardNation, option)
     local r = overseerInvCommon[option]
+
     if r == nil then
         if guardNation == xi.nation.OTHER then
             r = overseerInvNation[player:getNation()][option]
@@ -895,6 +959,7 @@ local function getStock(player, guardNation, option)
             r = overseerInvNation[guardNation][option]
         end
     end
+
     return r
 end
 
@@ -907,15 +972,20 @@ local function canBuyExpRing(player, item)
             if player:hasItem(i) then
                 player:messageSpecial(text.CONQUEST + 60, 0, 0, item) -- You do not meet the requirements to purchase the <item>.
                 player:messageSpecial(text.CONQUEST + 50, 0, 0, item) -- Due to its special nature, you can only purchase or recharge <item> once until the conquest results tally is performed. Also, you cannot purchase this item if a similar item is already in your possession.
+
                 return false
             end
         end
     end
 
     -- one exp ring per conquest tally
-    if xi.settings.main.BYPASS_EXP_RING_ONE_PER_WEEK ~= 1 and player:getCharVar("CONQUEST_RING_RECHARGE") > os.time() then
+    if
+        xi.settings.main.BYPASS_EXP_RING_ONE_PER_WEEK ~= 1 and
+        player:getCharVar('CONQUEST_RING_RECHARGE') > os.time()
+    then
         player:messageSpecial(text.CONQUEST + 60, 0, 0, item)
         player:messageSpecial(text.CONQUEST + 50, 0, 0, item)
+
         return false
     end
 
@@ -935,7 +1005,9 @@ xi.conquest.guard =
 }
 
 xi.conquest.areAllies = function(nationA, nationB)
-    return IsConquestAlliance() and GetNationRank(nationA) > 1 and GetNationRank(nationB) > 1
+    return IsConquestAlliance() and
+        GetNationRank(nationA) > 1 and
+        GetNationRank(nationB) > 1
 end
 
 xi.conquest.outpostFee = function(player, region)
@@ -960,6 +1032,7 @@ xi.conquest.canTeleportToOutpost = function(player, region)
     then
         return false
     end
+
     return true
 end
 
@@ -1000,32 +1073,31 @@ end
 -----------------------------------
 -- (PUBLIC) overseer
 -----------------------------------
-
 xi.conquest.overseerOnTrade = function(player, npc, trade, guardNation, guardType)
     if xi.garrison.onTrade(player, npc, trade, guardNation) then
         return
     end
 
     if player:getNation() == guardNation or guardNation == xi.nation.OTHER then
-        local item = trade:getItemId()
+        local item           = trade:getItemId()
         local tradeConfirmed = false
-        local mOffset = zones[player:getZoneID()].text.CONQUEST
+        local mOffset        = zones[player:getZoneID()].text.CONQUEST
 
         -- DONATE CRYSTALS FOR RANK OR CONQUEST POINTS
         if guardType <= xi.conquest.guard.FOREIGN and crystals[item] then
-            local pRank = player:getRank(player:getNation())
+            local pRank       = player:getRank(player:getNation())
             local pRankPoints = player:getRankPoints()
-            local addPoints = 0
+            local addPoints   = 0
 
             for crystalId, crystalWorth in pairs(crystals) do
                 local count = trade:getItemQty(crystalId)
 
                 if count > 0 then
                     if pRank == 1 then
-                        player:showText(npc, mOffset - 7) -- "I cannot accept crystals from someone whose rank is still 1."
+                        player:showText(npc, mOffset - 7) -- 'I cannot accept crystals from someone whose rank is still 1.'
                         break
                     elseif pRankPoints == 4000 then
-                        player:showText(npc, mOffset + 43) -- "You do not need to donate any more crystals at your current rank."
+                        player:showText(npc, mOffset + 43) -- 'You do not need to donate any more crystals at your current rank.'
                         break
                     else
                         trade:confirmItem(crystalId, count)
@@ -1038,11 +1110,12 @@ xi.conquest.overseerOnTrade = function(player, npc, trade, guardNation, guardTyp
                 if pRankPoints + addPoints >= 4000 then
                     player:setRankPoints(4000)
                     player:addCP(pRankPoints + addPoints - 4000)
-                    player:showText(npc, mOffset + 44) -- "Your rank points are full. We've added the excess to your conquest points."
+                    player:showText(npc, mOffset + 44) -- 'Your rank points are full. We've added the excess to your conquest points.'
                 else
                     player:addRankPoints(addPoints)
-                    player:showText(npc, mOffset + 45) -- "We've awarded you rank points for the crystals you've donated."
+                    player:showText(npc, mOffset + 45) -- 'We've awarded you rank points for the crystals you've donated.'
                 end
+
                 player:confirmTrade()
                 tradeConfirmed = true
             end
@@ -1050,22 +1123,25 @@ xi.conquest.overseerOnTrade = function(player, npc, trade, guardNation, guardTyp
 
         -- RECHARGE EXP RING
         if not tradeConfirmed and expRings[item] and npcUtil.tradeHas(trade, item) then
-            if xi.settings.main.BYPASS_EXP_RING_ONE_PER_WEEK == 1 or player:getCharVar("CONQUEST_RING_RECHARGE") < os.time() then
+            if
+                xi.settings.main.BYPASS_EXP_RING_ONE_PER_WEEK == 1 or
+                player:getCharVar('CONQUEST_RING_RECHARGE') < os.time()
+            then
                 local ring = expRings[item]
 
                 if player:getCP() >= ring.cp then
                     player:delCP(ring.cp)
                     player:confirmTrade()
                     player:addItem(item)
-                    player:setCharVar("CONQUEST_RING_RECHARGE", getConquestTally())
-                    player:showText(npc, mOffset + 58, item, ring.cp, ring.charges) -- "Your ring is now fully recharged."
+                    player:setCharVar('CONQUEST_RING_RECHARGE', getConquestTally())
+                    player:showText(npc, mOffset + 58, item, ring.cp, ring.charges) -- 'Your ring is now fully recharged.'
                 else
-                    player:showText(npc, mOffset + 55, item, ring.cp) -- "You do not have the required conquest points to recharge."
+                    player:showText(npc, mOffset + 55, item, ring.cp) -- 'You do not have the required conquest points to recharge.'
                 end
-             else
+            else
                 -- TODO: Verify that message is retail correct.
                 -- This gives feedback on a failure at least, and is grouped with the recharge messages.  Confident enough for a commit.
-                player:showText(npc, mOffset + 56, item) -- "Please be aware that you can only purchase or recharge <item> once during the period between each conquest results tally.
+                player:showText(npc, mOffset + 56, item) -- 'Please be aware that you can only purchase or recharge <item> once during the period between each conquest results tally.
             end
         end
     end
@@ -1079,9 +1155,16 @@ xi.conquest.overseerOnTrigger = function(player, npc, guardNation, guardType, gu
     end
 
     -- SUPPLY RUNS
-    if pNation == guardNation and areSuppliesRotten(player, npc, guardType) then
+    if
+        pNation == guardNation and
+        areSuppliesRotten(player, npc, guardType)
+    then
         -- do nothing else
-    elseif pNation == guardNation and guardType >= xi.conquest.guard.OUTPOST and canDeliverSupplies(player, guardNation, guardEvent, guardRegion) then
+    elseif
+        pNation == guardNation and
+        guardType >= xi.conquest.guard.OUTPOST and
+        canDeliverSupplies(player, guardNation, guardEvent, guardRegion)
+    then
         -- do nothing else
 
     -- JEUNO OVERSEERS
@@ -1119,16 +1202,18 @@ end
 
 xi.conquest.overseerOnEventUpdate = function(player, csid, option, guardNation)
     local pNation = player:getNation()
+
     if guardNation == xi.nation.OTHER then
         guardNation = pNation
     end
+
     local stock = getStock(player, guardNation, option)
 
     if stock ~= nil then
-        local pRank   = GetNationRank(pNation)
-        local u1 = 2 -- default: player is correct job and level to equip item
-        local u2 = 0 -- default: player has enough CP for item
-        local u3 = stock.item -- default: the item ID we're purchasing
+        local pRank = GetNationRank(pNation)
+        local u1    = 2 -- default: player is correct job and level to equip item
+        local u2    = 0 -- default: player has enough CP for item
+        local u3    = stock.item -- default: the item ID we're purchasing
 
         if not player:canEquipItem(stock.item, false) then -- can't equip
             u1 = 0 -- can't equip due to job
@@ -1140,21 +1225,33 @@ xi.conquest.overseerOnEventUpdate = function(player, csid, option, guardNation)
             u2 = 1
         end
 
-        if option >= 32933 and option <= 32935 and player:hasKeyItem(xi.ki.CONQUEST_PROMOTION_VOUCHER) then
+        if
+            option >= 32933 and
+            option <= 32935 and
+            player:hasKeyItem(xi.ki.CONQUEST_PROMOTION_VOUCHER)
+        then
             u2 = 0
         end
 
         local rankCheck = true
-        if guardNation ~= xi.nation.OTHER and guardNation ~= pNation and GetNationRank(guardNation) <= pRank then -- buy from other nation, must be higher ranked
+        if
+            guardNation ~= xi.nation.OTHER and
+            guardNation ~= pNation and
+            GetNationRank(guardNation) <= pRank
+        then -- buy from other nation, must be higher ranked
             rankCheck = false
-        elseif guardNation ~= xi.nation.OTHER and stock.place ~= nil and guardNation ~= pNation then -- buy from other nation, cannot buy items with nation rank requirement
+        elseif
+            guardNation ~= xi.nation.OTHER and
+            stock.place ~= nil and
+            guardNation ~= pNation
+        then -- buy from other nation, cannot buy items with nation rank requirement
             rankCheck = false
         elseif stock.place ~= nil and pRank > stock.place then -- buy from own nation, check nation rank
             rankCheck = false
         end
 
         if rankCheck and u2 == 0 then
-            player:setLocalVar("boughtItemCP", stock.item) -- set localVar for later cheat prevention
+            player:setLocalVar('boughtItemCP', stock.item) -- set localVar for later cheat prevention
         end
 
         player:updateEvent(u1, u2, u3)
@@ -1170,22 +1267,27 @@ local function canPurchaseItem(player, stock, pRank, guardNation, mOffset, optio
     end
 
     -- validate localVar (cheat protection)
-    local boughtItem = player:getLocalVar("boughtItemCP")
-    player:setLocalVar("boughtItemCP", 0)
+    local boughtItem = player:getLocalVar('boughtItemCP')
+    player:setLocalVar('boughtItemCP', 0)
+
     if stock.item ~= boughtItem then
-        player:messageSpecial(mOffset + 61, stock.item) -- "Your rank is too low to purchase the <item>."
+        player:messageSpecial(mOffset + 61, stock.item) -- 'Your rank is too low to purchase the <item>.'
         return -1
     end
 
     -- validate rank
     if stock.rank and pRank < stock.rank then
-        player:messageSpecial(mOffset + 61, stock.item) -- "Your rank is too low to purchase the <item>."
+        player:messageSpecial(mOffset + 61, stock.item) -- 'Your rank is too low to purchase the <item>.'
         return -1
     end
 
     -- validate price
     local price = stock.cp
-    if stock.rank ~= nil and player:getNation() ~= guardNation and guardNation ~= xi.nation.OTHER then
+    if
+        stock.rank ~= nil and
+        player:getNation() ~= guardNation and
+        guardNation ~= xi.nation.OTHER
+    then
         if price <= 8000 then
             price = price * 2
         else
@@ -1194,8 +1296,12 @@ local function canPurchaseItem(player, stock, pRank, guardNation, mOffset, optio
     end
 
     if player:getCP() < price then
-        if option <= 32933 and option >= 32935 and not player:hasKeyItem(xi.ki.CONQUEST_PROMOTION_VOUCHER) then
-            player:messageSpecial(mOffset + 62, 0, 0, stock.item) -- "You do not have enough conquest points to purchase the <item>."
+        if
+            option <= 32933 and
+            option >= 32935 and
+            not player:hasKeyItem(xi.ki.CONQUEST_PROMOTION_VOUCHER)
+        then
+            player:messageSpecial(mOffset + 62, 0, 0, stock.item) -- 'You do not have enough conquest points to purchase the <item>.'
             return -1
         end
     end
@@ -1206,7 +1312,7 @@ end
 xi.conquest.overseerOnEventFinish = function(player, csid, option, guardNation, guardType, guardRegion)
     local pNation  = player:getNation()
     local pRank    = player:getRank(pNation)
-    local sRegion  = player:getCharVar("supplyQuest_region")
+    local sRegion  = player:getCharVar('supplyQuest_region')
     local sOutpost = outposts[sRegion]
     local mOffset  = zones[player:getZoneID()].text.CONQUEST
 
@@ -1219,21 +1325,26 @@ xi.conquest.overseerOnEventFinish = function(player, csid, option, guardNation, 
         local duration = (pRank + GetNationRank(pNation) + 3) * 3600
         player:delStatusEffectsByFlag(xi.effectFlag.INFLUENCE, true)
         player:addStatusEffect(xi.effect.SIGNET, 0, 0, duration)
-        player:messageSpecial(mOffset + 1) -- "You've received your nation's Signet!"
+        player:messageSpecial(mOffset + 1) -- 'You've received your nation's Signet!'
 
         if player:getEminenceProgress(3367) then
             xi.roe.onRecordTrigger(player, 3367) -- Complete Weekly Signet, brb objective.  This might be able to move to a status effect trigger
         end
 
     -- BEGIN SUPPLY RUN
-    elseif option >= 65541 and option <= 65565 and guardType <= xi.conquest.guard.FOREIGN then
-        local region = option - 65541
+    elseif
+        option >= 65541 and
+        option <= 65565 and
+        guardType <= xi.conquest.guard.FOREIGN
+    then
+        local region  = option - 65541
         local outpost = outposts[region]
+
         if outpost ~= nil then
             npcUtil.giveKeyItem(player, outpost.ki)
-            player:setCharVar("supplyQuest_started", vanaDay())
-            player:setCharVar("supplyQuest_region", region)
-            player:setCharVar("supplyQuest_fresh", getConquestTally())
+            player:setCharVar('supplyQuest_started', VanadielUniqueDay())
+            player:setCharVar('supplyQuest_region', region)
+            player:setCharVar('supplyQuest_fresh', getConquestTally())
         end
 
     -- FINISH SUPPLY RUN
@@ -1247,10 +1358,10 @@ xi.conquest.overseerOnEventFinish = function(player, csid, option, guardNation, 
     then
         player:delKeyItem(sOutpost.ki)
         player:addCP(sOutpost.cp)
-        player:messageSpecial(mOffset) -- "You've earned conquest points!"
-        player:setCharVar("supplyQuest_started", 0)
-        player:setCharVar("supplyQuest_region", 0)
-        player:setCharVar("supplyQuest_fresh", 0)
+        player:messageSpecial(mOffset) -- 'You've earned conquest points!'
+        player:setCharVar('supplyQuest_started', 0)
+        player:setCharVar('supplyQuest_region', 0)
+        player:setCharVar('supplyQuest_fresh', 0)
 
         if not player:hasTeleport(guardNation, sRegion + 5) then
             player:addTeleport(guardNation, sRegion + 5)
@@ -1260,9 +1371,9 @@ xi.conquest.overseerOnEventFinish = function(player, csid, option, guardNation, 
     elseif option == 4 then
         if player:delGil(setHomepointFee(player, guardNation)) then
             player:setHomePoint()
-            player:messageSpecial(mOffset + 94) -- "Your home point has been set."
+            player:messageSpecial(mOffset + 94) -- 'Your home point has been set.'
         else
-            player:messageSpecial(mOffset + 95) -- "You do not have enough gil to set your home point here."
+            player:messageSpecial(mOffset + 95) -- 'You do not have enough gil to set your home point here.'
         end
 
     -- PURCHASE CP ITEM
@@ -1275,20 +1386,30 @@ xi.conquest.overseerOnEventFinish = function(player, csid, option, guardNation, 
         end
 
         -- validate exp rings
-        if option >= 32933 and option <= 32935 and not canBuyExpRing(player, stock.item) then
+        if
+            option >= 32933 and
+            option <= 32935 and
+            not canBuyExpRing(player, stock.item)
+        then
             return
         end
 
         -- make sale
         if npcUtil.giveItem(player, stock.item) then
             if option >= 32933 and option <= 32935 then
-                player:setCharVar("CONQUEST_RING_RECHARGE", getConquestTally())
+                player:setCharVar('CONQUEST_RING_RECHARGE', getConquestTally())
+
                 if player:hasKeyItem(xi.ki.CONQUEST_PROMOTION_VOUCHER) then
                     player:delKeyItem(xi.ki.CONQUEST_PROMOTION_VOUCHER)
+
                     return
                 end
             end
+
             player:delCP(price)
+            if stock.rank ~= nil then
+                player:setTitle(titlesGranted[guardNation][stock.rank])
+            end
         end
     end
 end
@@ -1296,24 +1417,24 @@ end
 -----------------------------------
 -- (PUBLIC) vendor
 -----------------------------------
-
 xi.conquest.vendorOnTrigger = function(player, vendorRegion, vendorEvent)
     local pNation = player:getNation()
-    local owner = GetRegionOwner(vendorRegion)
+    local owner   = GetRegionOwner(vendorRegion)
+    local nation  = 0
+    local fee     = xi.conquest.outpostFee(player, vendorRegion)
 
-    local nation = 0
     if owner == pNation then
         nation = 1
     elseif xi.conquest.areAllies(pNation, owner) then
         nation = 2
     end
 
-    local fee = xi.conquest.outpostFee(player, vendorRegion)
     player:startEvent(vendorEvent, nation, fee, 0, fee, player:getCP(), 0, 0, 0)
 end
 
 xi.conquest.vendorOnEventUpdate = function(player, vendorRegion)
     local fee = xi.conquest.outpostFee(player, vendorRegion)
+
     player:updateEvent(player:getGil(), fee, 0, fee, player:getCP())
 end
 
@@ -1335,22 +1456,22 @@ end
 -----------------------------------
 -- (PUBLIC) outpost teleport NPC
 -----------------------------------
-
 xi.conquest.teleporterOnTrigger = function(player, teleporterNation, teleporterEvent)
-    local sandyRegions = getRegionsMask(xi.nation.SANDORIA)
-    local bastokRegions = getRegionsMask(xi.nation.BASTOK)
-    local windyRegions = getRegionsMask(xi.nation.WINDURST)
-    local beastmenRegions = getRegionsMask(xi.nation.BEASTMEN)
+    local sandyRegions     = getRegionsMask(xi.nation.SANDORIA)
+    local bastokRegions    = getRegionsMask(xi.nation.BASTOK)
+    local windyRegions     = getRegionsMask(xi.nation.WINDURST)
+    local beastmenRegions  = getRegionsMask(xi.nation.BEASTMEN)
     local allowedTeleports = getAllowedTeleports(player, teleporterNation)
-    local nationBits = player:getNation() + bit.lshift(teleporterNation, 8)
+    local nationBits       = player:getNation() + bit.lshift(teleporterNation, 8)
+
     player:startEvent(teleporterEvent, sandyRegions, bastokRegions, windyRegions, beastmenRegions, 0, nationBits, player:getMainLvl(), allowedTeleports)
 end
 
 xi.conquest.teleporterOnEventUpdate = function(player, csid, option, teleporterEvent)
     if csid == teleporterEvent then
         local region = option - 1073741829
-        local fee = xi.conquest.outpostFee(player, region)
-        local cpFee = fee / 10
+        local fee    = xi.conquest.outpostFee(player, region)
+        local cpFee  = fee / 10
 
         player:updateEvent(player:getGil(), fee, 0, cpFee, player:getCP())
     end
@@ -1361,18 +1482,24 @@ xi.conquest.teleporterOnEventFinish = function(player, csid, option, teleporterE
         -- TELEPORT WITH GIL
         if option >= 5 and option <= 23 then
             local region = option - 5
-            local fee = xi.conquest.outpostFee(player, region)
+            local fee    = xi.conquest.outpostFee(player, region)
 
-            if xi.conquest.canTeleportToOutpost(player, region) and player:delGil(fee) then
+            if
+                xi.conquest.canTeleportToOutpost(player, region) and
+                player:delGil(fee)
+            then
                 player:addStatusEffectEx(xi.effect.TELEPORT, 0, xi.teleport.id.OUTPOST, 0, 1, 0, region)
             end
 
         -- TELEPORT WITH CP
         elseif option >= 1029 and option <= 1047 then
             local region = option - 1029
-            local cpFee = xi.conquest.outpostFee(player, region) / 10
+            local cpFee  = xi.conquest.outpostFee(player, region) / 10
 
-            if xi.conquest.canTeleportToOutpost(player, region) and player:getCP() >= cpFee then
+            if
+                xi.conquest.canTeleportToOutpost(player, region) and
+                player:getCP() >= cpFee
+            then
                 player:delCP(cpFee)
                 player:addStatusEffectEx(xi.effect.TELEPORT, 0, xi.teleport.id.OUTPOST, 0, 1, 0, region)
             end
@@ -1383,113 +1510,174 @@ end
 -----------------------------------
 -- (PUBLIC) conquest messages
 -----------------------------------
+xi.conquest.sendConquestTallyStartMessage = function(player, messageBase)
+    player:messageText(player, messageBase, 5)
+end
 
-xi.conquest.onConquestUpdate = function(zone, updatetype)
-    local region = zone:getRegionID()
-    local owner = GetRegionOwner(region)
-    local players = zone:getPlayers()
-    local messageBase = zones[zone:getID()].text.CONQUEST_BASE
-    local ranking = GetConquestBalance()
+-- City areas, though not technically conquest areas, should show the tally end message.
+xi.conquest.sendCityConquestTallyEndMessage = function(player, messageBase, ranking, isConquestAlliance)
+    -- Tallying conquest results...
+    player:messageText(player, messageBase + 1, 5)
 
+    -- Global balance of power message
+    xi.conquest.sendBalanceOfPowerMessage(player, messageBase, ranking, isConquestAlliance)
+end
+
+-- Used for non city conquest areas. shows tally end message + owner of the region.
+xi.conquest.sendConquestTallyEndMessage = function(player, messageBase, owner, ranking, isConquestAlliance)
+    -- Tallying conquest results...
+    player:messageText(player, messageBase + 1, 5)
+
+    if owner <= 3 then
+        player:messageText(player, messageBase + 2 + owner, 5) -- This region is currently under <nation> control.
+    else
+        player:messageText(player, messageBase + 6, 5) -- This region is currently under beastman control.
+    end
+
+    -- Global balance of power message
+    xi.conquest.sendBalanceOfPowerMessage(player, messageBase, ranking, isConquestAlliance)
+end
+
+-- Helper method for sendConquestTallyUpdateMessage and sendConquestTallyEndMessage
+xi.conquest.sendBalanceOfPowerMessage = function(player, messageBase, ranking, isConquestAlliance)
+    local offset = 0
+    if bit.band(ranking, 0x03) == 0x01 then
+        offset = offset + 7 -- 7
+        if bit.band(ranking, 0x30) == 0x10 then
+            offset = offset + 1 -- 8
+            if bit.band(ranking, 0x0C) == 0x0C then
+                offset = offset + 1 -- 9
+            end
+        elseif bit.band(ranking, 0x0C) == 0x08 then
+            offset = offset + 3 -- 10
+            if bit.band(ranking, 0x30) == 0x30 then
+                offset = offset + 1 -- 11
+            end
+        elseif bit.band(ranking, 0x0C) == 0x04 then
+            offset = offset + 6 -- 13
+        end
+    elseif bit.band(ranking, 0x0C) == 0x04 then
+        offset = offset + 15 -- 15
+        if bit.band(ranking, 0x30) == 0x02 then
+            offset = offset + 3 -- 18
+            if bit.band(ranking, 0x03) == 0x03 then
+                offset = offset + 1 -- 19
+            end
+        elseif bit.band(ranking, 0x30) == 0x10 then
+            offset = offset + 6 -- 21
+        end
+    elseif bit.band(ranking, 0x30) == 0x10 then
+        offset = offset + 23 -- 23
+        if bit.band(ranking, 0x0C) == 0x08 then
+            offset = offset + 3 -- 26
+            if bit.band(ranking, 0x30) == 0x30 then
+                offset = offset + 1 -- 27
+            end
+        end
+    end
+
+    player:messageText(player, messageBase + offset, 5) -- Global balance of power:
+
+    if isConquestAlliance then
+        if bit.band(ranking, 0x03) == 0x01 then
+            player:messageText(player, messageBase + 50, 5) -- Bastok and Windurst have formed an alliance.
+        elseif bit.band(ranking, 0x0C) == 0x04 then
+            player:messageText(player, messageBase + 51, 5) -- San d'Oria and Windurst have formed an alliance.
+        elseif bit.band(ranking, 0x30) == 0x10 then
+            player:messageText(player, messageBase + 52, 5) -- San d'Oria and Bastok have formed an alliance.
+        end
+    end
+end
+
+xi.conquest.sendConquestTallyUpdateMessage = function(player, messageBase, owner, ranking, influence, isConquestAlliance)
+    -- don't send regional influence for city zones -- nobody can gain influence here.
+    if owner == 255 then
+        return
+    end
+
+    if owner <= 3 then
+        player:messageText(player, messageBase + 32 + owner, 5) -- This region is currently under <nation> control.
+    else
+        player:messageText(player, messageBase + 31, 5) -- This region is currently under beastman control.
+    end
+
+    if influence >= 64 then
+        player:messageText(player, messageBase + 37, 5) -- The beastmen are on the rise.
+    elseif influence == 0 then
+        player:messageText(player, messageBase + 36, 5) -- All three nations are at a deadlock.
+    else
+        local sandoria = bit.band(influence, 0x03)
+        local bastok   = bit.rshift(bit.band(influence, 0x0C), 2)
+        local windurst = bit.rshift(bit.band(influence, 0x30), 4)
+
+        player:messageText(player, messageBase + 41 - sandoria, 5) -- Regional influence: San d'Oria
+        player:messageText(player, messageBase + 45 - bastok, 5)   -- Regional influence: Bastok
+        player:messageText(player, messageBase + 49 - windurst, 5) -- Regional influence: Windurst
+    end
+
+    if isConquestAlliance then
+        if bit.band(ranking, 0x03) == 0x01 then
+            player:messageText(player, messageBase + 53, 5) -- Bastok and Windurst are currently allies.
+        elseif bit.band(ranking, 0x0C) == 0x04 then
+            player:messageText(player, messageBase + 54, 5) -- San d'Oria and Windurst are currently allies.
+        elseif bit.band(ranking, 0x30) == 0x10 then
+            player:messageText(player, messageBase + 55, 5) -- San d'Oria and Bastok are currently allies.
+        end
+    end
+end
+
+xi.conquest.onConquestUpdate = function(zone, updatetype, influence, owner, ranking, isConquestAlliance)
+    -- onConquestUpdate is called for zones in city regions as well
+    -- in such cases, owner and influence is undetermined, so we call a city specific method.
+    local regionId = zone:getRegionID()
+    if regionId > xi.region.TAVNAZIANARCH and regionId < xi.region.DYNAMIS then
+        xi.conquest.onCityConquestUpdate(zone, updatetype, ranking, isConquestAlliance)
+        return
+    end
+
+    local messageBase        = zones[zone:getID()].text.CONQUEST_BASE
+    local players            = zone:getPlayers()
+
+    -----------------------------------
+    -- WARNING: This is iterating every player in a zone, be careful not
+    --        : to put expensive operations like db reads in here!
+    -----------------------------------
     for _, player in pairs(players) do
-
-        -- CONQUEST TALLY START
         if updatetype == conquestConstants.TALLY_START then
-            player:messageText(player, messageBase, 5)
+            xi.conquest.sendConquestTallyStartMessage(player, messageBase)
 
-        -- CONQUEST TALLY END
         elseif updatetype == conquestConstants.TALLY_END then
-            player:messageText(player, messageBase + 1, 5) -- Tallying conquest results...
+            xi.conquest.sendConquestTallyEndMessage(player, messageBase, owner, ranking, isConquestAlliance)
 
-            if owner <= 3 then
-                player:messageText(player, messageBase + 2 + owner, 5) -- This region is currently under <nation> control.
-            else
-                player:messageText(player, messageBase + 6, 5) -- This region is currently under beastman control.
-            end
-
-            local offset = 0
-            if bit.band(ranking, 0x03) == 0x01 then
-                offset = offset + 7 -- 7
-                if bit.band(ranking, 0x30) == 0x10 then
-                    offset = offset + 1 -- 8
-                    if bit.band(ranking, 0x0C) == 0x0C then
-                        offset = offset + 1 -- 9
-                    end
-                elseif bit.band(ranking, 0x0C) == 0x08 then
-                    offset = offset + 3 -- 10
-                    if bit.band(ranking, 0x30) == 0x30 then
-                        offset = offset + 1 -- 11
-                    end
-                elseif bit.band(ranking, 0x0C) == 0x04 then
-                    offset = offset + 6 -- 13
-                end
-            elseif bit.band(ranking, 0x0C) == 0x04 then
-                offset = offset + 15 -- 15
-                if bit.band(ranking, 0x30) == 0x02 then
-                    offset = offset + 3 -- 18
-                    if bit.band(ranking, 0x03) == 0x03 then
-                        offset = offset + 1 -- 19
-                    end
-                elseif bit.band(ranking, 0x30) == 0x10 then
-                    offset = offset + 6 -- 21
-                end
-            elseif bit.band(ranking, 0x30) == 0x10 then
-                offset = offset + 23 -- 23
-                if bit.band(ranking, 0x0C) == 0x08 then
-                    offset = offset + 3 -- 26
-                    if bit.band(ranking, 0x30) == 0x30 then
-                        offset = offset + 1 -- 27
-                    end
-                end
-            end
-
-            player:messageText(player, messageBase + offset, 5) -- Global balance of power:
-
-            if IsConquestAlliance() then
-                if bit.band(ranking, 0x03) == 0x01 then
-                    player:messageText(player, messageBase + 50, 5) -- Bastok and Windurst have formed an alliance.
-                elseif bit.band(ranking, 0x0C) == 0x04 then
-                    player:messageText(player, messageBase + 51, 5) -- San d'Oria and Windurst have formed an alliance.
-                elseif bit.band(ranking, 0x30) == 0x10 then
-                    player:messageText(player, messageBase + 52, 5) -- San d'Oria and Bastok have formed an alliance.
-                end
-            end
-
-            xi.conquest.toggleRegionalNPCs(zone)
-
-        -- CONQUEST UPDATE
         elseif updatetype == conquestConstants.UPDATE then
-            local influence = GetRegionInfluence(region)
+            xi.conquest.sendConquestTallyUpdateMessage(player, messageBase, owner, ranking, influence, isConquestAlliance)
+        end
+    end
+end
 
-            if owner <= 3 then
-                player:messageText(player, messageBase + 32 + owner, 5) -- This region is currently under <nation> control.
-            else
-                player:messageText(player, messageBase + 31, 5) -- This region is currently under beastman control.
-            end
+xi.conquest.onCityConquestUpdate = function(zone, updatetype, ranking, isconquestAlliance)
+    local messageBase        = zones[zone:getID()].text.CONQUEST_BASE
+    local players            = zone:getPlayers()
 
-            if influence >= 64 then
-                player:messageText(player, messageBase + 37, 5) -- The beastmen are on the rise.
-            elseif influence == 0 then
-                player:messageText(player, messageBase + 36, 5) -- All three nations are at a deadlock.
-            else
-                local sandoria = bit.band(influence, 0x03)
-                local bastok = bit.rshift(bit.band(influence, 0x0C), 2)
-                local windurst = bit.rshift(bit.band(influence, 0x30), 4)
+    -----------------------------------
+    -- Once per zone logic
+    -----------------------------------
 
-                player:messageText(player, messageBase + 41 - sandoria, 5) -- Regional influence: San d'Oria
-                player:messageText(player, messageBase + 45 - bastok, 5)   -- Regional influence: Bastok
-                player:messageText(player, messageBase + 49 - windurst, 5) -- Regional influence: Windurst
-            end
+    -- Triggers regional npc updates for city zones only
+    if updatetype == conquestConstants.TALLY_END then
+        xi.conquest.toggleRegionalNPCs(zone)
+    end
 
-            if IsConquestAlliance() then
-                if bit.band(ranking, 0x03) == 0x01 then
-                    player:messageText(player, messageBase + 53, 5) -- Bastok and Windurst are currently allies.
-                elseif bit.band(ranking, 0x0C) == 0x04 then
-                    player:messageText(player, messageBase + 54, 5) -- San d'Oria and Windurst are currently allies.
-                elseif bit.band(ranking, 0x30) == 0x10 then
-                    player:messageText(player, messageBase + 55, 5) -- San d'Oria and Bastok are currently allies.
-                end
-            end
+    -----------------------------------
+    -- WARNING: This is iterating every player in a zone, be careful not
+    --        : to put expensive operations like db reads in here!
+    -----------------------------------
+    for _, player in pairs(players) do
+        if updatetype == conquestConstants.TALLY_START then
+            xi.conquest.sendConquestTallyStartMessage(player, messageBase)
+
+        elseif updatetype == conquestConstants.TALLY_END then
+            xi.conquest.sendCityConquestTallyEndMessage(player, messageBase, ranking, isconquestAlliance)
         end
     end
 end

@@ -1,9 +1,6 @@
 -----------------------------------
--- Area: Temenos Eastern Tower
+-- Area: Central Temenos 2nd Floor
 --  Mob: Thunder Elemental
------------------------------------
-require("scripts/globals/mobs")
-require("scripts/globals/status")
 -----------------------------------
 local entity = {}
 

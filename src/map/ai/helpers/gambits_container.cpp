@@ -1,22 +1,22 @@
 ﻿#include "gambits_container.h"
 
-#include "../../ability.h"
-#include "../../ai/states/ability_state.h"
-#include "../../ai/states/magic_state.h"
-#include "../../ai/states/mobskill_state.h"
-#include "../../ai/states/petskill_state.h"
-#include "../../ai/states/range_state.h"
-#include "../../ai/states/weaponskill_state.h"
-#include "../../enmity_container.h"
-#include "../../mobskill.h"
-#include "../../spell.h"
-#include "../../utils/battleutils.h"
-#include "../../utils/trustutils.h"
-#include "../../weapon_skill.h"
+#include "ability.h"
+#include "ai/states/ability_state.h"
+#include "ai/states/magic_state.h"
+#include "ai/states/mobskill_state.h"
+#include "ai/states/petskill_state.h"
+#include "ai/states/range_state.h"
+#include "ai/states/weaponskill_state.h"
+#include "enmity_container.h"
+#include "mobskill.h"
+#include "spell.h"
+#include "utils/battleutils.h"
+#include "utils/trustutils.h"
+#include "weapon_skill.h"
 
-#include "../../weapon_skill.h"
-#include "../controllers/player_controller.h"
-#include "../controllers/trust_controller.h"
+#include "ai/controllers/player_controller.h"
+#include "ai/controllers/trust_controller.h"
+#include "weapon_skill.h"
 
 namespace gambits
 {
@@ -39,7 +39,7 @@ namespace gambits
         }
         if (available)
         {
-            gambits.push_back(gambit);
+            gambits.emplace_back(gambit);
             return gambit.identifier;
         }
         return "";
@@ -216,10 +216,8 @@ namespace gambits
                 {
                     if (isValidMember(PMember) && CheckTrigger(PMember, predicate))
                     {
-                        auto name = std::string(reinterpret_cast<const char*>(PMember->GetName()));
-                        std::transform(name.begin(), name.end(), name.begin(),
-                        [](unsigned char c) { return std::tolower(c); });
-                        if (name == "curilla")
+                        auto name = PMember->GetName();
+                        if (strcmpi(name.c_str(), "curilla") == 0)
                         {
                             result = true;
                         }
@@ -227,6 +225,20 @@ namespace gambits
                 });
                 // clang-format on
                 return result;
+            }
+            else if (predicate.target == G_TARGET::PARTY_MULTI)
+            {
+                uint8 count = 0;
+                // clang-format off
+                static_cast<CCharEntity*>(POwner->PMaster)->ForPartyWithTrusts([&](CBattleEntity* PMember)
+                {
+                    if (isValidMember(PMember) && CheckTrigger(PMember, predicate))
+                    {
+                        ++count;
+                    }
+                });
+                // clang-format on
+                return count > 1;
             }
 
             // Fallthrough
@@ -381,10 +393,8 @@ namespace gambits
                     {
                         if (isValidMember(target, PMember) && CheckTrigger(PMember, gambit.predicates[0]))
                         {
-                            auto name = std::string(reinterpret_cast<const char*>(PMember->GetName()));
-                            std::transform(name.begin(), name.end(), name.begin(),
-                                           [](unsigned char c) { return std::tolower(c); });
-                            if (name == "curilla")
+                            auto name = PMember->GetName();
+                            if (strcmpi(name.c_str(), "curilla") == 0)
                             {
                                 target = PMember;
                             }
@@ -484,12 +494,18 @@ namespace gambits
                     {
                         CStatusEffect* PSCEffect = target->StatusEffectContainer->GetStatusEffect(EFFECT_SKILLCHAIN, 0);
 
+                        if (PSCEffect == nullptr)
+                        {
+                            ShowError("G_SELECT::MB_ELEMENT: PSCEffect was null.");
+                            return;
+                        }
+
                         std::list<SKILLCHAIN_ELEMENT> resonanceProperties;
                         if (uint16 power = PSCEffect->GetPower())
                         {
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)(power & 0xF));
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)(power >> 4 & 0xF));
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)(power >> 8));
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)(power & 0xF));
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)(power >> 4 & 0xF));
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)(power >> 8));
                         }
 
                         std::optional<SpellID> spell_id;
@@ -640,11 +656,11 @@ namespace gambits
                         }
                     }
                 }
-                else if (action.reaction == G_REACTION::MSG)
+                else if (action.reaction == G_REACTION::MS)
                 {
                     if (action.select == G_SELECT::SPECIFIC)
                     {
-                        // trustutils::SendTrustMessage(POwner, action.select_arg);
+                        controller->MobSkill(target->targid, action.select_arg);
                     }
                 }
 
@@ -818,6 +834,11 @@ namespace gambits
                 return xirand::GetRandomNumber<uint16>(100) < (int16)predicate.condition_arg;
                 break;
             }
+            case G_CONDITION::HP_MISSING:
+            {
+                return (trigger_target->health.maxhp - trigger_target->health.hp) >= (int16)predicate.condition_arg;
+                break;
+            }
             default:
             {
                 return false;
@@ -924,15 +945,15 @@ namespace gambits
                         std::list<SKILLCHAIN_ELEMENT> resonanceProperties;
                         if (uint16 power = PSCEffect->GetPower())
                         {
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)(power & 0xF));
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)(power >> 4 & 0xF));
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)(power >> 8));
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)(power & 0xF));
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)(power >> 4 & 0xF));
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)(power >> 8));
                         }
 
                         std::list<SKILLCHAIN_ELEMENT> skillProperties;
-                        skillProperties.push_back((SKILLCHAIN_ELEMENT)skill.primary);
-                        skillProperties.push_back((SKILLCHAIN_ELEMENT)skill.secondary);
-                        skillProperties.push_back((SKILLCHAIN_ELEMENT)skill.tertiary);
+                        skillProperties.emplace_back((SKILLCHAIN_ELEMENT)skill.primary);
+                        skillProperties.emplace_back((SKILLCHAIN_ELEMENT)skill.secondary);
+                        skillProperties.emplace_back((SKILLCHAIN_ELEMENT)skill.tertiary);
                         if (SKILLCHAIN_ELEMENT possible_skillchain = battleutils::FormSkillchain(resonanceProperties, skillProperties);
                             possible_skillchain != SC_NONE)
                         {
@@ -956,14 +977,14 @@ namespace gambits
                         for (auto& skill : tp_skills)
                         {
                             std::list<SKILLCHAIN_ELEMENT> resonanceProperties;
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)PMasterLastWeaponSkill->getPrimarySkillchain());
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)PMasterLastWeaponSkill->getSecondarySkillchain());
-                            resonanceProperties.push_back((SKILLCHAIN_ELEMENT)PMasterLastWeaponSkill->getTertiarySkillchain());
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)skill.primary);
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)skill.secondary);
+                            resonanceProperties.emplace_back((SKILLCHAIN_ELEMENT)skill.tertiary);
 
                             std::list<SKILLCHAIN_ELEMENT> skillProperties;
-                            skillProperties.push_back((SKILLCHAIN_ELEMENT)skill.primary);
-                            skillProperties.push_back((SKILLCHAIN_ELEMENT)skill.secondary);
-                            skillProperties.push_back((SKILLCHAIN_ELEMENT)skill.tertiary);
+                            skillProperties.emplace_back((SKILLCHAIN_ELEMENT)PMasterLastWeaponSkill->getPrimarySkillchain());
+                            skillProperties.emplace_back((SKILLCHAIN_ELEMENT)PMasterLastWeaponSkill->getSecondarySkillchain());
+                            skillProperties.emplace_back((SKILLCHAIN_ELEMENT)PMasterLastWeaponSkill->getTertiarySkillchain());
                             if (SKILLCHAIN_ELEMENT possible_skillchain = battleutils::FormSkillchain(resonanceProperties, skillProperties);
                                 possible_skillchain != SC_NONE)
                             {
@@ -995,6 +1016,13 @@ namespace gambits
             if (chosen_skill->skill_type == G_REACTION::WS)
             {
                 CWeaponSkill* PWeaponSkill = battleutils::GetWeaponSkill(chosen_skill->skill_id);
+
+                if (PWeaponSkill == nullptr)
+                {
+                    ShowError("G_REACTION::WS: PWeaponSkill was null.");
+                    return false;
+                }
+
                 if (chosen_skill->valid_targets & TARGET_SELF)
                 {
                     target = POwner;

@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 #ifndef _GUILD_H
 #define _GUILD_H
 
-#include "../common/cbasetypes.h"
+#include "common/cbasetypes.h"
 #include <array>
 #include <string>
 #include <vector>
@@ -48,7 +48,7 @@ struct GPItem_t
 class CGuild
 {
 public:
-    CGuild(uint8 id, const char* pointsName);
+    CGuild(uint8 id, const std::string& pointsName);
     ~CGuild();
 
     std::vector<CItemContainer*> guildShops;
@@ -63,8 +63,8 @@ private:
     uint8       m_id;
     std::string pointsName;
 
-    std::array<uint8, GP_ITEM_RANKS>                 m_GPItemsRank;
-    std::array<std::vector<GPItem_t>, GP_ITEM_RANKS> m_GPItems;
+    std::array<uint8, GP_ITEM_RANKS>                 m_GPItemsRank{};
+    std::array<std::vector<GPItem_t>, GP_ITEM_RANKS> m_GPItems{};
 };
 
 #endif

@@ -1,7 +1,7 @@
 -- Zone: PsoXja (9)
 -- Desc: this file contains functions that are shared by multiple luas in this zone's directory
 -----------------------------------
-local ID = require("scripts/zones/PsoXja/IDs")
+local ID = zones[xi.zone.PSOXJA]
 -----------------------------------
 
 local psoXjaGlobal = {}
@@ -24,6 +24,7 @@ psoXjaGlobal.attemptPickLock = function(player, npc, correctSideOfDoor)
                 npc:messageName(ID.text.DISCOVER_DISARM_SUCCESS, player)
                 npc:openDoor(30)
             end
+
             player:tradeComplete()
         end
     end

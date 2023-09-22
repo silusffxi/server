@@ -1,10 +1,7 @@
 -----------------------------------
 -- Area: Northern San d'Oria
 --  NPC: Maurine
--- Type: Standard Dialogue NPC
 -- !pos 144.852 0.000 136.828 231
------------------------------------
-local ID = require("scripts/zones/Northern_San_dOria/IDs")
 -----------------------------------
 local entity = {}
 
@@ -14,10 +11,10 @@ end
 entity.onTrigger = function(player, npc)
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

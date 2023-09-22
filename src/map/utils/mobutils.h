@@ -27,8 +27,8 @@
 #include "common/cbasetypes.h"
 #include "common/mmo.h"
 
-#include "../entities/mobentity.h"
-#include "../modifier.h"
+#include "entities/mobentity.h"
+#include "modifier.h"
 
 struct ModsList_t
 {
@@ -37,8 +37,8 @@ struct ModsList_t
     std::vector<CModifier*> mobMods;
 
     ModsList_t()
+    : id(0)
     {
-        id = 0;
     }
 };
 
@@ -58,28 +58,27 @@ namespace mobutils
     void SetupJob(CMobEntity* PMob);
     void SetupRoaming(CMobEntity* PMob);
     void SetupDynamisMob(CMobEntity* PMob);
-    void SetupLimbusMob(CMobEntity* PMob);
     void SetupBattlefieldMob(CMobEntity* PMob);
     void SetupDungeonMob(CMobEntity* PMob);
     void SetupEventMob(CMobEntity* PMob);
     void SetupNMMob(CMobEntity* PMob);
     void SetupPetSkills(CMobEntity* PMob);
 
-    uint16 GetWeaponDamage(CMobEntity* PMob);
+    uint16 GetWeaponDamage(CMobEntity* PMob, uint16 slot);
     uint16 GetMagicEvasion(CMobEntity* PMob);
     uint16 GetEvasion(CMobEntity* PMob);
     uint16 GetBase(CMobEntity* PMob, uint8 rank);
     uint16 GetBaseToRank(uint8 rank, uint16 level);
     void   GetAvailableSpells(CMobEntity* PMob);
-    void   InitializeMob(CMobEntity* PMob, CZone* PZone);
-    void   LoadCustomMods();
+    void   InitializeMob(CMobEntity* PMob);
+    void   LoadSqlModifiers();
 
     // get modifiers for pool / family / spawn
     ModsList_t* GetMobFamilyMods(uint16 familyId, bool create = false);
     ModsList_t* GetMobPoolMods(uint32 poolId, bool create = false);
     ModsList_t* GetMobSpawnMods(uint32 mobId, bool create = false);
 
-    void AddCustomMods(CMobEntity* PMob);
+    void AddSqlModifiers(CMobEntity* PMob);
 
     void        SetSpellList(CMobEntity*, uint16);
     CMobEntity* InstantiateAlly(uint32 groupid, uint16 zoneID, CInstance* = nullptr);

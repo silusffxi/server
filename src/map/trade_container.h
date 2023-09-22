@@ -22,7 +22,7 @@
 #ifndef _CTRADECONTAINER_H
 #define _CTRADECONTAINER_H
 
-#include "../common/cbasetypes.h"
+#include "common/cbasetypes.h"
 #include <vector>
 
 #define CONTAINER_SIZE       17
@@ -58,7 +58,7 @@ public:
     uint16 getItemID(uint8 slotID);
     uint8  getInvSlotID(uint8 slotID);
     uint32 getQuantity(uint8 slotID); // Number of items in the slot
-    uint8  getConfirmedStatus(uint8 slotID);
+    uint32 getConfirmedStatus(uint8 slotID);
     uint32 getItemQuantity(uint16 itemID); // Number of items of one type
     uint8  getSize();
     uint8  getExSize() const;
@@ -81,10 +81,10 @@ public:
     void Clean(); // we clean the container
 
 private:
-    uint8 m_type;       // Container type (crystal type, store nation, etc.)
-    uint8 m_craftType;  // The craft synthesis type (CRAFT_TYPE)
-    uint8 m_ItemsCount; // The number of items in the container (set by yourself)
-    uint8 m_exSize;     // Can be used as a custom delineation point inside a container
+    uint8 m_type{};       // Container type (crystal type, store nation, etc.)
+    uint8 m_craftType{};  // The craft synthesis type (CRAFT_TYPE)
+    uint8 m_ItemsCount{}; // The number of items in the container (set by yourself)
+    uint8 m_exSize{};     // Can be used as a custom delineation point inside a container
 
     std::vector<CItem*> m_PItem;
     std::vector<uint8>  m_slotID;

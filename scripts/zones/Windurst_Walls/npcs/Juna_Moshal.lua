@@ -1,7 +1,6 @@
 -----------------------------------
 -- Area: Windurst Walls
 --  NPC: Juna Moshal
--- Working 100%
 -----------------------------------
 local entity = {}
 
@@ -26,10 +25,10 @@ entity.onTrigger = function(player, npc)
     player:startEvent(327)
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

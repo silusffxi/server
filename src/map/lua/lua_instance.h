@@ -44,7 +44,7 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const CLuaInstance& instance);
 
     uint16 getID();
-    auto   getName() -> std::string;
+    auto   getName() -> const std::string&;
     auto   getZone() -> CLuaZone;
     uint32 getEntranceZoneID();
     auto   getAllies() -> sol::table;
@@ -76,6 +76,11 @@ public:
     bool completed();
 
     auto insertAlly(uint32 groupid) -> std::optional<CLuaBaseEntity>;
+
+    bool operator==(const CLuaInstance& other) const
+    {
+        return this->m_PLuaInstance == other.m_PLuaInstance;
+    }
 
     static void Register();
 };

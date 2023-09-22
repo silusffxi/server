@@ -5,11 +5,6 @@
 -- !addmission 12 40
 -- Erminold : !pos 50.949 -40 -90.942 257
 -----------------------------------
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.SOA, xi.mission.id.soa.THE_PURGATION)
 
@@ -45,9 +40,9 @@ mission.sections =
         {
             ['Erminold'] = mission:event(1526):replaceDefault(),
 
-            onRegionEnter =
+            onTriggerAreaEnter =
             {
-                [1] = function(player, region)
+                [1] = function(player, triggerArea)
                     return mission:progressEvent(1510)
                 end,
             },

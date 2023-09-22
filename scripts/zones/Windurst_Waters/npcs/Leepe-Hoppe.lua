@@ -4,13 +4,7 @@
 -- Involved in Mission 1-3, Mission 7-2
 -- !pos 13 -9 -197 238
 -----------------------------------
-require("scripts/globals/settings")
-require("scripts/globals/missions")
-require("scripts/globals/keyitems")
-require("scripts/globals/npc_util")
-require("scripts/globals/quests")
-require("scripts/globals/titles")
-local ID = require("scripts/zones/Windurst_Waters/IDs")
+local ID = zones[xi.zone.WINDURST_WATERS]
 -----------------------------------
 local entity = {}
 
@@ -37,12 +31,29 @@ end
 local function getFenrirRewardMask(player)
     local rewardMask = 0
 
-    if player:findItem(18165) then rewardMask = rewardMask + 1;  end -- Fenrir's Stone
-    if player:findItem(13572) then rewardMask = rewardMask + 2;  end -- Fenrir's Cape
-    if player:findItem(13138) then rewardMask = rewardMask + 4;  end -- Fenrir's Torque
-    if player:findItem(13399) then rewardMask = rewardMask + 8;  end -- Fenrir's Earring
-    if player:findItem(1208)  then rewardMask = rewardMask + 16; end -- Ancient's Key
-    if player:hasSpell(297)   then rewardMask = rewardMask + 64; end  -- Pact
+    if player:findItem(18165) then
+        rewardMask = rewardMask + 1
+    end -- Fenrir's Stone
+
+    if player:findItem(13572) then
+        rewardMask = rewardMask + 2
+    end -- Fenrir's Cape
+
+    if player:findItem(13138) then
+        rewardMask = rewardMask + 4
+    end -- Fenrir's Torque
+
+    if player:findItem(13399) then
+        rewardMask = rewardMask + 8
+    end -- Fenrir's Earring
+
+    if player:findItem(1208) then
+        rewardMask = rewardMask + 16
+    end -- Ancient's Key
+
+    if player:hasSpell(xi.magic.spell.FENRIR) then
+        rewardMask = rewardMask + 64
+    end  -- Pact
 
     if
         not player:hasKeyItem(xi.ki.TRAINERS_WHISTLE) or
@@ -81,7 +92,10 @@ entity.onTrigger = function(player, npc)
     elseif tuningIn == QUEST_COMPLETED and tuningOut == QUEST_AVAILABLE then
         player:startEvent(888) -- Starting dialogue
 
-    elseif tuningOut == QUEST_ACCEPTED and player:getCharVar("TuningOut_Progress") == 8 then
+    elseif
+        tuningOut == QUEST_ACCEPTED and
+        player:getCharVar('TuningOut_Progress') == 8
+    then
         player:startEvent(897) -- Finishing dialogue
 
     -- The Moonlit Path and Other Fenrir Stuff!
@@ -95,7 +109,7 @@ entity.onTrigger = function(player, npc)
 
         player:startEvent(842, 0, 1125)
     elseif moonlitPath == QUEST_ACCEPTED then
-        if (player:hasKeyItem(xi.ki.MOON_BAUBLE)) then -- Default text after acquiring moon bauble and before fighting Fenrir
+        if player:hasKeyItem(xi.ki.MOON_BAUBLE) then -- Default text after acquiring moon bauble and before fighting Fenrir
             player:startEvent(845, 0, 1125, 334)
         elseif player:hasKeyItem(xi.ki.WHISPER_OF_THE_MOON) then -- First turn-in
             local availRewards = 0
@@ -120,7 +134,7 @@ entity.onTrigger = function(player, npc)
             local availRewards = getFenrirRewardMask(player)
 
             player:startEvent(850, 0, 13399, 1208, 1125, availRewards, 18165, 13572)
-        elseif (os.time() > player:getCharVar("MoonlitPath_date")) then --24 hours have passed, flag a new fight
+        elseif os.time() > player:getCharVar('MoonlitPath_date') then --24 hours have passed, flag a new fight
             player:startEvent(848, 0, 1125, 334)
         end
     elseif tuningIn == QUEST_ACCEPTED then
@@ -134,10 +148,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     -- Moonlit Path and Other Fenrir Stuff
     if csid == 842 and option == 2 then
         player:addQuest(xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_MOONLIT_PATH)
@@ -158,16 +172,20 @@ entity.onEventFinish = function(player, csid, option)
         player:delQuest(xi.quest.log_id.OTHER_AREAS, xi.quest.id.otherAreas.TRIAL_BY_LIGHTNING)
     elseif csid == 846 or csid == 850 then -- Turn-in event
         local reward = 0
-        if option == 1 then reward = 18165 -- Fenrir's Stone
-        elseif option == 2 then reward = 13572 -- Fenrir's Cape
-        elseif option == 3 then reward = 13138 -- Fenrir's Torque
-        elseif option == 4 then reward = 13399 -- Fenrir's Earring
-        elseif option == 5 then reward = 1208 -- Ancient's Key
+        if option == 1 then
+            reward = 18165 -- Fenrir's Stone
+        elseif option == 2 then
+            reward = 13572 -- Fenrir's Cape
+        elseif option == 3 then
+            reward = 13138 -- Fenrir's Torque
+        elseif option == 4 then
+            reward = 13399 -- Fenrir's Earring
+        elseif option == 5 then
+            reward = 1208 -- Ancient's Key
         elseif option == 6 then
-            player:addGil(xi.settings.main.GIL_RATE * 15000)
-            player:messageSpecial(ID.text.GIL_OBTAINED, xi.settings.main.GIL_RATE * 15000) -- Gil
+            npcUtil.giveCurrency(player, 'gil', 15000)
         elseif option == 7 then
-            player:addSpell(297) -- Pact
+            player:addSpell(xi.magic.spell.FENRIR) -- Pact
         elseif option == 8 then
             player:addKeyItem(xi.ki.FENRIR_WHISTLE)
             player:messageSpecial(ID.text.KEYITEM_OBTAINED, xi.ki.FENRIR_WHISTLE)
@@ -178,7 +196,7 @@ entity.onEventFinish = function(player, csid, option)
         -- if the player chooses an item, and they don't have space in their inventory.
         player:addTitle(xi.title.HEIR_OF_THE_NEW_MOON)
         player:delKeyItem(xi.ki.WHISPER_OF_THE_MOON)
-        player:setCharVar("MoonlitPath_date", getMidnight())
+        player:setCharVar('MoonlitPath_date', getMidnight())
         player:addFame(xi.quest.fame_area.WINDURST, 30)
 
         if player:getQuestStatus(xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_MOONLIT_PATH) == QUEST_ACCEPTED then
@@ -189,7 +207,11 @@ entity.onEventFinish = function(player, csid, option)
             npcUtil.giveItem(player, reward)
         end
 
-        if player:getNation() == xi.nation.WINDURST and player:getRank(player:getNation()) == 10 and player:getQuestStatus(xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_PROMISE) == QUEST_COMPLETED then
+        if
+            player:getNation() == xi.nation.WINDURST and
+            player:getRank(player:getNation()) == 10 and
+            player:getQuestStatus(xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_PROMISE) == QUEST_COMPLETED
+        then
             npcUtil.giveKeyItem(player, xi.ki.DARK_MANA_ORB)
         end
     elseif csid == 848 then
@@ -210,7 +232,7 @@ entity.onEventFinish = function(player, csid, option)
 
     -- Tuning Out
     elseif csid == 888 then
-        player:setCharVar("TuningOut_Progress", 1)
+        player:setCharVar('TuningOut_Progress', 1)
         player:addQuest(xi.quest.log_id.WINDURST, xi.quest.id.windurst.TUNING_OUT)
 
     elseif
@@ -220,7 +242,7 @@ entity.onEventFinish = function(player, csid, option)
             title = xi.title.FRIEND_OF_THE_HELMED,
         })
     then
-        player:setCharVar("TuningOut_Progress", 0) -- zero when quest is done
+        player:setCharVar('TuningOut_Progress', 0) -- zero when quest is done
     end
 end
 

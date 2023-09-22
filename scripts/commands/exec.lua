@@ -2,48 +2,51 @@
 -- func: exec
 -- desc: Allows you to execute a Lua string directly from chat.
 -----------------------------------
+local commandObj = {}
 
-cmdprops =
+commandObj.cmdprops =
 {
     permission = 4,
-    parameters = "s"
+    parameters = 's'
 }
 
-function error(player, msg)
+local function error(player, msg)
     player:PrintToPlayer(msg)
-    player:PrintToPlayer("!exec <Lua string>")
+    player:PrintToPlayer('!exec <Lua string>')
 end
 
-function onTrigger(player, str)
+commandObj.onTrigger = function(player, str)
     -- Ensure a command was given..
-    if (str == nil or string.len(str) == 0) then
-        error(player, "You must enter a string to execute.")
+    if str == nil or string.len(str) == 0 then
+        error(player, 'You must enter a string to execute.')
         return
     end
 
     -- For safety measures we will nuke the os table..
-    local old_os = os
+    local oldOs = os
     os = nil
 
-    -- Define "player" and "target" inside the string for use by the caller
-    local define_player = "local player = GetPlayerByName(\"" .. player:getName() .. "\"); "
-    local define_target = "local target = player:getCursorTarget(); "
+    -- Define 'player' and 'target' inside the string for use by the caller
+    local definePlayer = 'local player = GetPlayerByName(\'' .. player:getName() .. '\'); '
+    local defineTarget = 'local target = player:getCursorTarget(); '
 
     -- Ensure the command compiles / is valid..
-    local scriptObj, err0 = loadstring(define_player .. define_target .. str)
-    if (scriptObj == nil) then
-        player:PrintToPlayer("Failed to load the given string.")
+    local scriptObj, err0 = loadstring(definePlayer .. defineTarget .. str)
+    if scriptObj == nil then
+        player:PrintToPlayer('Failed to load the given string.')
         player:PrintToPlayer(err0)
-        os = old_os
+        os = oldOs
         return
     end
 
     -- Execute the string..
-    local status, err1 = pcall(scriptObj)
-    if (status == false) then
-        player:PrintToPlayer("Error calling: " .. str .. "\n" .. err1)
+    local successfullyExecuted, errorMessage = pcall(scriptObj)
+    if not successfullyExecuted then
+        player:PrintToPlayer('Error calling: ' .. str .. '\n' .. errorMessage)
     end
 
     -- Restore the os table..
-    os = old_os
+    os = oldOs
 end
+
+return commandObj

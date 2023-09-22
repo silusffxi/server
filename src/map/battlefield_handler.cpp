@@ -49,9 +49,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 #include "zone.h"
 
 CBattlefieldHandler::CBattlefieldHandler(CZone* PZone)
+: m_PZone(PZone)
+, m_MaxBattlefields(luautils::OnBattlefieldHandlerInitialise(PZone))
 {
-    m_PZone           = PZone;
-    m_MaxBattlefields = luautils::OnBattlefieldHandlerInitialise(PZone);
 }
 
 void CBattlefieldHandler::HandleBattlefields(time_point tick)
@@ -77,7 +77,7 @@ void CBattlefieldHandler::HandleBattlefields(time_point tick)
             {
                 it = m_Battlefields.erase(it);
                 ShowDebug("[CBattlefieldHandler]HandleBattlefields cleaned up Battlefield %s", PBattlefield->GetName().c_str());
-                delete PBattlefield;
+                destroy(PBattlefield);
                 continue;
             }
         }
@@ -98,7 +98,7 @@ void CBattlefieldHandler::HandleBattlefields(time_point tick)
         {
             luautils::OnBattlefieldKick(PChar);
             PChar->StatusEffectContainer->DelStatusEffectsByFlag(EFFECTFLAG_CONFRONTATION, true);
-            PChar->StatusEffectContainer->DelStatusEffect(EFFECT_LEVEL_RESTRICTION);
+            m_PZone->updateCharLevelRestriction(PChar);
         }
         iter = m_orphanedPlayers.erase(iter);
     }
@@ -380,5 +380,5 @@ uint8 CBattlefieldHandler::MaxBattlefieldAreas() const
 void CBattlefieldHandler::addOrphanedPlayer(CCharEntity* PChar)
 {
     auto orphan = std::make_pair(PChar->id, server_clock::now() + 5s);
-    m_orphanedPlayers.push_back(orphan);
+    m_orphanedPlayers.emplace_back(orphan);
 }

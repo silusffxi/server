@@ -4,9 +4,7 @@
 -- Type: Fishing Synthesis Image Support
 -- !pos -178.900 -2.789 76.200 240
 -----------------------------------
-require("scripts/globals/status")
-require("scripts/globals/crafting")
-local ID = require("scripts/zones/Port_Windurst/IDs")
+local ID = zones[xi.zone.PORT_WINDURST]
 -----------------------------------
 local entity = {}
 
@@ -14,12 +12,11 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-    local guildMember = xi.crafting.isGuildMember(player, 5)
     local skillCap = xi.crafting.getCraftSkillCap(player, xi.skill.FISHING)
     local skillLevel = player:getSkillLevel(xi.skill.FISHING)
 
-    if (guildMember == 1) then
-        if (player:hasStatusEffect(xi.effect.FISHING_IMAGERY) == false) then
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.FISHING) then
+        if not player:hasStatusEffect(xi.effect.FISHING_IMAGERY) then
             player:startEvent(10012, skillCap, skillLevel, 1, 239, player:getGil(), 0, 0, 0) -- p1 = skill level
         else
             player:startEvent(10012, skillCap, skillLevel, 1, 239, player:getGil(), 19194, 4031, 0)
@@ -29,11 +26,11 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
-    if (csid == 10012 and option == 1) then
+entity.onEventFinish = function(player, csid, option, npc)
+    if csid == 10012 and option == 1 then
         player:messageSpecial(ID.text.FISHING_SUPPORT, 0, 0, 1)
         player:addStatusEffect(xi.effect.FISHING_IMAGERY, 1, 0, 3600)
     end

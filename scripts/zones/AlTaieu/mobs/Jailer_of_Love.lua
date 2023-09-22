@@ -3,8 +3,7 @@
 --   NM: Jailer of Love
 -- !pos 431.522 -0.912 -603.503 33
 -----------------------------------
-local ID = require("scripts/zones/AlTaieu/IDs")
-require("scripts/globals/status")
+local ID = zones[xi.zone.ALTAIEU]
 -----------------------------------
 local entity = {}
 
@@ -28,16 +27,20 @@ end
 
 entity.onMobFight = function(mob, target)
     -- reduce regen after nine Xzomits and Hpemdes are killed
-    if mob:getLocalVar("JoL_Regen_Reduction") == 0 and mob:getLocalVar("JoL_Qn_xzomit_Killed") >= 9 and mob:getLocalVar("JoL_Qn_hpemde_Killed") >= 9 then
-        mob:setLocalVar("JoL_Regen_Reduction", 1)
+    if
+        mob:getLocalVar('JoL_Regen_Reduction') == 0 and
+        mob:getLocalVar('JoL_Qn_xzomit_Killed') >= 9 and
+        mob:getLocalVar('JoL_Qn_hpemde_Killed') >= 9
+    then
+        mob:setLocalVar('JoL_Regen_Reduction', 1)
         mob:addMod(xi.mod.REGEN, -260)
     end
 
     -- spawn minions in 2.5 minute intervals
-    if os.time() > mob:getLocalVar("pop_pets") then
-        mob:setLocalVar("pop_pets", os.time() + 150)
+    if os.time() > mob:getLocalVar('pop_pets') then
+        mob:setLocalVar('pop_pets', os.time() + 150)
 
-        local spawns = mob:getLocalVar("SPAWNS")
+        local spawns = mob:getLocalVar('SPAWNS')
         if spawns < 8 then
             local minionOffset = ID.mob.JAILER_OF_LOVE + minionGroup[spawns]
             SpawnMob(minionOffset + 0):updateEnmity(target)
@@ -72,7 +75,8 @@ entity.onMobFight = function(mob, target)
                 SpawnMob(phuaboDn[i]):updateEnmity(target)
             end
         end
-        mob:setLocalVar("SPAWNS", spawns + 1)
+
+        mob:setLocalVar('SPAWNS', spawns + 1)
     end
 end
 

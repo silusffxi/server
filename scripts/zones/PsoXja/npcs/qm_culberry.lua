@@ -4,22 +4,25 @@
 -- Notes: Used to spawn Golden-Tongued Culberry
 -- !pos -270.063 31.395 256.812 9
 -----------------------------------
-local ID = require("scripts/zones/PsoXja/IDs")
-require("scripts/globals/npc_util")
+local ID = zones[xi.zone.PSOXJA]
 -----------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
     local pendantChance = 0
-    if npcUtil.tradeHas(trade, 18014) then -- odorous knife
+
+    if npcUtil.tradeHasExactly(trade, xi.item.ODOROUS_KNIFE) then
         pendantChance = 500
-    elseif npcUtil.tradeHas(trade, 18016) then -- odorous knife +1
+    elseif npcUtil.tradeHasExactly(trade, xi.item.ODOROUS_KNIFE_P1) then
         pendantChance = 1000
     end
 
-    if pendantChance > 0 and npcUtil.popFromQM(player, npc, ID.mob.GOLDEN_TONGUED_CULBERRY) then
+    if
+        pendantChance > 0 and
+        npcUtil.popFromQM(player, npc, ID.mob.GOLDEN_TONGUED_CULBERRY)
+    then
         player:confirmTrade()
-        SetDropRate(1190, 13145, pendantChance)
+        GetMobByID(ID.mob.GOLDEN_TONGUED_CULBERRY):setLocalVar('DropRate', pendantChance)
     end
 end
 
@@ -27,10 +30,10 @@ entity.onTrigger = function(player, npc)
     player:messageSpecial(ID.text.BROKEN_KNIFE)
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

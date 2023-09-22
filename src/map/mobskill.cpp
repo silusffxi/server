@@ -23,24 +23,24 @@
 #include <cstring>
 
 CMobSkill::CMobSkill(uint16 id)
+: m_ID(id)
+, m_TotalTargets(1)
+, m_Param(0)
+, m_AnimID(0)
+, m_Aoe(0)
+, m_Distance(0)
+, m_Flag(0)
+, m_ValidTarget(0)
+, m_AnimationTime(0)
+, m_ActivationTime(0)
+, m_Message(0)
+, m_TP(0)
+, m_HPP(0)
+, m_knockback(0)
+, m_primarySkillchain(0)
+, m_secondarySkillchain(0)
+, m_tertiarySkillchain(0)
 {
-    m_ID                  = id;
-    m_AnimID              = 0;
-    m_Aoe                 = 0;
-    m_Distance            = 0;
-    m_TotalTargets        = 1;
-    m_Flag                = 0;
-    m_ValidTarget         = 0;
-    m_AnimationTime       = 0;
-    m_ActivationTime      = 0;
-    m_Message             = 0;
-    m_Param               = 0;
-    m_primarySkillchain   = 0;
-    m_secondarySkillchain = 0;
-    m_tertiarySkillchain  = 0;
-    m_TP                  = 0;
-    m_HPP                 = 0;
-    m_knockback           = 0;
 }
 
 bool CMobSkill::hasMissMsg() const
@@ -106,15 +106,14 @@ void CMobSkill::setAnimationID(uint16 animID)
     m_AnimID = animID;
 }
 
-const int8* CMobSkill::getName() const
+const std::string& CMobSkill::getName()
 {
-    return (const int8*)m_name.c_str();
+    return m_name;
 }
 
-void CMobSkill::setName(int8* name)
+void CMobSkill::setName(const std::string& name)
 {
-    m_name.clear();
-    m_name.insert(0, (const char*)name);
+    m_name = name;
 }
 
 void CMobSkill::setAoe(uint8 aoe)

@@ -7,13 +7,6 @@
 -- Aldo                    : !pos 20 3 -58 245
 -- Ru'Avitau Main Entrance : !pos -0.2171 -45.013 -119.7575
 -----------------------------------
-require('scripts/globals/interaction/mission')
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/settings')
-require('scripts/globals/titles')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.ZILART, xi.mission.id.zilart.THE_SEALED_SHRINE)
 
@@ -35,7 +28,7 @@ mission.sections =
             {
                 onTrigger = function(player, npc)
                     if player:getMissionStatus(mission.areaId) == 0 then
-                         return mission:progressEvent(172)
+                        return mission:progressEvent(172)
                     end
                 end,
             },

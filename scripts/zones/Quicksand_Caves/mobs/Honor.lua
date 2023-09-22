@@ -3,9 +3,6 @@
 --  Mob: Honor
 -- Coming of Age (San dOria Mission 8-1)
 -----------------------------------
-require("scripts/globals/missions")
-require("scripts/globals/status")
------------------------------------
 local entity = {}
 
 entity.onMobInitialize = function(mob)
@@ -14,8 +11,8 @@ end
 
 entity.onMobSpawn = function(mob)
     DespawnMob(mob:getID(), 180)
-    mob:addMod(xi.mod.SLEEPRES, 50)
-    mob:addMod(xi.mod.LULLABYRES, 50)
+    mob:addMod(xi.mod.SLEEP_MEVA, 50)
+    mob:addMod(xi.mod.LULLABY_MEVA, 50)
 end
 
 entity.onMobDeath = function(mob, player, optParams)

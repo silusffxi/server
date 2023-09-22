@@ -4,21 +4,18 @@
 -- Only sells when Windurst controlls Aragoneu Region
 -- Confirmed shop stock, August 2013
 -----------------------------------
-require("scripts/globals/events/harvest_festivals")
-local ID = require("scripts/zones/Windurst_Waters/IDs")
-require("scripts/globals/conquest")
-require("scripts/globals/shop")
+local ID = zones[xi.zone.WINDURST_WATERS]
 -----------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
-    onHalloweenTrade(player, trade, npc)
+    xi.events.harvestFestival.onHalloweenTrade(player, trade, npc)
 end
 
 entity.onTrigger = function(player, npc)
     local regionOwner = GetRegionOwner(xi.region.ARAGONEU)
 
-    if (regionOwner ~= xi.nation.WINDURST) then
+    if regionOwner ~= xi.nation.WINDURST then
         player:showText(npc, ID.text.MAQUMOLPIH_CLOSED_DIALOG)
     else
         player:showText(npc, ID.text.MAQUMOLPIH_OPEN_DIALOG)
@@ -35,10 +32,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

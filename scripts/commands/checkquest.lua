@@ -2,28 +2,34 @@
 -- func: !checkquest <logID> <questID> (player)
 -- desc: Prints status of the quest to the in game chatlog
 -----------------------------------
-require("scripts/globals/quests")
 local logIdHelpers = require('scripts/globals/log_ids')
 -----------------------------------
+local commandObj = {}
 
-cmdprops =
+commandObj.cmdprops =
 {
     permission = 1,
-    parameters = "sss"
+    parameters = 'sss'
 }
 
-function error(player, msg)
+local function error(player, msg)
     player:PrintToPlayer(msg)
-    player:PrintToPlayer("!checkquest <logID> <questID> (player)")
+    player:PrintToPlayer('!checkquest <logID> <questID> (player)')
 end
 
-function onTrigger(player, logId, questId, target)
+local questStatusString =
+{
+    [0] = 'AVAILABLE',
+    [1] = 'ACCEPTED',
+    [2] = 'COMPLETED',
+}
 
+commandObj.onTrigger = function(player, logId, questId, target)
     -- validate logId
     local questLog = logIdHelpers.getQuestLogInfo(logId)
 
     if questLog == nil then
-        error(player, "Invalid logID.")
+        error(player, 'Invalid logID.')
         return
     end
 
@@ -37,7 +43,7 @@ function onTrigger(player, logId, questId, target)
     end
 
     if questId == nil or questId < 0 then
-        error(player, "Invalid questID.")
+        error(player, 'Invalid questID.')
         return
     end
 
@@ -45,26 +51,22 @@ function onTrigger(player, logId, questId, target)
     local targ
     if target == nil then
         targ = player:getCursorTarget()
-        if (targ == nil or not targ:isPC()) then
+        if targ == nil or not targ:isPC() then
             targ = player
         end
     else
         targ = GetPlayerByName(target)
         if targ == nil then
-            error(player, string.format("Player named '%s' not found!", target))
+            error(player, string.format('Player named "%s" not found!', target))
             return
         end
     end
 
     -- get quest status
     local status = targ:getQuestStatus(logId, questId)
-    switch (status): caseof
-    {
-        [0] = function (x) status = "AVAILABLE" end,
-        [1] = function (x) status = "ACCEPTED" end,
-        [2] = function (x) status = "COMPLETED" end,
-    }
 
     -- show quest status
-    player:PrintToPlayer( string.format( "%s's status for %s quest ID %i is: %s", targ:getName(), logName, questId, status ) )
+    player:PrintToPlayer(string.format('%s\'s status for %s quest ID %i is: %s', targ:getName(), logName, questId, questStatusString[status]))
 end
+
+return commandObj

@@ -19,20 +19,30 @@ jobs:
   Sanity_Checks:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Install Dependencies
       run: |
+        # https://mariadb.com/docs/connect/programming-languages/c/install/#connector-c-install-repo-configure-cs
+        # Ubuntu is using an old libmariadb but python3 pip expects it to be newer. Use the mariadb provided deb packages.
+        wget -P /tmp/ https://downloads.mariadb.com/MariaDB/mariadb_repo_setup
+        # Note: there is a sha256sum command here according to the above link, but I am unsure if this file may change with time
+        chmod +x /tmp/mariadb_repo_setup
+        sudo /tmp/mariadb_repo_setup --mariadb-server-version="mariadb-10.6"
+        # Remove the above when it's no longer necessary
+
         sudo apt-get update
-        sudo apt-get install -y software-properties-common cppcheck luajit-5.1-dev luarocks mariadb-server mariadb-client libmariadb-dev-compat binutils-dev
+        sudo apt-get install -y software-properties-common cppcheck luajit-5.1-dev luarocks mariadb-server-10.6 mariadb-client-10.6 libmariadb-dev-compat binutils-dev
         pip install -r tools/requirements.txt
         luarocks install luacheck --local
+        npm install -g diff-so-fancy
     - id: changed-files
       name: Get Changed Files
-      uses: Ana06/get-changed-files@v2.1.0
+      uses: Ana06/get-changed-files@v2.2.0
       with:
         filter: |
+          modules/**
           src/**
           scripts/**
           sql/**
@@ -98,17 +108,23 @@ jobs:
             fi
           fi
         done
-        git diff >> cpp_formatting_checks.txt
-        cat cpp_formatting_checks.txt
+        git diff --color >> cpp_formatting_checks.txt
         git reset --hard
         if [ -s cpp_formatting_checks.txt ]
         then
+          echo ""
+          echo "You have errors in your C++ code formatting."
+          echo "Please see below in red for the incorrect formatting, and in green for the correct formatting."
+          echo "You can either fix the formatting by hand or use clang-format."
+          echo "(You can safely ignore warnings about \$TERM and tput)"
+          echo ""
+          cat cpp_formatting_checks.txt | diff-so-fancy || true
           exit 1
         fi
         exit 0
     - name: Upload CPP Formatting Diff
       if: hashFiles('cpp_formatting_checks.txt') != ''
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: clang_format_diff
         path: |
@@ -117,6 +133,8 @@ jobs:
       if: always()
       run: |
         touch lua_checks.txt
+        python3 tools/ci/lua_stylecheck.py test >> lua_checks.txt
+
         for changed_file in ${{ steps.changed-files.outputs.all }}; do
           if [[ -f $changed_file ]]; then
             if [[ $changed_file == *.lua ]]; then
@@ -172,7 +190,7 @@ jobs:
     needs: Sanity_Checks
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
     - name: Install Dependencies
@@ -194,19 +212,51 @@ jobs:
       run: |
         cmake --build build -j4
     - name: Archive Executables
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: linux_executables
         path: |
           xi_connect
           xi_map
           xi_search
+          xi_world
 
-  Linux_GCC11_64bit:
+  Linux_ClangTidy14_64bit:
     needs: Sanity_Checks
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common cmake libmariadb-dev-compat libluajit-5.1-dev libzmq3-dev zlib1g-dev libssl-dev binutils-dev
+    #- name: Cache 'build' folder
+    #  uses: actions/cache@v3
+    #  with:
+    #    path: build
+    #    key: ${{ runner.os }}-clang
+    - name: Configure CMake
+      run: |
+        export CC=/usr/bin/clang-14
+        export CXX=/usr/bin/clang++-14
+        mkdir -p build
+        cmake -S . -B build -DENABLE_CLANG_TIDY=ON
+    - name: Build
+      run: |
+        touch clang-tidy.txt
+        cmake --build build -j4 >> clang-tidy.txt || true
+        cat clang-tidy.txt
+        if grep -q warning\|error clang-tidy.txt; then
+            exit 1
+        fi
+
+  Linux_GCC12_64bit:
+    needs: Sanity_Checks
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
     - name: Install Dependencies
@@ -220,8 +270,8 @@ jobs:
     #    key: ${{ runner.os }}-gcc
     - name: Configure CMake
       run: |
-        export CC=/usr/bin/gcc-11
-        export CXX=/usr/bin/g++-11
+        export CC=/usr/bin/gcc-12
+        export CXX=/usr/bin/g++-12
         mkdir -p build
         CFLAGS=-m64 CXXFLAGS=-m64 LDFLAGS=-m64 cmake -S . -B build
     - name: Build
@@ -234,7 +284,7 @@ jobs:
     env:
       MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: Cache 'build' folder
@@ -258,7 +308,7 @@ jobs:
     env:
       MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: Cache 'build' folder
@@ -276,21 +326,22 @@ jobs:
         run: |
           cmake --build build -j4
       - name: Archive Executables
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: windows_executables
           path: |
             xi_connect.exe
             xi_map.exe
             xi_search.exe
+            xi_world.exe
 
-  Windows_64bit_Release_Tracy_Modules_World:
+  Windows_64bit_Release_Tracy_Modules:
     needs: Sanity_Checks
     runs-on: windows-latest
     env:
       MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: Cache 'build' folder
@@ -311,7 +362,7 @@ jobs:
         shell: cmd
         run: |
           mkdir -p build
-          cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DTRACY=ON -DBUILD_WORLD=ON
+          cmake -S . -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DENABLE_TRACY=ON
       - name: Build
         shell: cmd
         run: |
@@ -322,7 +373,7 @@ jobs:
     # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-11-Readme.md
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 1
       - name: Install Dependencies (Brew)
@@ -352,7 +403,7 @@ jobs:
     needs: Linux_Clang14_64bit
     services:
       mysql:
-        image: mariadb
+        image: mariadb:10.6
         env:
           MYSQL_DATABASE: xidb
           MYSQL_ROOT_PASSWORD: root
@@ -360,17 +411,17 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: linux_executables
         path: .
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y software-properties-common cmake mariadb-server mariadb-client libmariadb-dev-compat libluajit-5.1-dev libzmq3-dev zlib1g-dev libssl-dev luarocks binutils-dev
+        sudo apt-get install -y software-properties-common cmake mariadb-client-10.6 libmariadb-dev-compat libluajit-5.1-dev libzmq3-dev zlib1g-dev libssl-dev luarocks binutils-dev
     - name: Verify MySQL connection from container
       run: |
         mysql -h 127.0.0.1 -uroot -proot -e "SHOW DATABASES"
@@ -396,7 +447,7 @@ jobs:
     - name: Startup and character login checks
       uses: nick-invision/retry@v2
       with:
-        timeout_minutes: 5
+        timeout_minutes: 15
         max_attempts: 3
         retry_on: timeout
         shell: bash
@@ -404,67 +455,109 @@ jobs:
           chmod +x xi_connect
           chmod +x xi_map
           chmod +x xi_search
+          chmod +x xi_world
           ls -l
 
           printf "\nStart server processes\n"
           screen -d -m -S xi_connect ./xi_connect --log login-server.log
           screen -d -m -S xi_search ./xi_search --log search-server.log
           screen -d -m -S xi_map ./xi_map --log map-server.log
+          screen -d -m -S xi_world ./xi_world --log world-server.log
 
-          printf "\nWaiting 90s for servers to fully start up\n"
-          sleep 90s
+          printf "\nWaiting 5m for servers to fully start up\n"
+          sleep 300s
 
+          # define bash helper function to help diagnose any sql errors
+          function mysqlcmd() { mysql xidb -h 127.0.0.1 -uroot -proot --verbose -e "$@"; }
           printf "\nPopulating database\n"
-          mysql xidb -h 127.0.0.1 -uroot -proot << EOF
-          -- Clean out anything already there (just in case)
-          DELETE FROM accounts;
-          DELETE FROM chars;
-          -- Create an account
-          INSERT INTO accounts(id, login, password, timecreate, timelastmodify, status, priv)
+
+          # Clean out anything already there (just in case)
+          mysqlcmd "DELETE FROM accounts;"
+          mysqlcmd "DELETE FROM chars;"
+          mysqlcmd "DELETE FROM char_look;"
+          mysqlcmd "DELETE FROM char_stats;"
+
+          # Clean tables that are made from triggers on insert to char table
+          mysqlcmd "DELETE FROM char_equip;"
+          mysqlcmd "DELETE FROM char_exp;"
+          mysqlcmd "DELETE FROM char_history;"
+          mysqlcmd "DELETE FROM char_inventory;"
+          mysqlcmd "DELETE FROM char_jobs;"
+          mysqlcmd "DELETE FROM char_pet;"
+          mysqlcmd "DELETE FROM char_points;"
+          mysqlcmd "DELETE FROM char_profile;"
+          mysqlcmd "DELETE FROM char_storage;"
+          mysqlcmd "DELETE FROM char_unlocks;"
+
+          # Create an account
+          mysqlcmd "INSERT INTO accounts (id, login, password, timecreate, timelastmodify, status, priv)
           VALUES(1000, 'admin', PASSWORD('admin'), NOW(), NOW(), 1, 1);
-          SELECT id, login FROM accounts;
-          -- Create a character
-          INSERT INTO chars(charid, accid, charname, pos_zone, nation, gmlevel)
+          SELECT id, login, content_ids FROM accounts;"
+
+          # Create a character
+          mysqlcmd "INSERT INTO chars (charid, accid, charname, pos_zone, nation, gmlevel)
           VALUES(1, 1000, 'Test', 0, 0, 5);
-          -- Set char_look (default is 0 and trips up scripting)
-          INSERT INTO char_look (charid, face, race, size, head, body, hands, legs, feet, main, sub, ranged)
+          SELECT charid, accid, charname, pos_zone FROM chars;"
+
+          # Set char_look (default is 0 and trips up scripting)
+          mysqlcmd "INSERT INTO char_look (charid, face, race, size, head, body, hands, legs, feet, main, sub, ranged)
           VALUES (1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
-          SELECT charid, face, race FROM char_look;
-          -- Update character information
-          -- Place near some Robber Crabs in Kuftal Tunnel
-          UPDATE chars
+          SELECT charid, face, race FROM char_look;"
+
+          # Populate more char tables with defaults
+          mysqlcmd "INSERT INTO char_stats (charid, mjob)
+          VALUES(1, 1);
+          SELECT charid, mjob FROM char_stats;"
+
+          # Update character information
+          # Place near some Robber Crabs in Kuftal Tunnel
+          mysqlcmd "UPDATE chars
           SET
               pos_zone = 174,
               pos_prevzone = 174,
               pos_x = 55,
               pos_y = -9,
               pos_z = -140
-          WHERE charid = 1;
-          SELECT charid, accid, pos_zone, pos_x, pos_y, pos_z FROM chars;
-          -- Set GodMode CharVar = 1
-          INSERT INTO char_vars(charid, varname, value)
-          VALUES(1, 'GodMode', 1);
-          SELECT * FROM char_vars;
-          EOF
+          WHERE charid = 1;"
+
+          mysqlcmd "SELECT charid, accid, charname, pos_zone, pos_x, pos_y, pos_z FROM chars;"
+          # Set GodMode CharVar = 1
+          mysqlcmd "INSERT INTO char_vars(charid, varname, value)
+          VALUES(1, 'GodMode', 1);"
 
           printf "\nRunning HeadlessXI for 60 seconds\n"
           python3 << EOF
           import time
-          from tools.headlessxi.hxiclient import HXIClient
-          hxi_client = HXIClient('admin', 'admin', 'localhost')
-          hxi_client.login()
-          print('Sleeping 30s')
-          time.sleep(30)
-          hxi_client.logout()
+          try:
+              from tools.headlessxi.hxiclient import HXIClient
+              hxi_client = HXIClient('admin', 'admin', 'localhost')
+              hxi_client.login()
+              print('Sleeping 60s')
+              time.sleep(60)
+              hxi_client.logout()
+              exit(0)
+          except Exception as e:
+              exit(-1)
           EOF
+          hxi_result=$?
 
-          killall screen
+          pkill -SIGINT xi_map
+          pkill -SIGINT xi_search
+          pkill -SIGINT xi_connect
+          pkill -SIGINT xi_world
+
+          # fail if hxi had a non-zero exit code
+          if [[ "$hxi_result" -ne "0" ]]; then
+              echo "hxi exited with code $hxi_result"
+              exit $hxi_result
+          fi
     - name: Check for errors and warnings
       if: ${{ success() || failure() }}
       run: |
         cat login-server*.log
         cat map-server*.log
         cat search-server*.log
+        cat world-server*.log
 
         if grep -qi "warning\|error\|crash" login-server*.log; then
             exit -1
@@ -478,12 +571,16 @@ jobs:
             exit -1
         fi
 
+        if grep -qi "warning\|error\|crash" world-server*.log; then
+            exit -1
+        fi
+
   MultiInstance_Startup_Checks_Linux:
     runs-on: ubuntu-22.04
     needs: Linux_Clang14_64bit
     services:
       mysql:
-        image: mariadb
+        image: mariadb:10.6
         env:
           MYSQL_DATABASE: xidb
           MYSQL_ROOT_PASSWORD: root
@@ -491,17 +588,17 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: linux_executables
         path: .
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y software-properties-common cmake mariadb-server mariadb-client libmariadb-dev-compat libluajit-5.1-dev libzmq3-dev zlib1g-dev libssl-dev luarocks binutils-dev
+        sudo apt-get install -y software-properties-common cmake mariadb-client-10.6 libmariadb-dev-compat libluajit-5.1-dev libzmq3-dev zlib1g-dev libssl-dev luarocks binutils-dev
     - name: Verify MySQL connection from container
       run: |
         mysql -h 127.0.0.1 -uroot -proot -e "SHOW DATABASES"
@@ -525,14 +622,16 @@ jobs:
         chmod +x xi_connect
         chmod +x xi_map
         chmod +x xi_search
+        chmod +x xi_world
         ls -l
 
         printf "\nStart server processes\n"
         screen -d -m -S xi_connect ./xi_connect --log login-server.log
         screen -d -m -S xi_search ./xi_search --log search-server.log
-        screen -d -m -S xi_map ./xi_map --log map-server-0.log --port 54230
-        screen -d -m -S xi_map ./xi_map --log map-server-1.log --port 54231
-        sleep 2m
+        screen -d -m -S xi_map ./xi_map --log map-server-0.log --ip 127.0.0.1 --port 54230
+        screen -d -m -S xi_map ./xi_map --log map-server-1.log --ip 127.0.0.1 --port 54231
+        screen -d -m -S xi_world ./xi_world --log world-server.log
+        sleep 300s
         killall screen
     - name: Check for errors and warnings
       if: ${{ success() || failure() }}
@@ -541,6 +640,7 @@ jobs:
         cat search-server*.log
         cat map-server-0*.log
         cat map-server-1*.log
+        cat world-server*.log
 
         if grep -qi "warning\|error\|crash" login-server*.log; then
             exit -1
@@ -558,14 +658,18 @@ jobs:
           exit -1
         fi
 
+        if grep -qi "warning\|error\|crash" world-server*.log; then
+          exit -1
+        fi
+
   Full_Startup_Checks_Windows:
     runs-on: windows-latest
     needs: Windows_64bit_Debug
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 1
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: windows_executables
         path: .

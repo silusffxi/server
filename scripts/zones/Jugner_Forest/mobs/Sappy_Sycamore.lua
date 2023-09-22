@@ -2,16 +2,12 @@
 -- Area: Jugner_Forest
 --   NM: Sappy Sycamore
 -----------------------------------
-require("scripts/globals/hunts")
-require("scripts/globals/status")
-require("scripts/globals/mobs")
------------------------------------
 local entity = {}
 
 entity.onMobInitialize = function(mob)
     mob:setMobMod(xi.mobMod.ADD_EFFECT, 1)
-    mob:addMod(xi.mod.SLEEPRES, 20)
-    mob:addMod(xi.mod.BINDRES, 20)
+    mob:addMod(xi.mod.SLEEP_MEVA, 20)
+    mob:addMod(xi.mod.BIND_MEVA, 20)
     mob:addMod(xi.mod.EARTH_MEVA, 100)
 end
 

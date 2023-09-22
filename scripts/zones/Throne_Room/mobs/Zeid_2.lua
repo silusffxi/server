@@ -3,12 +3,7 @@
 --  Mob: Zeid (Phase 2)
 -- Mission 9-2 BASTOK BCNM Fight
 -----------------------------------
-local ID = require("scripts/zones/Throne_Room/IDs")
-mixins = { require("scripts/mixins/job_special") }
-require("scripts/globals/mobskills")
-require("scripts/globals/settings")
-require("scripts/globals/titles")
-require("scripts/globals/status")
+mixins = { require('scripts/mixins/job_special') }
 -----------------------------------
 local entity = {}
 
@@ -26,7 +21,12 @@ entity.onMobFight = function(mob, target)
     local shadow1 = GetMobByID(zeid + 1)
     local shadow2 = GetMobByID(zeid + 2)
 
-    if mob:getHPP() <= 77 and mob:getTP() >= 1000 and shadow1:isDead() and shadow2:isDead() then
+    if
+        mob:getHPP() <= 77 and
+        mob:getTP() >= 1000 and
+        shadow1:isDead() and
+        shadow2:isDead()
+    then
         mob:useMobAbility(984)
     end
 end

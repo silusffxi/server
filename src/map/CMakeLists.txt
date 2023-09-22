@@ -1,6 +1,7 @@
 add_subdirectory(ai)
 add_subdirectory(entities)
 add_subdirectory(items)
+add_subdirectory(los)
 add_subdirectory(lua)
 add_subdirectory(packets)
 add_subdirectory(utils)
@@ -10,6 +11,7 @@ set(SOURCES
     ${AI_SOURCES}
     ${ENTITY_SOURCES}
     ${ITEM_SOURCES}
+    ${LOS_SOURCES}
     ${LUA_SOURCES}
     ${PACKET_SOURCES}
     ${UTIL_SOURCES}
@@ -29,6 +31,8 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/battlefield_handler.h
     ${CMAKE_CURRENT_SOURCE_DIR}/battlefield.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/battlefield.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/besieged_system.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/besieged_system.h
     ${CMAKE_CURRENT_SOURCE_DIR}/blue_spell.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/blue_spell.h
     ${CMAKE_CURRENT_SOURCE_DIR}/blue_trait.cpp
@@ -41,6 +45,8 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/char_recast_container.h
     ${CMAKE_CURRENT_SOURCE_DIR}/command_handler.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/command_handler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/conquest_data.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/conquest_data.h
     ${CMAKE_CURRENT_SOURCE_DIR}/conquest_system.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/conquest_system.h
     ${CMAKE_CURRENT_SOURCE_DIR}/daily_system.cpp
@@ -96,8 +102,6 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/petskill.h
     ${CMAKE_CURRENT_SOURCE_DIR}/recast_container.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/recast_container.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/region.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/region.h
     ${CMAKE_CURRENT_SOURCE_DIR}/roe.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/roe.h
     ${CMAKE_CURRENT_SOURCE_DIR}/spell.cpp
@@ -118,12 +122,12 @@ set(SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/transport.h
     ${CMAKE_CURRENT_SOURCE_DIR}/treasure_pool.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/treasure_pool.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/trigger_area.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/trigger_area.h
     ${CMAKE_CURRENT_SOURCE_DIR}/unitychat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/unitychat.h
     ${CMAKE_CURRENT_SOURCE_DIR}/universal_container.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/universal_container.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/vana_time.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/vana_time.h
     ${CMAKE_CURRENT_SOURCE_DIR}/weapon_skill.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/weapon_skill.h
     ${CMAKE_CURRENT_SOURCE_DIR}/zone_entities.cpp
@@ -139,6 +143,9 @@ if(UNIX)
 else()
     set(resource "${CMAKE_SOURCE_DIR}/res/mapserver.rc")
 endif()
+
+# Track the init file to make sure a re-configure will happen on build if needed
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/modules/init.txt")
 
 # Search for module directories
 set(module_include_dirs "")
@@ -185,15 +192,22 @@ target_link_libraries(xi_map
 
 target_include_directories(xi_map
     PUBLIC
+        ${CMAKE_SOURCE_DIR}
         ${CMAKE_SOURCE_DIR}/src
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${module_include_dirs}
 )
 
-target_precompile_headers(xi_map PUBLIC pch.h)
+if(NOT ${ENABLE_CLANG_TIDY})
+    target_precompile_headers(xi_map PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
+endif()
+
+if (APPLE)
+    disable_lto(xi_map)
+endif()
 
 if(TRACY_ENABLE)
-    target_link_libraries(xi_map PUBLIC tracy_client)
+    target_link_libraries(xi_map PUBLIC TracyClient)
 endif(TRACY_ENABLE)
 
 set_target_output_directory(xi_map)

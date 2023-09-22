@@ -2460,6 +2460,24 @@ ID Number    Costume Name
 2909    FF14 Spriggan
 2910    FF14 Spriggan
 2928    Porxie
+2933    Mumor II
+2934    Gargoyle
+2935    Purple Imp
+2936    White Ooze
+2937    Pet Behemoth
+2938    Iroha
+2939    Dark Promathia
+2940    Purple Dragon
+2941    Swirling Orb of Darkness
+2942    Cloud of Darkness
+2944    Pet Dragon
+2945    Pet Mantis
+2948    Pet Sheep
+2954    Big Mandragora
+2955    Big Rabbit
+2956    Big Worm
+2957    Tiny Morbol
+2965    Golden Crab
 3000    Trust: Shantotto
 3001    Trust: Naji
 3002    Trust: Kupipi
@@ -2570,6 +2588,8 @@ ID Number    Costume Name
 3119    Trust: Cornelia
 3120    Trust: Monberaux
 3121    Trust: Matsui-P
+
+3581    Gargantuan Moogle with Vest (Bonanza)
 
 0x0500E80400000000000000000000000000000000    Tatenashi Armor
 0x0500E90400000000000000000000000000000000    Hizamaru Armor

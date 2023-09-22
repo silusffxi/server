@@ -2,8 +2,8 @@
 -- Area: Temenos
 --  Mob: Pee Qoho the Python
 -----------------------------------
-mixins = { require("scripts/mixins/job_special") }
-local ID = require("scripts/zones/Temenos/IDs")
+mixins = { require('scripts/mixins/job_special') }
+local ID = zones[xi.zone.TEMENOS]
 -----------------------------------
 local entity = {}
 
@@ -23,6 +23,7 @@ entity.onMobEngaged = function(mob, target)
         mob:setMod(xi.mod.IMPACT_SDT, 300)
         mob:setMod(xi.mod.HTH_SDT, 300)
     end
+
     GetMobByID(ID.mob.TEMENOS_C_MOB[3]):updateEnmity(target)
     GetMobByID(ID.mob.TEMENOS_C_MOB[3] + 1):updateEnmity(target)
 end

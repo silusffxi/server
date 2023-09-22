@@ -5,10 +5,6 @@
 -- !addmission 12 93
 -- Levil : !pos -87.204 3.350 12.655 256
 -----------------------------------
-require('scripts/globals/missions')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.SOA, xi.mission.id.soa.CRIES_FROM_THE_DEEP)
 
@@ -31,9 +27,9 @@ mission.sections =
 
         [xi.zone.EASTERN_ADOULIN] =
         {
-            onRegionEnter =
+            onTriggerAreaEnter =
             {
-                [1] = function(player, region)
+                [1] = function(player, triggerArea)
                     return mission:progressEvent(1532, 0, 15827327, utils.MAX_UINT32 - 703, 579, 89, 207, 1998, 4)
                 end,
             },

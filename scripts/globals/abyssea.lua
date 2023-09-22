@@ -1,14 +1,10 @@
 -----------------------------------
 -- Abyssea Global
 -----------------------------------
-require("scripts/globals/spell_data")
-require("scripts/globals/keyitems")
-require("scripts/globals/quests")
-require("scripts/globals/status")
-require("scripts/globals/utils")
-require("scripts/globals/weaponskillids")
-require("scripts/globals/zone")
-require("scripts/globals/extravaganza")
+require('scripts/globals/npc_util')
+require('scripts/globals/quests')
+require('scripts/globals/utils')
+require('scripts/globals/extravaganza')
 -----------------------------------
 xi = xi or {}
 xi.abyssea = xi.abyssea or {}
@@ -86,69 +82,117 @@ local itemType = xi.abyssea.itemType
 xi.abyssea.visionsCruorProspectorItems =
 {
 --  Sel      Item                                       Cost,  Qty
-    [ 1] = { xi.items.PERLE_SALADE,                     4000 },
-    [ 2] = { xi.items.PERLE_HAUBERK,                    5000 },
-    [ 3] = { xi.items.PERLE_MOUFLES,                    3000 },
-    [ 4] = { xi.items.PERLE_BRAYETTES,                  3000 },
-    [ 5] = { xi.items.PERLE_SOLLERETS,                  3000 },
-    [ 6] = { xi.items.AURORE_BERET,                     4000 },
-    [ 7] = { xi.items.AURORE_DOUBLET,                   5000 },
-    [ 8] = { xi.items.AURORE_GLOVES,                    3000 },
-    [ 9] = { xi.items.AURORE_BRAIS,                     3000 },
-    [10] = { xi.items.AURORE_GAITERS,                   3000 },
-    [11] = { xi.items.TEAL_CHAPEAU,                     4000 },
-    [12] = { xi.items.TEAL_SAIO,                        5000 },
-    [13] = { xi.items.TEAL_CUFFS,                       3000 },
-    [14] = { xi.items.TEAL_SLOPS,                       3000 },
-    [15] = { xi.items.TEAL_PIGACHES,                    3000 },
-    [16] = { xi.items.FORBIDDEN_KEY,                     500 },
-    [17] = { xi.items.CIPHER_OF_JOACHIMS_ALTER_EGO,     5000 },
-    [18] = { xi.items.SHADOW_THRONE,                 2000000 },
+    [ 1] = { xi.item.PERLE_SALADE,                     4000 },
+    [ 2] = { xi.item.PERLE_HAUBERK,                    5000 },
+    [ 3] = { xi.item.PERLE_MOUFLES,                    3000 },
+    [ 4] = { xi.item.PERLE_BRAYETTES,                  3000 },
+    [ 5] = { xi.item.PERLE_SOLLERETS,                  3000 },
+    [ 6] = { xi.item.AURORE_BERET,                     4000 },
+    [ 7] = { xi.item.AURORE_DOUBLET,                   5000 },
+    [ 8] = { xi.item.AURORE_GLOVES,                    3000 },
+    [ 9] = { xi.item.AURORE_BRAIS,                     3000 },
+    [10] = { xi.item.AURORE_GAITERS,                   3000 },
+    [11] = { xi.item.TEAL_CHAPEAU,                     4000 },
+    [12] = { xi.item.TEAL_SAIO,                        5000 },
+    [13] = { xi.item.TEAL_CUFFS,                       3000 },
+    [14] = { xi.item.TEAL_SLOPS,                       3000 },
+    [15] = { xi.item.TEAL_PIGACHES,                    3000 },
+    [16] = { xi.item.FORBIDDEN_KEY,                     500 },
+    [17] = { xi.item.CIPHER_OF_JOACHIMS_ALTER_EGO,     5000 },
+    [18] = { xi.item.SHADOW_THRONE,                 2000000 },
 }
 
 xi.abyssea.visionsCruorProspectorTemps =
 {
 --  Sel      Item                          Cost, Qty
-    [ 1] = { xi.items.LUCID_POTION_I,             80 },
-    [ 2] = { xi.items.LUCID_ETHER_I,              80 },
-    [ 3] = { xi.items.BOTTLE_OF_CATHOLICON,       80 },
-    [ 4] = { xi.items.DUSTY_ELIXIR,              120 },
-    [ 5] = { xi.items.TUBE_OF_CLEAR_SALVE_I,     120 },
-    [ 6] = { xi.items.BOTTLE_OF_STALWARTS_TONIC, 150 },
-    [ 7] = { xi.items.BOTTLE_OF_ASCETICS_TONIC,  150 },
-    [ 8] = { xi.items.BOTTLE_OF_CHAMPIONS_TONIC, 150 },
-    [ 9] = { xi.items.LUCID_POTION_II,           200 },
-    [10] = { xi.items.LUCID_ETHER_II,            200 },
-    [11] = { xi.items.LUCID_ELIXIR_I,            300 },
-    [12] = { xi.items.FLASK_OF_HEALING_POWDER,   300 },
-    [13] = { xi.items.PINCH_OF_MANA_POWDER,      300 },
-    [14] = { xi.items.TUBE_OF_HEALING_SALVE_I,   300 },
-    [15] = { xi.items.BOTTLE_OF_VICARS_DRINK,    300 },
-    [16] = { xi.items.TUBE_OF_CLEAR_SALVE_II,    300 },
-    [17] = { xi.items.PRIMEVAL_BREW,         2000000 },
+    [ 1] = { xi.item.LUCID_POTION_I,             80 },
+    [ 2] = { xi.item.LUCID_ETHER_I,              80 },
+    [ 3] = { xi.item.BOTTLE_OF_CATHOLICON,       80 },
+    [ 4] = { xi.item.DUSTY_ELIXIR,              120 },
+    [ 5] = { xi.item.TUBE_OF_CLEAR_SALVE_I,     120 },
+    [ 6] = { xi.item.BOTTLE_OF_STALWARTS_TONIC, 150 },
+    [ 7] = { xi.item.BOTTLE_OF_ASCETICS_TONIC,  150 },
+    [ 8] = { xi.item.BOTTLE_OF_CHAMPIONS_TONIC, 150 },
+    [ 9] = { xi.item.LUCID_POTION_II,           200 },
+    [10] = { xi.item.LUCID_ETHER_II,            200 },
+    [11] = { xi.item.LUCID_ELIXIR_I,            300 },
+    [12] = { xi.item.FLASK_OF_HEALING_POWDER,   300 },
+    [13] = { xi.item.PINCH_OF_MANA_POWDER,      300 },
+    [14] = { xi.item.TUBE_OF_HEALING_SALVE_I,   300 },
+    [15] = { xi.item.BOTTLE_OF_VICARS_DRINK,    300 },
+    [16] = { xi.item.TUBE_OF_CLEAR_SALVE_II,    300 },
+    [17] = { xi.item.PRIMEVAL_BREW,         2000000 },
 }
 
+-- Each selection can contain multiple effects in the format of { abysseaEffect, actualEffect, Amt, keyItemRequired, bonusMultiplier }
+-- and after that table, the cruor cost is defined.
 xi.abyssea.visionsCruorProspectorBuffs =
 {
---  Sel          Effect (Abyssea)       Actual Effect          Amt, KeyItem for Bonus,           Bonus Mult      Cost
-    [ 6] = { { { xi.effect.ABYSSEA_HP,  xi.effect.MAX_HP_BOOST, 20, xi.abyssea.abyssiteType.MERIT,       10 }, },  50 },
-    [ 7] = { { { xi.effect.ABYSSEA_MP,  xi.effect.MAX_MP_BOOST, 10, xi.abyssea.abyssiteType.MERIT,        5 }, }, 120 },
-    [ 8] = { { { xi.effect.ABYSSEA_STR, xi.effect.STR_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_DEX, xi.effect.DEX_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 }, }, 120 },
-    [ 9] = { { { xi.effect.ABYSSEA_VIT, xi.effect.VIT_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_AGI, xi.effect.AGI_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 }, }, 100 },
-    [10] = { { { xi.effect.ABYSSEA_INT, xi.effect.INT_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_CHR, xi.effect.CHR_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_MND, xi.effect.MND_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 }, }, 100 },
-    [11] = { { { xi.effect.ABYSSEA_HP,  xi.effect.MAX_HP_BOOST, 20, xi.abyssea.abyssiteType.MERIT,       10 },
-               { xi.effect.ABYSSEA_MP,  xi.effect.MAX_MP_BOOST, 10, xi.abyssea.abyssiteType.MERIT,        5 },
-               { xi.effect.ABYSSEA_STR, xi.effect.STR_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_DEX, xi.effect.DEX_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_VIT, xi.effect.VIT_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_AGI, xi.effect.AGI_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_INT, xi.effect.INT_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_CHR, xi.effect.CHR_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
-               { xi.effect.ABYSSEA_MND, xi.effect.MND_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 }, }, 470 },
+    [6] =
+    {
+        {
+            { xi.effect.ABYSSEA_HP, xi.effect.MAX_HP_BOOST, 20, xi.abyssea.abyssiteType.MERIT, 10 },
+        },
+
+        50,
+    },
+
+    [7] =
+    {
+        {
+            { xi.effect.ABYSSEA_MP, xi.effect.MAX_MP_BOOST, 10, xi.abyssea.abyssiteType.MERIT, 5 },
+        },
+
+        120,
+    },
+
+    [8] =
+    {
+        {
+            { xi.effect.ABYSSEA_STR, xi.effect.STR_BOOST, 10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_DEX, xi.effect.DEX_BOOST, 10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+        },
+
+        120,
+    },
+
+    [9] =
+    {
+        {
+            { xi.effect.ABYSSEA_VIT, xi.effect.VIT_BOOST, 10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_AGI, xi.effect.AGI_BOOST, 10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+        },
+
+        100,
+    },
+
+    [10] =
+    {
+        {
+            { xi.effect.ABYSSEA_INT, xi.effect.INT_BOOST, 10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_CHR, xi.effect.CHR_BOOST, 10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_MND, xi.effect.MND_BOOST, 10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+        },
+
+        100,
+    },
+
+    [11] =
+    {
+        {
+            { xi.effect.ABYSSEA_HP,  xi.effect.MAX_HP_BOOST, 20, xi.abyssea.abyssiteType.MERIT,       10 },
+            { xi.effect.ABYSSEA_MP,  xi.effect.MAX_MP_BOOST, 10, xi.abyssea.abyssiteType.MERIT,        5 },
+            { xi.effect.ABYSSEA_STR, xi.effect.STR_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_DEX, xi.effect.DEX_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_VIT, xi.effect.VIT_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_AGI, xi.effect.AGI_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_INT, xi.effect.INT_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_CHR, xi.effect.CHR_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+            { xi.effect.ABYSSEA_MND, xi.effect.MND_BOOST,    10, xi.abyssea.abyssiteType.FURTHERANCE, 10 },
+        },
+
+        470,
+    },
 }
 
 -- Sequential Abyssite Key Items.
@@ -359,7 +403,7 @@ local redWeakness =
 
 local yellowWeakness =
 {
-    [xi.magic.element.FIRE] =
+    [xi.element.FIRE] =
     {
         xi.magic.spell.FIRE_III,
         xi.magic.spell.FIRE_IV,
@@ -370,7 +414,7 @@ local yellowWeakness =
         xi.magic.spell.ICE_THRENODY,
     },
 
-    [xi.magic.element.ICE] =
+    [xi.element.ICE] =
     {
         xi.magic.spell.BLIZZARD_III,
         xi.magic.spell.BLIZZARD_IV,
@@ -381,7 +425,7 @@ local yellowWeakness =
         xi.magic.spell.WIND_THRENODY,
     },
 
-    [xi.magic.element.WIND] =
+    [xi.element.WIND] =
     {
         xi.magic.spell.AERO_III,
         xi.magic.spell.AERO_IV,
@@ -392,7 +436,7 @@ local yellowWeakness =
         xi.magic.spell.EARTH_THRENODY,
     },
 
-    [xi.magic.element.EARTH] =
+    [xi.element.EARTH] =
     {
         xi.magic.spell.STONE_III,
         xi.magic.spell.STONE_IV,
@@ -403,7 +447,7 @@ local yellowWeakness =
         xi.magic.spell.LIGHTNING_THRENODY,
     },
 
-    [xi.magic.element.THUNDER] =
+    [xi.element.THUNDER] =
     {
         xi.magic.spell.THUNDER_III,
         xi.magic.spell.THUNDER_IV,
@@ -414,7 +458,7 @@ local yellowWeakness =
         xi.magic.spell.WATER_THRENODY,
     },
 
-    [xi.magic.element.WATER] =
+    [xi.element.WATER] =
     {
         xi.magic.spell.WATER_III,
         xi.magic.spell.WATER_IV,
@@ -425,7 +469,7 @@ local yellowWeakness =
         xi.magic.spell.FIRE_THRENODY,
     },
 
-    [xi.magic.element.LIGHT] =
+    [xi.element.LIGHT] =
     {
         xi.magic.spell.BANISH_II,
         xi.magic.spell.BANISH_III,
@@ -437,7 +481,7 @@ local yellowWeakness =
         xi.magic.spell.DARK_THRENODY,
     },
 
-    [xi.magic.element.DARK] =
+    [xi.element.DARK] =
     {
         xi.magic.spell.ASPIR,
         xi.magic.spell.DRAIN,
@@ -461,7 +505,7 @@ local blueWeakness =
         xi.weaponskill.BLAST_SHOT,
         xi.weaponskill.HEAVY_SHOT,
         xi.weaponskill.DETONATOR,
-        xi.weaponskill.SHADOWSTICH,
+        xi.weaponskill.SHADOWSTITCH,
         xi.weaponskill.DANCING_EDGE,
         xi.weaponskill.SHARK_BITE,
         xi.weaponskill.EVISCERATION,
@@ -531,31 +575,34 @@ local popEvents =
 xi.abyssea.visionsCruorProspectorOnTrigger = function(player, npc)
     local active = xi.extravaganza.campaignActive()
     local cipher = 0
-    local cruor = player:getCurrency("cruor")
+    local cruor = player:getCurrency('cruor')
     local demilune = xi.abyssea.getDemiluneAbyssite(player)
 
-    if active == xi.extravaganza.campaign.SUMMER_NY or active == xi.extravaganza.campaign.BOTH then
+    if
+        active == xi.extravaganza.campaign.SUMMER_NY or
+        active == xi.extravaganza.campaign.BOTH
+    then
         cipher = 1
     end
 
     player:startEvent(2002, cruor, demilune, 0, 0, cipher)
 end
 
-xi.abyssea.visionsCruorProspectorOnEventFinish = function (player, csid, option, prospectorItems)
+xi.abyssea.visionsCruorProspectorOnEventFinish = function(player, csid, option, prospectorItems)
     local itemCategory = bit.band(option, 0x07)
     local itemSelected = bit.band(bit.rshift(option, 16), 0x1F)
-    local cruorTotal = player:getCurrency("cruor")
+    local cruorTotal = player:getCurrency('cruor')
 
     if itemCategory == itemType.ITEM then
         local itemData = prospectorItems[itemCategory][itemSelected]
-        local itemQty = itemData[1] ~= xi.items.FORBIDDEN_KEY and 1 or bit.rshift(option, 24)
+        local itemQty = itemData[1] ~= xi.item.FORBIDDEN_KEY and 1 or bit.rshift(option, 24)
         local itemCost = itemData[2] * itemQty
 
         if
             itemCost <= cruorTotal and
             npcUtil.giveItem(player, { { itemData[1], itemQty } })
         then
-            player:delCurrency("cruor", itemCost)
+            player:delCurrency('cruor', itemCost)
         end
     elseif itemCategory == itemType.TEMP then
         local itemData = prospectorItems[itemCategory][itemSelected]
@@ -565,7 +612,7 @@ xi.abyssea.visionsCruorProspectorOnEventFinish = function (player, csid, option,
             itemCost <= cruorTotal and
             npcUtil.giveTempItem(player, { { itemData[1], 1 } })
         then
-            player:delCurrency("cruor", itemCost)
+            player:delCurrency('cruor', itemCost)
         end
     elseif itemCategory == itemType.KEYITEM then
         local itemData = prospectorItems[itemCategory][itemSelected]
@@ -574,7 +621,7 @@ xi.abyssea.visionsCruorProspectorOnEventFinish = function (player, csid, option,
             itemData[2] <= cruorTotal and
             npcUtil.giveKeyItem(player, itemData[1])
         then
-            player:delCurrency("cruor", itemData[2])
+            player:delCurrency('cruor', itemData[2])
         end
     elseif itemCategory == itemType.ENHANCEMENT then
         local enhanceData = prospectorItems[itemCategory][itemSelected]
@@ -590,7 +637,7 @@ xi.abyssea.visionsCruorProspectorOnEventFinish = function (player, csid, option,
                 end
             end
 
-            player:delCurrency("cruor", enhanceData[2])
+            player:delCurrency('cruor', enhanceData[2])
         end
     end
 end
@@ -626,7 +673,7 @@ end
 xi.abyssea.spendTravStones = function(player, spentstones)
     local numRemoved = 0
 
-    for keyItem = xi.ki.TRAVERSER_STONE6, xi.ki.TRAVERSER_STONE1 do
+    for keyItem = xi.ki.TRAVERSER_STONE6, xi.ki.TRAVERSER_STONE1, -1 do
         if numRemoved == spentstones then
             break
         elseif player:hasKeyItem(keyItem) then
@@ -636,7 +683,7 @@ xi.abyssea.spendTravStones = function(player, spentstones)
     end
 end
 
--- returns total "Abyssite of <thing>"
+-- returns total 'Abyssite of <thing>'
 xi.abyssea.getAbyssiteTotal = function(player, enumVal)
     local kiCount = 0
 
@@ -650,7 +697,7 @@ xi.abyssea.getAbyssiteTotal = function(player, enumVal)
 end
 
 xi.abyssea.canGiveNMKI = function(mob, dropChance)
-    local redProcValue = mob:getLocalVar("[AbysseaRedProc]")
+    local redProcValue = mob:getLocalVar('[AbysseaRedProc]')
 
     if math.random(1, 100) <= dropChance or redProcValue == 1 then
         return true
@@ -660,30 +707,31 @@ xi.abyssea.canGiveNMKI = function(mob, dropChance)
 end
 
 xi.abyssea.giveNMDrops = function(mob, player, ID)
+    if not xi.abyssea.mob[mob:getName()] then
+        return
+    end
+
     local atmaDrops = xi.abyssea.mob[mob:getName()]['Atma']
     local normalDrops = xi.abyssea.mob[mob:getName()]['Normal']
-    local playerClaimed = GetPlayerByID(mob:getLocalVar("[ClaimedBy]"))
+    local playerClaimed = GetPlayerByID(mob:getLocalVar('[ClaimedBy]'))
 
-    for k, v in pairs(normalDrops) do
+    for _, keyItemId in pairs(normalDrops) do
         if xi.abyssea.canGiveNMKI(mob, 20) then
-            playerClaimed:addKeyItem(v)
-            playerClaimed:messageSpecial(ID.text.KEYITEM_OBTAINED, v)
+            npcUtil.giveKeyItem(playerClaimed, keyItemId, ID.text.PLAYER_KEYITEM_OBTAINED)
         end
     end
 
-    for k, v in pairs(atmaDrops) do
+    for _, keyItemId in pairs(atmaDrops) do
         local ally = playerClaimed:getAlliance()
 
         for _, member in ipairs(ally) do
-            if not member:hasKeyItem(v) and xi.abyssea.canGiveNMKI(mob, 10) then
-                member:addKeyItem(v)
-                member:messageSpecial(ID.text.KEYITEM_OBTAINED, v)
+            if not member:hasKeyItem(keyItemId) and xi.abyssea.canGiveNMKI(mob, 10) then
+                npcUtil.giveKeyItem(member, keyItemId, ID.text.PLAYER_KEYITEM_OBTAINED)
             end
         end
 
-        if not playerClaimed:hasKeyItem(v) then
-            playerClaimed:addKeyItem(v)
-            playerClaimed:messageSpecial(ID.text.KEYITEM_OBTAINED, v)
+        if not playerClaimed:hasKeyItem(keyItemId) then
+            npcUtil.giveKeyItem(playerClaimed, keyItemId, ID.text.PLAYER_KEYITEM_OBTAINED)
         end
     end
 
@@ -743,27 +791,30 @@ xi.abyssea.procMonster = function(mob, player, triggerType)
         end
 
         if triggerType == xi.abyssea.triggerType.RED then
-            if mob:getLocalVar("[AbysseaRedProc]") == 0 then
-                mob:setLocalVar("[AbysseaRedProc]", 1)
+            if mob:getLocalVar('[AbysseaRedProc]') == 0 then
+                mob:setLocalVar('[AbysseaRedProc]', 1)
             else
-                mob:setLocalVar("[AbysseaRedProc]", 0)
+                mob:setLocalVar('[AbysseaRedProc]', 0)
             end
+
             mob:weaknessTrigger(2)
             mob:addStatusEffect(xi.effect.TERROR, 0, 0, 30)
         elseif triggerType == xi.abyssea.triggerType.YELLOW then
-            if mob:getLocalVar("[AbysseaYellowProc]") == 0 then
-                mob:setLocalVar("[AbysseaYellowProc]", 1)
+            if mob:getLocalVar('[AbysseaYellowProc]') == 0 then
+                mob:setLocalVar('[AbysseaYellowProc]', 1)
             else
-                mob:setLocalVar("[AbysseaYellowProc]", 0)
+                mob:setLocalVar('[AbysseaYellowProc]', 0)
             end
+
             mob:weaknessTrigger(1)
             mob:addStatusEffect(xi.effect.TERROR, 0, 0, 30)
         elseif triggerType == xi.abyssea.triggerType.BLUE then
-            if mob:getLocalVar("[AbysseaBlueProc]") == 0 then
-                mob:setLocalVar("[AbysseaBlueProc]", 1)
+            if mob:getLocalVar('[AbysseaBlueProc]') == 0 then
+                mob:setLocalVar('[AbysseaBlueProc]', 1)
             else
-                mob:setLocalVar("[AbysseaBlueProc]", 0)
+                mob:setLocalVar('[AbysseaBlueProc]', 0)
             end
+
             mob:weaknessTrigger(0)
             mob:addStatusEffect(xi.effect.TERROR, 0, 0, 30)
         end
@@ -798,7 +849,7 @@ xi.abyssea.qmOnTrade = function(player, npc, trade, mobId, reqTrade)
     GetMobByID(mobId):setSpawn(dx, dy, dz)
 
     SpawnMob(mobId):updateClaim(player)
-    GetMobByID(mobId):setLocalVar("[ClaimedBy]", player:getID())
+    GetMobByID(mobId):setLocalVar('[ClaimedBy]', player:getID())
 
     return true
 end
@@ -809,6 +860,7 @@ local checkMobID = function(zoneId, mobId)
             return true
         end
     end
+
     return false
 end
 
@@ -826,6 +878,7 @@ xi.abyssea.qmOnTrigger = function(player, npc, mobId, kis, tradeReqs)
                     t[i] = 0
                 end
             end
+
             player:startEvent(events[1], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8]) -- report required trades
             return true
         end
@@ -850,12 +903,13 @@ xi.abyssea.qmOnTrigger = function(player, npc, mobId, kis, tradeReqs)
         if keyItem ~= 0 and not player:hasKeyItem(keyItem) then
             validKis = false
         end
-        player:setLocalVar("KI" .. index, keyItem)
+
+        player:setLocalVar('KI' .. index, keyItem)
         kisExpected[index] = keyItem
     end
 
     local pop = checkMobID(zoneId, mobId)
-    player:setLocalVar("[AbysseaPopNmID]", mobId)
+    player:setLocalVar('[AbysseaPopNmID]', mobId)
     -- start event
     if validKis and pop then
         player:startEvent(events[2], kisExpected[1], kisExpected[2], kisExpected[3], kisExpected[4], kisExpected[5], kisExpected[6], kisExpected[7], kisExpected[8]) -- player has all key items
@@ -866,11 +920,11 @@ xi.abyssea.qmOnTrigger = function(player, npc, mobId, kis, tradeReqs)
     end
 end
 
-xi.abyssea.qmOnEventUpdate = function(player, csid, option)
+xi.abyssea.qmOnEventUpdate = function(player, csid, option, npc)
     return false
 end
 
-xi.abyssea.qmOnEventFinish = function(player, csid, option)
+xi.abyssea.qmOnEventFinish = function(player, csid, option, npc)
     local zoneId = player:getZoneID()
     local events = popEvents[zoneId]
     local ID = zones[player:getZoneID()]
@@ -878,7 +932,7 @@ xi.abyssea.qmOnEventFinish = function(player, csid, option)
     if csid == events[2] and option == 1 then
 
         for i = 1, 8 do
-            local keyItem = player:getLocalVar("KI" .. i)
+            local keyItem = player:getLocalVar('KI' .. i)
             if keyItem == 0 then
                 break
             end
@@ -890,14 +944,14 @@ xi.abyssea.qmOnEventFinish = function(player, csid, option)
         end
 
         -- pop nm
-        local nm = player:getLocalVar("[AbysseaPopNmID]")
+        local nm = player:getLocalVar('[AbysseaPopNmID]')
         local dx = player:getXPos() + math.random(-1, 1)
         local dy = player:getYPos()
         local dz = player:getZPos() + math.random(-1, 1)
 
         GetMobByID(nm):setSpawn(dx, dy, dz)
         SpawnMob(nm):updateClaim(player)
-        GetMobByID(nm):setLocalVar("[ClaimedBy]", player:getID())
+        GetMobByID(nm):setLocalVar('[ClaimedBy]', player:getID())
 
         return true
     end
@@ -911,8 +965,8 @@ end
 -- Light Handling
 -----------------------------------
 xi.abyssea.getLightsTable = function(player)
-    local lightMaskFirst  = player:getCharVar("abysseaLights1")
-    local lightMaskSecond = player:getCharVar("abysseaLights2")
+    local lightMaskFirst  = player:getCharVar('abysseaLights1')
+    local lightMaskSecond = player:getCharVar('abysseaLights2')
     local lightValues = { 0, 0, 0, 0, 0, 0, 0 }
 
     for v = 1, 7 do
@@ -938,8 +992,8 @@ local function setLightsFromTable(player, lightTable)
         end
     end
 
-    player:setCharVar("abysseaLights1", lightMaskFirst)
-    player:setCharVar("abysseaLights2", lightMaskSecond)
+    player:setCharVar('abysseaLights1', lightMaskFirst)
+    player:setCharVar('abysseaLights2', lightMaskSecond)
 end
 
 xi.abyssea.displayAbysseaLights = function(player)
@@ -948,21 +1002,21 @@ xi.abyssea.displayAbysseaLights = function(player)
         local lightValues = xi.abyssea.getLightsTable(player)
 
         player:messageName(ID.text.LIGHTS_MESSAGE_1, nil,
-                              lightValues[xi.abyssea.lightType.PEARL],
-                              lightValues[xi.abyssea.lightType.EBON],
-                              lightValues[xi.abyssea.lightType.GOLDEN],
-                              lightValues[xi.abyssea.lightType.SILVERY])
+            lightValues[xi.abyssea.lightType.PEARL],
+            lightValues[xi.abyssea.lightType.EBON],
+            lightValues[xi.abyssea.lightType.GOLDEN],
+            lightValues[xi.abyssea.lightType.SILVERY])
 
         player:messageName(ID.text.LIGHTS_MESSAGE_2, nil,
-                              lightValues[xi.abyssea.lightType.AZURE],
-                              lightValues[xi.abyssea.lightType.RUBY],
-                              lightValues[xi.abyssea.lightType.AMBER])
+            lightValues[xi.abyssea.lightType.AZURE],
+            lightValues[xi.abyssea.lightType.RUBY],
+            lightValues[xi.abyssea.lightType.AMBER])
     end
 end
 
 xi.abyssea.resetPlayerLights = function(player)
-    player:setCharVar("abysseaLights1", 0)
-    player:setCharVar("abysseaLights2", 0)
+    player:setCharVar('abysseaLights1', 0)
+    player:setCharVar('abysseaLights2', 0)
 end
 
 xi.abyssea.setBonusLights = function(player)
@@ -1004,7 +1058,7 @@ xi.abyssea.addPlayerLights = function(player, light, amount)
 end
 
 xi.abyssea.getLightValue = function(player, light)
-    return bit.band(bit.rshift(player:getCharVar("abysseaLights"), (light - 1) * 2), 0xFF)
+    return bit.band(bit.rshift(player:getCharVar('abysseaLights'), (light - 1) * 2), 0xFF)
 end
 
 xi.abyssea.canEnterAbyssea = function(player)
@@ -1037,11 +1091,18 @@ xi.abyssea.onZoneIn = function(player)
     end
 end
 
+xi.abyssea.onEventFinish = function(player, csid, option, npc)
+    if csid == 2180 then
+        local zoneID = player:getZoneID()
+        player:setPos(unpack(xi.abyssea.exitPositions[zoneID]))
+    end
+end
+
 xi.abyssea.afterZoneIn = function(player)
     local zoneID = player:getZoneID()
     local ID = zones[zoneID]
 
-    -- Add 5 minutes of hidden time to get "real" visitant status.  The additional 4 seconds
+    -- Add 5 minutes of hidden time to get 'real' visitant status.  The additional 4 seconds
     -- is intentional due to tick variances (up to 3s), and the status will be deleted should
     -- the countdown timer for visitant status reach 0 before actually running out of time on
     -- the effect.
@@ -1082,7 +1143,9 @@ xi.abyssea.searingWardTimer = function(player)
         end
 
         player:setLocalVar('tetherTimer', tetherTimer - 1)
-        player:timer(1500, function() xi.abyssea.searingWardTimer(player) end)
+        player:timer(1500, function()
+            xi.abyssea.searingWardTimer(player)
+        end)
     elseif tetherTimer == 1 then
         player:setLocalVar('tetherTimer', 0)
         player:messageSpecial(ID.text.RETURNING_TO_WARD)
@@ -1090,7 +1153,7 @@ xi.abyssea.searingWardTimer = function(player)
     end
 end
 
-xi.abyssea.onWardRegionLeave = function(player)
+xi.abyssea.onWardTriggerAreaLeave = function(player)
     local ID = zones[player:getZoneID()]
     local visitantEffect = player:getStatusEffect(xi.effect.VISITANT)
 
@@ -1100,7 +1163,7 @@ xi.abyssea.onWardRegionLeave = function(player)
     end
 end
 
-xi.abyssea.onWardRegionEnter = function(player)
+xi.abyssea.onWardTriggerAreaEnter = function(player)
     player:setLocalVar('tetherTimer', 0)
 end
 
@@ -1161,14 +1224,14 @@ local function getUnlockedMawTable(player)
 end
 
 xi.abyssea.warpNPCOnTrigger = function(player, npc)
-    local totalCruor = player:getCurrency("cruor")
+    local totalCruor = player:getCurrency('cruor')
     local unlockedMaws = getUnlockedMawTable(player)
     local statusParam = player:hasCompletedQuest(xi.quest.log_id.ABYSSEA, xi.quest.id.abyssea.THE_TRUTH_BECKONS) and 2 or 0
 
     player:startEvent(supportNPCData[player:getZoneID()][2], statusParam, totalCruor, unlockedMaws[1], unlockedMaws[2], unlockedMaws[3])
 end
 
-xi.abyssea.warpNPCOnEventUpdate = function(player, csid, option)
+xi.abyssea.warpNPCOnEventUpdate = function(player, csid, option, npc)
 end
 
 xi.abyssea.warpNPCOnEventFinish = function(player, csid, option, npc)
@@ -1177,9 +1240,9 @@ xi.abyssea.warpNPCOnEventFinish = function(player, csid, option, npc)
     -- Bit 8 is set for all teleport selections
     if
         utils.mask.getBit(option, 8) and
-        player:getCurrency("cruor") >= 200
+        player:getCurrency('cruor') >= 200
     then
-        player:delCurrency("cruor", 200)
+        player:delCurrency('cruor', 200)
         player:setPos(unpack(teleportData[teleportSelection]))
     end
 end
@@ -1206,11 +1269,11 @@ xi.abyssea.traverserNPCOnTrigger = function(player, npc)
     then
         player:messageText(npc, ID.text.NOT_ACQUAINTED)
     elseif player:getQuestStatus(xi.quest.log_id.ABYSSEA, xi.quest.id.abyssea.DAWN_OF_DEATH) >= QUEST_ACCEPTED then
-        player:startEvent(supportNPCData[zoneID][1], 0, availableStones, numTraverserHeld, messageType, 1, 1, 1, 3) -- Post "The Truth Beckons" Menu
+        player:startEvent(supportNPCData[zoneID][1], 0, availableStones, numTraverserHeld, messageType, 1, 1, 1, 3) -- Post 'The Truth Beckons' Menu
     end
 end
 
-xi.abyssea.traverserNPCOnUpdate = function(player, csid, option)
+xi.abyssea.traverserNPCOnUpdate = function(player, csid, option, npc)
     if csid == supportNPCData[player:getZoneID()][1] then
         if option == 3 then
             -- The following values calculates the amount of time remaining for a stone by working backwards from current time.

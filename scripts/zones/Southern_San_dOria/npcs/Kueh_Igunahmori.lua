@@ -4,10 +4,7 @@
 -- Guild Merchant NPC: Leathercrafting Guild
 -- !pos -194.791 -8.800 13.130 230
 -----------------------------------
-require("scripts/globals/settings")
-require("scripts/globals/shop")
-require("scripts/globals/conquest")
-local ID = require("scripts/zones/Southern_San_dOria/IDs")
+local ID = zones[xi.zone.SOUTHERN_SAN_DORIA]
 -----------------------------------
 local entity = {}
 
@@ -15,15 +12,15 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-    if (player:sendGuild(529, 3, 18, 4)) then
+    if player:sendGuild(529, 3, 18, 4) then
         player:showText(npc, ID.text.KUEH_IGUNAHMORI_DIALOG)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

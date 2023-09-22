@@ -31,7 +31,6 @@ CJobPoints::CJobPoints(CCharEntity* PChar)
 
 void CJobPoints::LoadJobPoints()
 {
-    memset(m_jobPoints, 0, sizeof(m_jobPoints));
     if (
         sql->Query("SELECT charid, jobid, capacity_points, job_points, job_points_spent, "
                    "jptype0, jptype1, jptype2, jptype3, jptype4, jptype5, jptype6, jptype7, jptype8, jptype9 "
@@ -146,7 +145,7 @@ JobPoints_t* CJobPoints::GetAllJobPoints()
 
 bool CJobPoints::AddCapacityPoints(uint16 amount)
 {
-    uint32 adjustedCapacity = m_jobPoints[m_PChar->GetMJob()].capacityPoints + amount;
+    uint32 adjustedCapacity = m_jobPoints[m_PChar->GetMJob()].capacityPoints + amount * settings::get<float>("map.CAPACITY_RATE");
     uint16 currentJobPoints = this->GetJobPoints();
 
     if (adjustedCapacity >= 30000)
@@ -218,7 +217,7 @@ namespace jobpointutils
                 gift.modId      = sql->GetUIntData(2);
                 gift.value      = sql->GetUIntData(3);
 
-                jpGifts[jobId].push_back(gift);
+                jpGifts[jobId].emplace_back(gift);
             }
         }
     }
@@ -242,7 +241,7 @@ namespace jobpointutils
                 break;
             }
 
-            currentGifts->push_back(CModifier(static_cast<Mod>(gift.modId), gift.value));
+            currentGifts->emplace_back(CModifier(static_cast<Mod>(gift.modId), gift.value));
         }
 
         PChar->addModifiers(currentGifts);

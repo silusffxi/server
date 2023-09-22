@@ -1,10 +1,7 @@
 -----------------------------------
 -- Campaign global
 -----------------------------------
-require("scripts/globals/teleports")
-require("scripts/globals/zone")
-require("scripts/globals/status")
-require("scripts/globals/items")
+require('scripts/globals/teleports')
 -----------------------------------
 xi = xi or {}
 xi.campaign = {}
@@ -67,9 +64,9 @@ xi.campaign.zone =
     ThroneRoom           = 156,
 }
 
------------------------------------------------------------------
+-----------------------------------
 -- Variable for getNationTeleport and getPoint
------------------------------------------------------------------
+-----------------------------------
 
 --[[
 ALLIED_NOTES = 11
@@ -86,15 +83,18 @@ PAST_WINDURST = 7
 
 xi.campaign.getMedalRank = function(player)
     local rank = 0
+    -- TODO: Use xi.ki enum in this table
     local medals =
     {
-         924, 925, 926, 927, 928, 929, 930,
-         931, 932, 933, 934, 935, 936, 937,
-         938, 939, 940, 941, 942, 943
+        924, 925, 926, 927, 928, 929, 930,
+        931, 932, 933, 934, 935, 936, 937,
+        938, 939, 940, 941, 942, 943
     }
-    while (player:hasKeyItem(medals[rank + 1]) == true) do
+
+    while player:hasKeyItem(medals[rank + 1]) do
         rank = rank + 1
     end
+
     return rank
 end
 
@@ -108,7 +108,7 @@ end
 -- -------------------------------------------------------------------
 
 xi.campaign.getSandOriaNotesItem = function(i)
-    local sandOria_AN =
+    local sandOriaAlliedNotesItems =
     {
         [2] = { id = 15754, price = 980 }, -- Sprinter's Shoes
         [258] = { id = 5428, price = 10 }, -- Scroll of Instant Retrace
@@ -118,8 +118,8 @@ xi.campaign.getSandOriaNotesItem = function(i)
         [1282] = { id = 15841, price = 5000, adj = 5000 }, -- Recall Ring: Jugner
         [1538] = { id = 15842, price = 5000, adj = 5000 }, -- Recall Ring: Pashow
         [1794] = { id = 15843, price = 5000, adj = 5000 }, -- Recall Ring: Meriphataud
-        [2050] = { id = xi.items.CIPHER_OF_VALAINERALS_ALTER_EGO, price = 2000 }, -- Cipher: Valaineral
-        [2306] = { id = xi.items.CIPHER_OF_ADELHEIDS_ALTER_EGO, price = 2000 }, -- Cipher: Adelheid
+        [2050] = { id = xi.item.CIPHER_OF_VALAINERALS_ALTER_EGO, price = 2000 }, -- Cipher: Valaineral
+        [2306] = { id = xi.item.CIPHER_OF_ADELHEIDS_ALTER_EGO, price = 2000 }, -- Cipher: Adelheid
         -- Stars Service
         [18] = { id = 14581, price = 15000, adj = 10000 }, -- Iron Ram Chainmain
         [274] = { id = 15005, price = 10500, adj = 7000 }, -- Iron Ram Mufflers
@@ -148,12 +148,12 @@ xi.campaign.getSandOriaNotesItem = function(i)
         [82] = { id = 17684, price = 150000, adj = 100000 }, -- Griffinclaw
         [338] = { id = 11636, price = 75000, adj = 50000 } -- Royal Knight Sigil Ring
     }
-    local item = sandOria_AN[i]
+    local item = sandOriaAlliedNotesItems[i]
     return item.id, item.price, item.adj
 end
 
 xi.campaign.getBastokNotesItem = function(i)
-    local bastok_AN =
+    local bastokAlliedNotesItems =
     {
         [2] = { id = 15754, price = 980 }, -- Sprinter's Shoes
         [258] = { id = 5428, price = 10 }, -- Scroll of Instant Retrace
@@ -193,12 +193,12 @@ xi.campaign.getBastokNotesItem = function(i)
         [82] = { id = 17685, price = 150000, adj = 100000 }, -- Lex Talionis
         [338] = { id = 11545, price = 75000, adj = 50000 } -- Fourth Mantle
     }
-    local item = bastok_AN[i]
+    local item = bastokAlliedNotesItems[i]
     return item.id, item.price, item.adj
 end
 
 xi.campaign.getWindurstNotesItem = function(i)
-    local windurst_AN =
+    local windurstAlliedNotesItems =
     {
         [2] = { id = 15754, price = 980 }, -- Sprinter's Shoes
         [258] = { id = 5428, price = 10 }, -- Scroll of Instant Retrace
@@ -242,7 +242,7 @@ xi.campaign.getWindurstNotesItem = function(i)
         [82] = { id = 17684, price = 150000, adj = 10000 }, -- Samudra
         [338] = { id = 11636, price = 75000, adj = 50000 } -- Mercenary Major Charm
     }
-    local item = windurst_AN[i]
+    local item = windurstAlliedNotesItems[i]
     return item.id, item.price, item.adj
 end
 

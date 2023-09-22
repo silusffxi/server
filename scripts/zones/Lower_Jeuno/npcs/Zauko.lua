@@ -1,65 +1,28 @@
 -----------------------------------
 -- Area: Lower Jeuno
 --  NPC: Zauko
--- Involved in Quests: Save the Clock Tower, Community Service
+-- Involved in Quests: Community Service
 -- !pos -3 0 11 245
 -----------------------------------
-require("scripts/zones/Lower_Jeuno/globals")
-local ID = require("scripts/zones/Lower_Jeuno/IDs")
-require("scripts/globals/keyitems")
-require("scripts/globals/npc_util")
-require("scripts/globals/quests")
-require("scripts/globals/status")
-require("scripts/globals/titles")
+require('scripts/zones/Lower_Jeuno/globals')
+local ID = zones[xi.zone.LOWER_JEUNO]
 -----------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
-
-    ----- Save The Clock Tower Quest -----
-    if
-        trade:hasItemQty(555, 1) == true and
-        trade:getItemCount() == 1
-    then
-        local a = player:getCharVar("saveTheClockTowerNPCz2") -- NPC Zone2
-        if
-            a == 0 or
-            (
-                a ~= 256 and
-                a ~= 288 and
-                a ~= 320 and
-                a ~= 384 and
-                a ~= 768 and
-                a ~= 352 and
-                a ~= 896 and
-                a ~= 416 and
-                a ~= 832 and
-                a ~= 448 and
-                a ~= 800 and
-                a ~= 480 and
-                a ~= 864 and
-                a ~= 928 and
-                a ~= 960 and
-                a ~= 992
-            )
-        then
-            player:startEvent(50, 10 - player:getCharVar("saveTheClockTowerVar")) -- "Save the Clock Tower" Quest
-        end
-    end
-
 end
 
 entity.onTrigger = function(player, npc)
     local hour              = VanadielHour()
-    local playerOnQuestId   = GetServerVariable("[JEUNO]CommService")
+    local playerOnQuestId   = GetServerVariable('[JEUNO]CommService')
     local doneCommService   = (player:getQuestStatus(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.COMMUNITY_SERVICE) == QUEST_COMPLETED) and 1 or 0
-    local currCommService   = player:getCharVar("currCommService")
+    local currCommService   = player:getCharVar('currCommService')
     local hasMembershipCard = player:hasKeyItem(xi.ki.LAMP_LIGHTERS_MEMBERSHIP_CARD) and 1 or 0
 
     local allLampsLit = true
     for i = 0, 11 do
         local lamp = GetNPCByID(ID.npc.STREETLAMP_OFFSET + i)
-        if (lamp:getAnimation() == xi.anim.CLOSE_DOOR) then
+        if lamp:getAnimation() == xi.anim.CLOSE_DOOR then
             allLampsLit = false
             break
         end
@@ -77,7 +40,7 @@ entity.onTrigger = function(player, npc)
             elseif hour >= 21 or hour < 1 then
                 player:startEvent(114) -- tell player they can start lighting lamps.
             else
-                SetServerVariable("[JEUNO]CommService", -1) -- frees player from quest, but don't allow anyone else to take it today.
+                SetServerVariable('[JEUNO]CommService', -1) -- frees player from quest, but don't allow anyone else to take it today.
                 player:startEvent(119) -- player didn't light lamps in time. fail quest.
             end
         end
@@ -93,17 +56,16 @@ entity.onTrigger = function(player, npc)
     -- default dialog including option to drop membership card
     else
         player:startEvent(118, hasMembershipCard)
-
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
     if csid == 116 and option == 0 then
         -- player accepts quest
         -- if nobody else has already been assigned to the quest, including Vhana, give it to this player
 
         local doneCommService = (player:getQuestStatus(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.COMMUNITY_SERVICE) == QUEST_COMPLETED) and 1 or 0
-        local playerOnQuestId = GetServerVariable("[JEUNO]CommService")
+        local playerOnQuestId = GetServerVariable('[JEUNO]CommService')
         local hour = VanadielHour()
 
         if
@@ -111,9 +73,9 @@ entity.onEventUpdate = function(player, csid, option)
             (hour >= 18 or hour < 1)
         then
             -- nobody is currently on the quest
-            SetServerVariable("[JEUNO]CommService", player:getID())
+            SetServerVariable('[JEUNO]CommService', player:getID())
             player:addQuest(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.COMMUNITY_SERVICE)
-            player:setCharVar("currCommService", 1)
+            player:setCharVar('currCommService', 1)
             player:updateEvent(1, doneCommService)
         else
             -- either another player or vasha have been assigned the quest
@@ -122,15 +84,10 @@ entity.onEventUpdate = function(player, csid, option)
     end
 end
 
-entity.onEventFinish = function(player, csid, option)
-    -- SAVE THE CLOCKTOWER
-    if csid == 50 then
-        player:incrementCharVar("saveTheClockTowerVar", 1)
-        player:incrementCharVar("saveTheClockTowerNPCz2", 256)
-
+entity.onEventFinish = function(player, csid, option, npc)
     -- COMMUNITY SERVICE
-    elseif csid == 117 then
-        local params = { title = xi.title.TORCHBEARER, var = "currCommService" }
+    if csid == 117 then
+        local params = { title = xi.title.TORCHBEARER, var = 'currCommService' }
         if player:getQuestStatus(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.COMMUNITY_SERVICE) ~= QUEST_COMPLETED then
             -- first victory
             params.fame = 30
@@ -141,6 +98,7 @@ entity.onEventFinish = function(player, csid, option)
                 params.ki = xi.ki.LAMP_LIGHTERS_MEMBERSHIP_CARD
             end
         end
+
         npcUtil.completeQuest(player, xi.quest.log_id.JEUNO, xi.quest.id.jeuno.COMMUNITY_SERVICE, params)
 
     elseif csid == 118 and option == 1 then
@@ -149,7 +107,7 @@ entity.onEventFinish = function(player, csid, option)
 
     elseif csid == 119 then
         -- player fails quest
-        player:setCharVar("currCommService", 0)
+        player:setCharVar('currCommService', 0)
     end
 end
 

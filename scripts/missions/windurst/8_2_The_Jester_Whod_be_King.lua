@@ -15,14 +15,8 @@
 -- Shantotto        : !pos 122 -2 112 239
 -- _5e5 (Cr. Wall)  : !pos -424.255 -1.909 619.995 194
 -- _5cb (Gate. Drk) : !pos -228 0 99 192
-require('scripts/globals/interaction/mission')
-require('scripts/globals/items')
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/npc_util')
-require('scripts/globals/zone')
 -----------------------------------
-local outerHorutotoID = require("scripts/zones/Outer_Horutoto_Ruins/IDs")
+local outerHorutotoID = zones[xi.zone.OUTER_HORUTOTO_RUINS]
 -----------------------------------
 
 local mission = Mission:new(xi.mission.log_id.WINDURST, xi.mission.id.windurst.THE_JESTER_WHOD_BE_KING)
@@ -291,7 +285,7 @@ mission.sections =
                     local missionStatus = player:getMissionStatus(mission.areaId)
 
                     if missionStatus == 0 then
-                        return mission:progressEvent(588)
+                        return mission:progressEvent(588, 0, xi.ki.MANUSTERY_RING)
                     elseif missionStatus == 2 then
                         return mission:progressEvent(601, 0, xi.ki.ORASTERY_RING)
                     elseif missionStatus == 6 then

@@ -8,12 +8,7 @@
 -- Antiquated_Sluice_Gate  : !pos -529.361 -7.000 59.988 258
 -- WATERWAY_FACILITY_CRANK : !addkeyitem 2450
 -----------------------------------
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
-local ralaID = require('scripts/zones/Rala_Waterways/IDs')
+local ralaID = zones[xi.zone.RALA_WATERWAYS]
 -----------------------------------
 
 local mission = Mission:new(xi.mission.log_id.SOA, xi.mission.id.soa.BEHIND_THE_SLUICES)
@@ -29,8 +24,8 @@ mission.sections =
     {
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId and
-                   not player:hasKeyItem(xi.ki.WATERWAY_FACILITY_CRANK) and
-                   missionStatus == 0
+                not player:hasKeyItem(xi.ki.WATERWAY_FACILITY_CRANK) and
+                missionStatus == 0
         end,
 
         [xi.zone.RALA_WATERWAYS] =
@@ -50,8 +45,8 @@ mission.sections =
     {
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId and
-                   player:hasKeyItem(xi.ki.WATERWAY_FACILITY_CRANK) and
-                   missionStatus == 0
+                player:hasKeyItem(xi.ki.WATERWAY_FACILITY_CRANK) and
+                missionStatus == 0
         end,
 
         [xi.zone.RALA_WATERWAYS] =
@@ -76,7 +71,7 @@ mission.sections =
     {
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId and
-                   player:hasKeyItem(xi.ki.WATERWAY_FACILITY_CRANK)
+                player:hasKeyItem(xi.ki.WATERWAY_FACILITY_CRANK)
         end,
 
         [xi.zone.RALA_WATERWAYS] =
@@ -105,7 +100,7 @@ mission.sections =
     {
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId and
-                   missionStatus == 3
+                missionStatus == 3
         end,
 
         [xi.zone.RALA_WATERWAYS] =

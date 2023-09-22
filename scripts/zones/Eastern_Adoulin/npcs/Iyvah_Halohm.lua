@@ -4,9 +4,6 @@
 -- Type: Adoulin Fame Checking NPC
 -- !pos -61.044 -0.150 -5.239 257
 -----------------------------------
-require('scripts/globals/quests')
------------------------------------
-
 local entity = {}
 
 entity.onTrigger = function(player, npc)
@@ -22,9 +19,9 @@ entity.onTrigger = function(player, npc)
     local mummersRank = 0
 
     player:startEvent(562,
-                      imprimatursSpent, adoulinFame,
-                      pioneersRank, peacekeepersRank, couriersRank,
-                      scoutsRank, inventorsRank, mummersRank)
+        imprimatursSpent, adoulinFame,
+        pioneersRank, peacekeepersRank, couriersRank,
+        scoutsRank, inventorsRank, mummersRank)
 end
 
 return entity

@@ -2,10 +2,6 @@
 -- Manaclipper
 -- https://ffxiclopedia.fandom.com/wiki/Manaclipper
 -----------------------------------
-require("scripts/globals/keyitems")
-require("scripts/globals/zone")
------------------------------------
-
 xi = xi or {}
 xi.manaclipper = xi.manaclipper or {}
 
@@ -93,12 +89,12 @@ xi.manaclipper.timekeeperOnTrigger = function(player, location, eventId)
             player:startEvent(eventId, earthSecs, nextEvent.act, 0, nextEvent.dest)
         end
     else
-        printf("[warning] bad location %i in xi.manaclipper.timekeeperOnTrigger", location)
+        printf('[warning] bad location %i in xi.manaclipper.timekeeperOnTrigger', location)
     end
 end
 
-xi.manaclipper.aboard = function(player, regionId, isAboard)
-    player:setCharVar("[manaclipper]aboard", isAboard and regionId or 0)
+xi.manaclipper.aboard = function(player, triggerArea, isAboard)
+    player:setCharVar('[manaclipper]aboard', isAboard and triggerArea or 0)
 end
 
 xi.manaclipper.onZoneIn = function(player)
@@ -118,15 +114,15 @@ xi.manaclipper.onZoneIn = function(player)
         end
 
         if nextEvent.route == dest.PURGONORGO_ISLE then
-            player:setCharVar("[manaclipper]arrivalEventId", 13) -- Bibiki event 13 sets pos then chains to 11: arrive at Purgonorgo Isle
+            player:setCharVar('[manaclipper]arrivalEventId', 13) -- Bibiki event 13 sets pos then chains to 11: arrive at Purgonorgo Isle
         else
-            player:setCharVar("[manaclipper]arrivalEventId", 12) -- Bibiki event 12 sets pos then chains to 10: arrive at Sunset Docks
+            player:setCharVar('[manaclipper]arrivalEventId', 12) -- Bibiki event 12 sets pos then chains to 10: arrive at Sunset Docks
         end
 
     -- zoning into bibiki bay. play the eventId stored in [manaclipper]arrivalEventId.
     elseif zoneId == xi.zone.BIBIKI_BAY then
-        local eventId = player:getCharVar("[manaclipper]arrivalEventId")
-        player:setCharVar("[manaclipper]arrivalEventId", 0)
+        local eventId = player:getCharVar('[manaclipper]arrivalEventId')
+        player:setCharVar('[manaclipper]arrivalEventId', 0)
 
         if eventId > 0 then
             return eventId
@@ -139,15 +135,15 @@ end
 
 xi.manaclipper.onTransportEvent = function(player, transport)
     local ID = zones[player:getZoneID()]
-    local aboard = player:getCharVar("[manaclipper]aboard")
+    local aboard = player:getCharVar('[manaclipper]aboard')
 
-    -- leaving Sunset Docks. must be standing in region 1. must have a ticket.
+    -- leaving Sunset Docks. must be standing in trigger area 1. must have a ticket.
     if aboard == 1 then
         if player:hasKeyItem(xi.ki.MANACLIPPER_TICKET) then
             player:delKeyItem(xi.ki.MANACLIPPER_TICKET)
             player:startEvent(14)
         elseif player:hasKeyItem(xi.ki.MANACLIPPER_MULTI_TICKET) then
-            local uses = player:getCharVar("Manaclipper_Ticket")
+            local uses = player:getCharVar('Manaclipper_Ticket')
 
             if uses == 1 then
                 player:messageSpecial(ID.text.END_BILLET, 0, xi.ki.MANACLIPPER_MULTI_TICKET)
@@ -155,14 +151,15 @@ xi.manaclipper.onTransportEvent = function(player, transport)
             else
                 player:messageSpecial(ID.text.LEFT_BILLET, 0, xi.ki.MANACLIPPER_MULTI_TICKET, uses - 1)
             end
-            player:setCharVar("Manaclipper_Ticket", uses - 1)
+
+            player:setCharVar('Manaclipper_Ticket', uses - 1)
             player:startEvent(14)
         else
             player:messageSpecial(ID.text.NO_BILLET, xi.ki.MANACLIPPER_TICKET)
             player:setPos(489, -3, 713, 200) -- kicked off Manaclipper, returned to Sunset Docks
         end
 
-    -- leaving Purgonorgo Isle. must be standing in region 2. no ticket required.
+    -- leaving Purgonorgo Isle. must be standing in trigger area 2. no ticket required.
     elseif aboard == 2 then
         player:startEvent(16)
     end

@@ -4,14 +4,12 @@
 -- Standard Merchant NPC
 -- Confirmed shop stock, August 2013
 -----------------------------------
-require("scripts/globals/events/harvest_festivals")
-require("scripts/globals/shop")
-local ID = require("scripts/zones/Windurst_Waters/IDs")
+local ID = zones[xi.zone.WINDURST_WATERS]
 -----------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
-    onHalloweenTrade(player, trade, npc)
+    xi.events.harvestFestival.onHalloweenTrade(player, trade, npc)
 end
 
 entity.onTrigger = function(player, npc)
@@ -19,28 +17,26 @@ entity.onTrigger = function(player, npc)
 
     local stock =
     {
-        4394,    10, 1,     --Ginger Cookie
-        4407,   727, 1,     --Carp Sushi
-        4425,   323, 1,     --Tomato Juice
-        4459,  1656, 1,     --Nebimonite Bake
-
-        4397,    14, 2,     --Cinna-cookie
-        4422,   184, 2,     --Orange Juice
-        4456,  2070, 2,     --Boiled Crab
-
-        4510,    21, 3,     --Acorn Cookie
-        4376,   108, 3,     --Meat Jerky
-        4509,    10, 3,     --Distilled Water
-        4538,   846, 3      --Roast Pipira
+        4394,   10, 1, -- Ginger Cookie
+        4407,  727, 1, -- Carp Sushi
+        4425,  323, 1, -- Tomato Juice
+        4459, 1656, 1, -- Nebimonite Bake
+        4397,   14, 2, -- Cinna-cookie
+        4422,  184, 2, -- Orange Juice
+        4456, 2070, 2, -- Boiled Crab
+        4510,   21, 3, -- Acorn Cookie
+        4376,  108, 3, -- Meat Jerky
+        4509,   10, 3, -- Distilled Water
+        4538,  846, 3, -- Roast Pipira
     }
+
     xi.shop.nation(player, stock, xi.nation.WINDURST)
-
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

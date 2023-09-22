@@ -4,8 +4,7 @@
 -- Type: Patrol
 -- !pos -349.796 -45.345 344.733 100
 -----------------------------------
-local ID = require("scripts/zones/West_Ronfaure/IDs")
-require("scripts/globals/pathfind")
+local ID = zones[xi.zone.WEST_RONFAURE]
 -----------------------------------
 local entity = {}
 
@@ -310,11 +309,14 @@ entity.onSpawn = function(npc)
 end
 
 entity.onPath = function(npc)
-    if npc:getLocalVar("reported") ~= 1 and npc:atPoint(xi.path.get(pathNodes, 45)) then
+    if
+        npc:getLocalVar('reported') ~= 1 and
+        npc:atPoint(xi.path.get(pathNodes, 45))
+    then
         GetNPCByID(npc:getID() + 3):showText(npc, ID.text.PALCOMONDAU_REPORT)
-        npc:setLocalVar("reported", 1)
+        npc:setLocalVar('reported', 1)
     elseif npc:atPoint(xi.path.last(pathNodes)) then
-        npc:setLocalVar("reported", 0)
+        npc:setLocalVar('reported', 0)
     end
 end
 
@@ -324,10 +326,10 @@ end
 entity.onTrigger = function(player, npc)
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

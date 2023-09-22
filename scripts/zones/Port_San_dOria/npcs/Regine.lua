@@ -4,13 +4,6 @@
 -- Standard Merchant NPC
 -- !pos 68 -9 -74 232
 -----------------------------------
-local ID = require("scripts/zones/Port_San_dOria/IDs")
-require("scripts/globals/items")
-require("scripts/globals/npc_util")
-require("scripts/globals/quests")
-require("scripts/globals/utils")
-require("scripts/globals/shop")
------------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
@@ -18,13 +11,19 @@ entity.onTrade = function(player, npc, trade)
     local theBrugaireConsortium = player:getQuestStatus(xi.quest.log_id.SANDORIA, xi.quest.id.sandoria.THE_BRUGAIRE_CONSORTIUM)
 
     -- FLYERS FOR REGINE
-    if (flyersForRegine == QUEST_ACCEPTED and npcUtil.tradeHas( trade, { { "gil", 10 } })) then
-        if (npcUtil.giveItem(player, xi.items.MAGICMART_FLYER)) then
+    if
+        flyersForRegine == QUEST_ACCEPTED and
+        npcUtil.tradeHas(trade, { { 'gil', 10 } })
+    then
+        if npcUtil.giveItem(player, xi.item.MAGICMART_FLYER) then
             player:confirmTrade()
         end
 
     -- THE BRUGAIRE CONSORTIUM
-    elseif (theBrugaireConsortium == QUEST_ACCEPTED and npcUtil.tradeHas(trade, xi.items.PARCEL_FOR_THE_MAGIC_SHOP)) then
+    elseif
+        theBrugaireConsortium == QUEST_ACCEPTED and
+        npcUtil.tradeHas(trade, xi.item.PARCEL_FOR_THE_MAGIC_SHOP)
+    then
         player:startEvent(535)
     end
 end
@@ -35,9 +34,13 @@ entity.onTrigger = function(player, npc)
     -- FLYERS FOR REGINE
     if ffr == QUEST_AVAILABLE then -- ready to accept quest
         player:startEvent(510, 2)
-    elseif ffr == QUEST_ACCEPTED and utils.mask.isFull(player:getCharVar('[ffr]deliveryMask'), 15) then -- all 15 flyers delivered
+    elseif
+        ffr == QUEST_ACCEPTED and
+        utils.mask.isFull(player:getCharVar('[ffr]deliveryMask'), 15)
+    then
+        -- all 15 flyers delivered
         player:startEvent(603)
-    elseif ffr == QUEST_ACCEPTED and not player:hasItem(xi.items.MAGICMART_FLYER) then -- on quest but out of flyers
+    elseif ffr == QUEST_ACCEPTED and not player:hasItem(xi.item.MAGICMART_FLYER) then -- on quest but out of flyers
         player:startEvent(510, 3)
 
     -- DEFAULT MENU
@@ -46,13 +49,13 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     -- FLYERS FOR REGINE
     if csid == 510 and option == 2 then
-        if npcUtil.giveItem(player, { { xi.items.MAGICMART_FLYER, 12 }, { xi.items.MAGICMART_FLYER, 3 } }) then
+        if npcUtil.giveItem(player, { { xi.item.MAGICMART_FLYER, 12 }, { xi.item.MAGICMART_FLYER, 3 } }) then
             player:addQuest(xi.quest.log_id.SANDORIA, xi.quest.id.sandoria.FLYERS_FOR_REGINE)
         end
     elseif csid == 603 then
@@ -66,12 +69,12 @@ entity.onEventFinish = function(player, csid, option)
         )
 
     -- THE BRUGAIRE CONSORTIUM
-    elseif (csid == 535) then
+    elseif csid == 535 then
         player:confirmTrade()
-        player:setCharVar("TheBrugaireConsortium-Parcels", 11)
+        player:setCharVar('TheBrugaireConsortium-Parcels', 11)
 
     -- WHITE MAGIC SHOP
-    elseif (csid == 510 and option == 0) then
+    elseif csid == 510 and option == 0 then
         local stockA =
         {
             4641, 1165, 1, -- Scroll of Diaga
@@ -96,7 +99,7 @@ entity.onEventFinish = function(player, csid, option)
         xi.shop.nation(player, stockA, xi.nation.SANDORIA)
 
     -- BLACK MAGIC SHOP
-    elseif (csid == 510 and option == 1) then
+    elseif csid == 510 and option == 1 then
         local stockB =
         {
             4862, 111, 1,  -- Scroll of Blind

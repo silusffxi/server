@@ -8,16 +8,10 @@
 -- Wailing Pond      : !pos 380 0.1 -181 149
 -- Screaming Pond    : !pos -219 0.1 -101 149
 -----------------------------------
-require('scripts/globals/keyitems')
-require('scripts/globals/quests')
-require('scripts/globals/npc_util')
-require('scripts/globals/utils')
-require('scripts/globals/interaction/hidden_quest')
------------------------------------
-local davoiID = require("scripts/zones/Davoi/IDs")
+local davoiID = zones[xi.zone.DAVOI]
 -----------------------------------
 
-local quest = HiddenQuest:new("CrimsonOrb")
+local quest = HiddenQuest:new('CrimsonOrb')
 
 quest.reward =
 {
@@ -54,7 +48,7 @@ local pondOnTrigger = function(player, npc)
     then
         quest:setLocalVar(player, 'npcOffset', npcOffset)
         player:messageSpecial(davoiID.text.ORB_QUEST_OFFSET)
-        return quest:progressEvent(50 + npcOffset, 0, numPonds, 7)
+        return quest:progressEvent(50 + npcOffset, 0, numPonds, player:getRace())
     else
         return quest:messageSpecial(davoiID.text.COLOR_OF_BLOOD)
     end

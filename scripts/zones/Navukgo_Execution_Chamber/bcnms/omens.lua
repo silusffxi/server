@@ -2,9 +2,6 @@
 -- Area: Navukgo Execution Chamber
 -- BCNM: Omens
 -----------------------------------
-require("scripts/globals/battlefield")
-local ID = require("scripts/zones/Navukgo_Execution_Chamber/IDs")
------------------------------------
 local battlefieldObject = {}
 
 battlefieldObject.onBattlefieldInitialise = function(battlefield)
@@ -19,9 +16,9 @@ end
 
 battlefieldObject.onBattlefieldEnter = function(player, battlefield)
     -- local mobOffset = (battlefield:getArea() - 1) * 7  -- Offset to spawn correct mob depending on battlefieldNumber
-    local track_var = 'entered_'.. player:getName()
-    if battlefield:getLocalVar(track_var) ~= 1 then
-        battlefield:setLocalVar(track_var, 1)
+    local trackVar = 'entered_'.. player:getName()
+    if battlefield:getLocalVar(trackVar) ~= 1 then
+        battlefield:setLocalVar(trackVar, 1)
         battlefield:setLocalVar('num_entrants', battlefield:getLocalVar('num_entrants') + 1)
     end
 end
@@ -32,16 +29,16 @@ battlefieldObject.onBattlefieldLeave = function(player, battlefield, leavecode)
 
         player:setLocalVar('battlefieldWin', battlefield:getID())
 
-        player:startEvent(32001, battlefield:getArea(), clearTime, partySize, battlefield:getTimeInside(), 1, battlefield:getLocalVar("[cs]bit"), 0)
+        player:startEvent(32001, battlefield:getArea(), clearTime, partySize, battlefield:getTimeInside(), 1, battlefield:getLocalVar('[cs]bit'), 0)
     elseif leavecode == xi.battlefield.leaveCode.LOST then
         player:startEvent(32002)
     end
 end
 
-battlefieldObject.onEventUpdate = function(player, csid, option)
+battlefieldObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-battlefieldObject.onEventFinish = function(player, csid, option)
+battlefieldObject.onEventFinish = function(player, csid, option, npc)
 end
 
 return battlefieldObject

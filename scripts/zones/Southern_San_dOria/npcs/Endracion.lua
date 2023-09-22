@@ -3,10 +3,6 @@
 --  NPC: Endracion
 -- !pos -110 1 -34 230
 -----------------------------------
-require("scripts/globals/settings")
-require("scripts/globals/keyitems")
-require("scripts/globals/missions")
------------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
@@ -26,16 +22,16 @@ entity.onTrigger = function(player, npc)
         if currentMission ~= xi.mission.id.sandoria.NONE then
             player:startEvent(1001) -- Have mission already activated
         else
-            local mission_mask, repeat_mask = xi.mission.getMissionMask(player)
-            player:startEvent(1009, mission_mask, 0, 0 , 0 , 0 , repeat_mask) -- Mission List
+            local missionMask, repeatMask = xi.mission.getMissionMask(player)
+            player:startEvent(1009, missionMask, 0, 0 , 0 , 0 , repeatMask) -- Mission List
         end
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

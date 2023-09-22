@@ -29,7 +29,7 @@ def main():
 
     function_names.append("skip_to_next")
 
-    # Add exceptions for interaction and battle frameworks
+    # Add exceptions for interaction, battle frameworks, and other user Lua types
     function_names.append("new")
     function_names.append("event")
     function_names.append("begin")
@@ -46,6 +46,8 @@ def main():
     function_names.append("keyItem")
     function_names.append("setMustZone")
     function_names.append("getMustZone")
+    function_names.append("setTimedVar")
+    function_names.append("setVarExpiration")
     function_names.append("oncePerZone")
     function_names.append("incrementVar")
     function_names.append("replaceDefault")
@@ -58,8 +60,8 @@ def main():
     function_names.append("onZoneIn")
     function_names.append("noAction")
     function_names.append("onZoneOut")
-    function_names.append("onRegionEnter")
-    function_names.append("onRegionLeave")
+    function_names.append("onTriggerAreaEnter")
+    function_names.append("onTriggerAreaLeave")
     function_names.append("onEventFinish")
     function_names.append("onEventUpdate")
     function_names.append("sequence")
@@ -78,7 +80,6 @@ def main():
     function_names.append("onBattlefieldLoss")
     function_names.append("onBattlefieldWipe")
     function_names.append("handleWipe")
-    function_names.append("needsToZone")
     function_names.append("unsetVarBit")
     function_names.append("addVar")
     function_names.append("getLocaLVar")
@@ -89,6 +90,14 @@ def main():
     function_names.append("closeDoors")
     function_names.append("check")
     function_names.append("face")
+    function_names.append("startFunc")
+    function_names.append("enableCheck")
+    function_names.append("endFunc")
+    function_names.append("checkEnding")
+    function_names.append("checkStarting")
+    function_names.append("setEnableCheck")
+    function_names.append("setStartFunction")
+    function_names.append("setEndFunction")
 
     # root_dir needs a trailing slash (i.e. /root/dir/)
     for filename in glob.iglob("./scripts/" + "**/*.lua", recursive=True):
@@ -111,9 +120,9 @@ def main():
                     # Try and ignore comments
                     line = line.split("--", 1)[0]
 
-                    # Don't look inside strings
-                    line = line.split("printf", 1)[0]
-                    line = line.split("print", 1)[0]
+                    # Don't look inside strings (replace with placeholder)
+                    line = re.sub('\"([^\"]*?)\"', "strVal", line)
+                    line = re.sub("\'([^\"]*?)\'", "strVal", line)
 
                     # Try and ignore function definitions
                     line = line.split("function", 1)[0]

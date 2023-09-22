@@ -2,12 +2,10 @@
 -- Area: Promyvion-Mea
 --   NM: Memory Receptacle
 -----------------------------------
-require("scripts/globals/promyvion")
------------------------------------
 local entity = {}
 
 entity.onMobInitialize = function(mob)
-    mob:SetAutoAttackEnabled(false) -- Receptacles only use TP moves.
+    mob:setAutoAttackEnabled(false) -- Receptacles only use TP moves.
 end
 
 entity.onMobFight = function(mob, target)

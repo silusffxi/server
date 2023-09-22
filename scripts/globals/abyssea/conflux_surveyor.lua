@@ -1,25 +1,28 @@
 -----------------------------------
 -- Conflux Surveyor Global
 -----------------------------------
-require("scripts/globals/abyssea")
-require("scripts/globals/status")
+require('scripts/globals/abyssea')
 -----------------------------------
 xi = xi or {}
 xi.abyssea = xi.abyssea or {}
 
 xi.abyssea.surveyorOnTrigger = function(player, npc)
     local timeRemaining = 0
-    local prevTime = player:getCharVar("abysseaTimeStored") -- Seconds remaining
+    local prevTime = 0
     local numStones = xi.abyssea.getHeldTraverserStones(player)
     local numSojourn = xi.abyssea.getAbyssiteTotal(player, xi.abyssea.abyssiteType.SOJOURN)
     local hasRhapsody = player:hasKeyItem(xi.ki.RHAPSODY_IN_MAUVE)
-
     local visitantEffect = player:getStatusEffect(xi.effect.VISITANT)
+    local hasVisitantStatusEffect = 0
+
     if visitantEffect and visitantEffect:getIcon() == xi.effect.VISITANT then
         timeRemaining = player:getStatusEffect(xi.effect.VISITANT):getTimeRemaining() / 1000 - 4
+        hasVisitantStatusEffect = 3
+    else
+        prevTime = player:getCharVar('abysseaTimeStored') -- Seconds remaining
     end
 
-    player:startEvent(2001, 0, timeRemaining, prevTime, numStones, numSojourn, hasRhapsody, 0, 2)
+    player:startEvent(2001, hasVisitantStatusEffect, timeRemaining, prevTime, numStones, numSojourn, hasRhapsody, 0, 0)
 end
 
 xi.abyssea.surveyorOnEventFinish = function(player, csid, option, npc)
@@ -40,8 +43,8 @@ xi.abyssea.surveyorOnEventFinish = function(player, csid, option, npc)
         if visitantEffect:getIcon() == xi.effect.VISITANT then
             visitantTime = visitantEffect:getTimeRemaining() / 1000 - 4
         else
-            visitantTime = player:getCharVar("abysseaTimeStored")
-            player:setCharVar("abysseaTimeStored", 0)
+            visitantTime = player:getCharVar('abysseaTimeStored')
+            player:setCharVar('abysseaTimeStored', 0)
         end
 
         local numSojourn = xi.abyssea.getAbyssiteTotal(player, xi.abyssea.abyssiteType.SOJOURN)
@@ -57,5 +60,6 @@ xi.abyssea.surveyorOnEventFinish = function(player, csid, option, npc)
         visitantEffect:setIcon(xi.effect.VISITANT)
 
         xi.abyssea.spendTravStones(player, additionalStones)
+        xi.abyssea.displayAbysseaLights(player)
     end
 end

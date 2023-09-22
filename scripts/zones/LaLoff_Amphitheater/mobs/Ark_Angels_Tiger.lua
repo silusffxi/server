@@ -2,8 +2,6 @@
 -- Area: LaLoff Amphitheater
 --  Mob: Ark Angel's Tiger
 -----------------------------------
-require("scripts/globals/status")
------------------------------------
 local entity = {}
 
 -- TODO: Implement shared spawning and victory system with Ark Angel's Mandragora.
@@ -20,7 +18,6 @@ entity.onMobEngaged = function(mob, target)
 end
 
 entity.onMobFight = function(mob, target)
-
 end
 
 entity.onMobDeath = function(mob, player, optParams)

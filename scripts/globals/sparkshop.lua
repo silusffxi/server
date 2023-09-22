@@ -3,17 +3,15 @@
 -- TO DO: Add Naakaul Seven Treasures
 -----------------------------------
 require('scripts/globals/npc_util')
-require('scripts/globals/zone')
-require('scripts/globals/items')
 require('scripts/globals/extravaganza')
 -----------------------------------
-
 xi = xi or {}
 xi.sparkshop = xi.sparkshop or {}
 
 local optionToItem =
 {
-    [1] = { -- Items page
+    [1] = -- Items page
+    {
         [ 0] = { cost =    10, id =  4181 }, -- Scroll of Instant Warp
         [ 1] = { cost =    10, id =  4182 }, -- Scroll of Instant Reraise
         [ 2] = { cost =  7500, id =  4064 }, -- Copy of Rem's Tale, chapter 1
@@ -29,7 +27,9 @@ local optionToItem =
         [12] = { cost =  5000, id = 28546 }, -- Capacity Ring
         [13] = { cost = 10000, id =  9009 }, -- Etched Memory
     },
-    [2] = { -- Skill-increasing tomes
+
+    [2] = -- Skill-increasing tomes
+    {
         [ 0] = { cost = 200, id = 6147 }, -- Mikehe's memo
         [ 1] = { cost = 200, id = 6148 }, -- Dagger enchiridion
         [ 2] = { cost = 200, id = 6149 }, -- Swing and Stab
@@ -64,7 +64,9 @@ local optionToItem =
         [31] = { cost = 200, id = 6178 }, -- Hrohj's record
         [32] = { cost = 200, id = 6179 }, -- The Bell Tolls
     },
-    [3] = { -- Equipment (Lv.1 - 9)
+
+    [3] = -- Equipment (Lv.1 - 9)
+    {
         [ 0] = { cost = 50, id = 16385 }, -- Cesti
         [ 1] = { cost = 50, id = 16390 }, -- Bronze knuckles
         [ 2] = { cost = 50, id = 16391 }, -- Brass knuckles
@@ -130,7 +132,9 @@ local optionToItem =
         [62] = { cost = 50, id = 12290 }, -- Maple shield
         [63] = { cost = 50, id = 12299 }, -- Aspis
     },
-    [4] = { -- Equipment (Lv.10 - 19)
+
+    [4] = -- Equipment (Lv.10 - 19)
+    {
         [ 0] = { cost =  60, id = 16407 }, -- Brass baghnakhs
         [ 1] = { cost =  60, id = 16450 }, -- Dagger
         [ 2] = { cost =  60, id = 16466 }, -- Knife
@@ -186,7 +190,9 @@ local optionToItem =
         [52] = { cost =  60, id = 12953 }, -- Lizard Ledelsens
         [53] = { cost =  60, id = 12291 }, -- Elm shield
     },
-    [5] = { -- Equipment (Lv.20 - 29)
+
+    [5] = -- Equipment (Lv.20 - 29)
+    {
         [ 0] = { cost =  87, id = 16392 }, -- Metal knuckles
         [ 1] = { cost = 144, id = 16406 }, -- Baghnakhs
         [ 2] = { cost =  99, id = 16387 }, -- Poison cesti
@@ -240,7 +246,9 @@ local optionToItem =
         [50] = { cost =  70, id = 12414 }, -- Turtle shield
         [51] = { cost = 153, id = 12306 }, -- Kite shield
     },
-    [6] = { -- Equipment (Lv.30 - 39)
+
+    [6] = -- Equipment (Lv.30 - 39)
+    {
         [ 0] = { cost = 182, id = 16411 }, -- Claws
         [ 1] = { cost = 194, id = 16399 }, -- Katars
         [ 2] = { cost = 230, id = 16393 }, -- Mythril Knuckles
@@ -316,7 +324,9 @@ local optionToItem =
         [72] = { cost = 195, id = 12293 }, -- Oak shield
         [73] = { cost = 256, id = 12364 }, -- Nymph shield
     },
-    [7] = { -- Equipment (Lv.40 - 50)
+
+    [7] = -- Equipment (Lv.40 - 50)
+    {
         [ 0] = { cost =  114, id = 16388 }, -- Himantes
         [ 1] = { cost =  298, id = 16412 }, -- Mythril claws
         [ 2] = { cost =  416, id = 16419 }, -- Patas
@@ -397,7 +407,9 @@ local optionToItem =
         [77] = { cost =  311, id = 12301 }, -- Buckler
         [78] = { cost =  128, id = 12294 }, -- Leather shield
     },
-    [8] = { -- Equipment (Lv.51 - 70)
+
+    [8] = -- Equipment (Lv.51 - 70)
+    {
         [ 0] = { cost =  389, id = 16394 }, -- Darksteel knuckles
         [ 1] = { cost =  484, id = 16400 }, -- Darksteel katars
         [ 2] = { cost =  362, id = 16422 }, -- Tigerfangs
@@ -443,7 +455,9 @@ local optionToItem =
         [42] = { cost = 1560, id = 12383 }, -- General's shield
         [43] = { cost =  204, id = 12359 }, -- Hickory shield
     },
-    [9] = { -- Equipment (Lv.71 - 98)
+
+    [9] = -- Equipment (Lv.71 - 98)
+    {
         [ 0] = { cost = 1033, id = 16423 }, -- Manoples
         [ 1] = { cost =  300, id = 18782 }, -- Eyra baghnakhs
         [ 2] = { cost =  300, id = 16470 }, -- Gully
@@ -488,7 +502,9 @@ local optionToItem =
         [41] = { cost = 2755, id = 12385 }, -- Acheron shield
         [42] = { cost =  300,  id = 16189 }, -- Gleaming shield
     },
-    [10] = { -- Equipment (Lv.99)
+
+    [10] = -- Equipment (Lv.99)
+    {
         [ 0] = { cost =  3000, id = 27740 }, -- Outrider mask
         [ 1] = { cost =  5000, id = 27881 }, -- Outrider mail
         [ 2] = { cost =  3000, id = 28029 }, -- Outrider mittens
@@ -549,33 +565,37 @@ local optionToItem =
         [57] = { cost =  7000, id = 21355 }, -- Hachiya shuriken
         [58] = { cost =  7000, id = 22260 }, -- Eminent animator II
     },
-    [12] = { -- Alter Ego Extravaganza Trusts
-        [10133] = { cost =  500, id = xi.items.CIPHER_OF_F_COFFINS_ALTER_EGO }, -- F. Coffin
-        [10138] = { cost =  500, id = xi.items.CIPHER_OF_CIDS_ALTER_EGO }, -- Cid
-        [10148] = { cost =  500, id = xi.items.CIPHER_OF_GILGAMESHS_ALTER_EGO }, -- Gilgamesh
-        [10152] = { cost =  500, id = xi.items.CIPHER_OF_QULTADAS_ALTER_EGO }, -- Qultada
-        [10181] = { cost =  500, id = xi.items.CIPHER_OF_KINGS_ALTER_EGO }, -- King
+
+    [12] = -- Alter Ego Extravaganza Trusts
+    {
+        [10133] = { cost =  500, id = xi.item.CIPHER_OF_F_COFFINS_ALTER_EGO }, -- F. Coffin
+        [10138] = { cost =  500, id = xi.item.CIPHER_OF_CIDS_ALTER_EGO }, -- Cid
+        [10148] = { cost =  500, id = xi.item.CIPHER_OF_GILGAMESHS_ALTER_EGO }, -- Gilgamesh
+        [10152] = { cost =  500, id = xi.item.CIPHER_OF_QULTADAS_ALTER_EGO }, -- Qultada
+        [10181] = { cost =  500, id = xi.item.CIPHER_OF_KINGS_ALTER_EGO }, -- King
     },
-    [20] = { -- Currency Exchange
-        [ 0] = { amount = 1000, name = "spark_of_eminence"      },
-        [ 1] = { amount = 1000, name = "conquest_points"        },
-        [ 2] = { amount = 1000, name = "imperial_standing"      },
-        [ 3] = { amount = 1000, name = "allied_notes"           },
-        [ 4] = { amount = 1000, name = "bayld"                  },
-        [ 5] = { amount = 1000, name = "valor_point"            },
-        [ 6] = { amount = 1000, name = "leujaoam_assault_point" },
-        [ 7] = { amount = 1000, name = "mamool_assault_point"   },
-        [ 8] = { amount = 1000, name = "lebros_assault_point"   },
-        [ 9] = { amount = 1000, name = "periqia_assault_point"  },
-        [10] = { amount = 1000, name = "ilrusi_assault_point"   },
-        [11] = { amount = 1000, name = "cruor"                  },
-        [12] = { amount = 1000, name = "kinetic_unit"           },
-        [13] = { amount = 1000, name = "obsidian_fragment"      },
-        [14] = { amount = 1000, name = "mweya_plasm"            },
-        [15] = { amount = 1000, name = "ballista_point"         },
-        [16] = { amount = 1000, name = "unity_accolades"        },
-        [17] = { amount = 1000, name = "escha_silt"             }, -- Not Implemented
-        [18] = { amount = 1000, name = "resistance_credit"      },
+
+    [20] = -- Currency Exchange
+    {
+        [ 0] = { amount = 1000, name = 'spark_of_eminence'      },
+        [ 1] = { amount = 1000, name = 'conquest_points'        },
+        [ 2] = { amount = 1000, name = 'imperial_standing'      },
+        [ 3] = { amount = 1000, name = 'allied_notes'           },
+        [ 4] = { amount = 1000, name = 'bayld'                  },
+        [ 5] = { amount = 1000, name = 'valor_point'            },
+        [ 6] = { amount = 1000, name = 'leujaoam_assault_point' },
+        [ 7] = { amount = 1000, name = 'mamool_assault_point'   },
+        [ 8] = { amount = 1000, name = 'lebros_assault_point'   },
+        [ 9] = { amount = 1000, name = 'periqia_assault_point'  },
+        [10] = { amount = 1000, name = 'ilrusi_assault_point'   },
+        [11] = { amount = 1000, name = 'cruor'                  },
+        [12] = { amount = 1000, name = 'kinetic_unit'           },
+        [13] = { amount = 1000, name = 'obsidian_fragment'      },
+        [14] = { amount = 1000, name = 'mweya_plasm'            },
+        [15] = { amount = 1000, name = 'ballista_point'         },
+        [16] = { amount = 1000, name = 'unity_accolades'        },
+        [17] = { amount = 1000, name = 'escha_silt'             }, -- Not Implemented
+        [18] = { amount = 1000, name = 'resistance_credit'      },
     },
 }
 
@@ -583,13 +603,13 @@ local optionToItem =
 local function getCurrencyCap(currencyName)
     local cap = nil
 
-    if currencyName == "spark_of_eminence" then
+    if currencyName == 'spark_of_eminence' then
         cap = xi.settings.main.CAP_CURRENCY_SPARKS
-    elseif currencyName == "unity_accolades" then
+    elseif currencyName == 'unity_accolades' then
         cap = xi.settings.main.CAP_CURRENCY_ACCOLADES
-    elseif currencyName == "ballista_point" then
+    elseif currencyName == 'ballista_point' then
         cap = xi.settings.main.CAP_CURRENCY_BALLISTA
-    elseif currencyName == "valor_point" then
+    elseif currencyName == 'valor_point' then
         cap = xi.settings.main.CAP_CURRENCY_VALOR
     end
 
@@ -597,21 +617,21 @@ local function getCurrencyCap(currencyName)
 end
 
 function xi.sparkshop.onTrade(player, npc, trade, eventid)
-    local copperVouchersStored = player:getCurrency("aman_vouchers")
-    local count = trade:getItemQty(8711)
+    local copperVouchersStored = player:getCurrency('aman_vouchers')
+    local count = trade:getItemQty(xi.item.COPPER_AMAN_VOUCHER)
 
     if count > 0 then
-        trade:confirmItem(8711, count)
-        player:addCurrency("aman_vouchers", count)
+        trade:confirmItem(xi.item.COPPER_AMAN_VOUCHER, count)
+        player:addCurrency('aman_vouchers', count)
         player:confirmTrade()
-        player:startEvent(eventid, 8711, count + copperVouchersStored, 230)
+        player:startEvent(eventid, xi.item.COPPER_AMAN_VOUCHER, count + copperVouchersStored, 230)
     end
 end
 
 function xi.sparkshop.onTrigger(player, npc, event)
-    local sparks = player:getCurrency("spark_of_eminence")
-    local vouchers = player:getCurrency("aman_vouchers")
-    local remainingLimit = xi.settings.main.WEEKLY_EXCHANGE_LIMIT - player:getCharVar("weekly_sparks_spent")
+    local sparks = player:getCurrency('spark_of_eminence')
+    local vouchers = player:getCurrency('aman_vouchers')
+    local remainingLimit = xi.settings.main.WEEKLY_EXCHANGE_LIMIT - player:getCharVar('weekly_sparks_spent')
     local cipher = xi.extravaganza.campaignActive() * 16 * 65536 -- Trust Alter Ego Extravaganza
     local naakual = 0 -- TODO: Naakual Seven Treasures Item Logic
 
@@ -620,18 +640,18 @@ function xi.sparkshop.onTrigger(player, npc, event)
 end
 
 function xi.sparkshop.onEventUpdate(player, csid, option, npc)
-    local sparks = player:getCurrency("spark_of_eminence")
-    local weeklySparksSpent = player:getCharVar("weekly_sparks_spent")
+    local sparks = player:getCurrency('spark_of_eminence')
+    local weeklySparksSpent = player:getCharVar('weekly_sparks_spent')
     local remainingLimit = xi.settings.main.WEEKLY_EXCHANGE_LIMIT - weeklySparksSpent
     local category = bit.band(option, 0xFF)
     local selection = bit.rshift(option, 16)
 
     local qty = 1
-    local requested_qty = bit.band(bit.rshift(option, 10), 0x3F)
+    local requestedQty = bit.band(bit.rshift(option, 10), 0x3F)
 
     -- only skillup books and currencies can have qty > 1 aside from special cases such as ammo or shurikens
     if category == 2 or category == 20 or category == 30 then
-        qty = requested_qty
+        qty = requestedQty
     end
 
     -- There are three specific cases for Sparks rewards currently implemented:
@@ -643,7 +663,7 @@ function xi.sparkshop.onEventUpdate(player, csid, option, npc)
         local cost = item.cost * qty
 
         -- makes sure player has room for three stacks of tomes
-        if (qty > 12 and qty < 99) and player:getFreeSlotsCount() < 3 then
+        if qty > 12 and qty < 99 and player:getFreeSlotsCount() < 3 then
             player:messageSpecial(zones[player:getZoneID()].text.ITEM_CANNOT_BE_OBTAINED, item.id)
             player:updateEvent(sparks, 0, 0, 0, 0, remainingLimit)
             return
@@ -665,10 +685,10 @@ function xi.sparkshop.onEventUpdate(player, csid, option, npc)
         elseif sparks >= cost then
             if npcUtil.giveItem(player, { { item.id, qty } }) then
                 sparks = sparks - cost
-                player:delCurrency("spark_of_eminence", cost)
+                player:delCurrency('spark_of_eminence', cost)
                 if xi.settings.main.ENABLE_EXCHANGE_LIMIT == 1 then
                     remainingLimit = remainingLimit - cost
-                    player:setCharVar("weekly_sparks_spent", weeklySparksSpent + cost)
+                    player:setCharVar('weekly_sparks_spent', weeklySparksSpent + cost)
                 end
             end
         else
@@ -677,46 +697,48 @@ function xi.sparkshop.onEventUpdate(player, csid, option, npc)
 
         player:updateEvent(sparks, 0, 0, 0, 0, remainingLimit)
     elseif category == 20 then
-        local copperVouchersStored = player:getCurrency("aman_vouchers")
+        local copperVouchersStored = player:getCurrency('aman_vouchers')
         local currency = optionToItem[category][selection]
 
         if copperVouchersStored >= qty then
-            player:delCurrency("aman_vouchers", qty)
+            player:delCurrency('aman_vouchers', qty)
 
-            if currency.name == "conquest_points" then
+            if currency.name == 'conquest_points' then
                 local nation = player:getNation()
 
                 if nation == 0 then
-                    currency.name = "sandoria_cp"
+                    currency.name = 'sandoria_cp'
                 elseif nation == 1 then
-                    currency.name = "bastok_cp"
+                    currency.name = 'bastok_cp'
                 elseif nation == 2 then
-                    currency.name = "windurst_cp"
+                    currency.name = 'windurst_cp'
                 end
             end
 
             player:addCurrency(currency.name, currency.amount * qty, getCurrencyCap(currency.name))
             player:messageSpecial(zones[player:getZoneID()].text.YOU_NOW_HAVE_AMT_CURRENCY, selection, player:getCurrency(currency.name))
         else
-            player:messageSpecial(zones[player:getZoneID()].text.DO_NOT_POSSESS_ENOUGH, 8711)
+            player:messageSpecial(zones[player:getZoneID()].text.DO_NOT_POSSESS_ENOUGH, xi.item.COPPER_AMAN_VOUCHER)
         end
-        player:updateEvent(sparks, player:getCurrency("aman_vouchers"))
+
+        player:updateEvent(sparks, player:getCurrency('aman_vouchers'))
     elseif category == 30 then
-        local copperVouchersStored = player:getCurrency("aman_vouchers")
+        local copperVouchersStored = player:getCurrency('aman_vouchers')
 
         if copperVouchersStored >= qty then
             if player:addItem({ id = selection, quantity = 2 * qty, silent = true }) then
-                player:delCurrency("aman_vouchers", qty)
+                player:delCurrency('aman_vouchers', qty)
                 player:messageSpecial(zones[player:getZoneID()].text.YOU_OBTAIN_ITEM, selection, 1) -- Retail: Provisions are always singular
             else
                 player:messageSpecial(zones[player:getZoneID()].text.ITEM_CANNOT_BE_OBTAINED, selection)
             end
         else
-            player:messageSpecial(zones[player:getZoneID()].text.DO_NOT_POSSESS_ENOUGH, 8711)
+            player:messageSpecial(zones[player:getZoneID()].text.DO_NOT_POSSESS_ENOUGH, xi.item.COPPER_AMAN_VOUCHER)
         end
-        player:updateEvent(sparks, player:getCurrency("aman_vouchers"))
+
+        player:updateEvent(sparks, player:getCurrency('aman_vouchers'))
     end
 end
 
-function xi.sparkshop.onEventFinish(player, csid, option)
+function xi.sparkshop.onEventFinish(player, csid, option, npc)
 end

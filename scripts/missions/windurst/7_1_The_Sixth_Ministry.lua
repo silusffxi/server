@@ -9,14 +9,8 @@
 -- Zokima-Rokima    : !pos 0 -16 124 239
 -- Tosuka-Porika    : !pos -26 -6 103 238
 -- _4pc             : !pos 132 12 -19 169
-require('scripts/globals/interaction/mission')
-require('scripts/globals/items')
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/npc_util')
-require('scripts/globals/zone')
 -----------------------------------
-local toraimaraiID = require("scripts/zones/Toraimarai_Canal/IDs")
+local toraimaraiID = zones[xi.zone.TORAIMARAI_CANAL]
 -----------------------------------
 
 local mission = Mission:new(xi.mission.log_id.WINDURST, xi.mission.id.windurst.THE_SIXTH_MINISTRY)
@@ -126,12 +120,12 @@ mission.sections =
                 onTrigger = function(player, npc)
                     for i = toraimaraiID.mob.HINGE_OILS_OFFSET, toraimaraiID.mob.HINGE_OILS_OFFSET + 3 do
                         if not GetMobByID(i):isDead() then
-                             -- At least one Hinge Oil is alive
+                            -- At least one Hinge Oil is alive
                             return mission:progressEvent(70, 0, 0, 0, 1)
                         end
                     end
 
-                     -- All four Hinge Oils are dead
+                    -- All four Hinge Oils are dead
                     return mission:progressEvent(70, 0, 0, 0, 2)
                 end,
             },

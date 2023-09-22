@@ -1,15 +1,9 @@
 -----------------------------------
 -- Area: Windurst Woods
 --  NPC: Kopuro-Popuro
--- Type: Standard NPC
 -- !pos -0.037 -4.749 -22.589 241
 -- Starts Quests: The All-New C-2000, Legendary Plan B, The All-New C-3000
 -- Involved in quests: Lost Chick
------------------------------------
-require("scripts/globals/npc_util")
-require("scripts/globals/settings")
-require("scripts/globals/quests")
-require("scripts/globals/titles")
 -----------------------------------
 local entity = {}
 
@@ -41,19 +35,22 @@ entity.onTrade = function(player, npc, trade)
         else
             player:startEvent(656, 0, 889, 939) -- Incorrect or not enough items
         end
-
     end
 end
 
 entity.onTrigger = function(player, npc)
     local allNewC2000 = player:getQuestStatus(xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_ALL_NEW_C_2000)
     local aGreetingCardian = player:getQuestStatus(xi.quest.log_id.WINDURST, xi.quest.id.windurst.A_GREETING_CARDIAN)
-    local aGreetingCardianCS = player:getCharVar("AGreetingCardian_Event")
+    local aGreetingCardianCS = player:getCharVar('AGreetingCardian_Event')
     local legendaryPlanB = player:getQuestStatus(xi.quest.log_id.WINDURST, xi.quest.id.windurst.LEGENDARY_PLAN_B)
     local allNewC3000 = player:getQuestStatus(xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_ALL_NEW_C_3000)
 
     -- THE ALL NEW C-3000
-    if legendaryPlanB == QUEST_COMPLETED and allNewC3000 == QUEST_AVAILABLE and player:getFameLevel(xi.quest.fame_area.WINDURST) >= 4 then
+    if
+        legendaryPlanB == QUEST_COMPLETED and
+        allNewC3000 == QUEST_AVAILABLE and
+        player:getFameLevel(xi.quest.fame_area.WINDURST) >= 4
+    then
         if player:needToZone() then
             player:startEvent(316) -- Post quest text from legendaryPlanB
         else
@@ -67,7 +64,11 @@ entity.onTrigger = function(player, npc)
         player:startEvent(301) -- Supplemental text when aGreetingCardian in progress, right before completion
 
     -- LEGENDARY PLAN B
-    elseif aGreetingCardian == QUEST_COMPLETED and legendaryPlanB == QUEST_AVAILABLE and player:getFameLevel(xi.quest.fame_area.WINDURST) >= 3 then
+    elseif
+        aGreetingCardian == QUEST_COMPLETED and
+        legendaryPlanB == QUEST_AVAILABLE and
+        player:getFameLevel(xi.quest.fame_area.WINDURST) >= 3
+    then
         if player:needToZone() then
             player:startEvent(306) -- Supplemental text for aGreetingCardian before start of legendaryPlanB
         else
@@ -92,10 +93,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     -- THE ALL NEW C-2000
     if csid == 285 and option ~= 2 then  -- option 2 is declining the quest for the second question
         player:addQuest(xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_ALL_NEW_C_2000)
@@ -109,14 +110,20 @@ entity.onEventFinish = function(player, csid, option)
     -- LEGENDARY PLAN B
     elseif csid == 308 then
         player:addQuest(xi.quest.log_id.WINDURST, xi.quest.id.windurst.LEGENDARY_PLAN_B)
-    elseif csid == 314 and npcUtil.completeQuest(player, xi.quest.log_id.WINDURST, xi.quest.id.windurst.LEGENDARY_PLAN_B, { item = 12749, gil = 700 }) then
+    elseif
+        csid == 314 and
+        npcUtil.completeQuest(player, xi.quest.log_id.WINDURST, xi.quest.id.windurst.LEGENDARY_PLAN_B, { item = 12749, gil = 700 })
+    then
         player:confirmTrade()
         player:needToZone(true)
 
     -- THE ALL NEW C-3000
     elseif csid == 655 then
         player:addQuest(xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_ALL_NEW_C_3000)
-    elseif csid == 657 and npcUtil.completeQuest(player, xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_ALL_NEW_C_3000, { fame = 10, gil = 600 }) then
+    elseif
+        csid == 657 and
+        npcUtil.completeQuest(player, xi.quest.log_id.WINDURST, xi.quest.id.windurst.THE_ALL_NEW_C_3000, { fame = 10, gil = 600 })
+    then
         player:confirmTrade()
     end
 end

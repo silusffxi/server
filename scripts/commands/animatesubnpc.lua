@@ -2,25 +2,24 @@
 -- func: animatesubnpc
 -- desc: Changes the animationSub of the given npc. (For testing purposes.)
 -----------------------------------
+local commandObj = {}
 
-require("scripts/globals/status")
-
-cmdprops =
+commandObj.cmdprops =
 {
     permission = 1,
-    parameters = "ss"
+    parameters = 'ss'
 }
 
-function error(player, msg)
+local function error(player, msg)
     player:PrintToPlayer(msg)
-    player:PrintToPlayer("!animatesubnpc (npcID) <animationID>")
+    player:PrintToPlayer('!animatesubnpc (npcID) <animationID>')
 end
 
-function onTrigger(player, arg1, arg2)
+commandObj.onTrigger = function(player, arg1, arg2)
     local targ
     local animationId
 
-    if (arg2 == nil) then
+    if arg2 == nil then
         -- player did not provide npcId.  Shift arguments by one.
         targ = player:getCursorTarget()
         animationId = arg1
@@ -32,24 +31,28 @@ function onTrigger(player, arg1, arg2)
 
     -- validate target
     if targ == nil then
-        error(player, "You must either enter a valid npcID or target an NPC.")
+        error(player, 'You must either enter a valid npcID or target an NPC.')
         return
     end
-    if (not targ:isNPC()) then
-        error(player, "Targeted entity is not an NPC.")
+
+    if not targ:isNPC() then
+        error(player, 'Targeted entity is not an NPC.')
         return
     end
 
     -- validate animationID
-    if (animationId ~= nil) then
+    if animationId ~= nil then
         animationId = tonumber(animationId) or xi.anim[string.upper(animationId)]
     end
-    if (animationId == nil) then
-        error(player, "Invalid animationID.")
+
+    if animationId == nil then
+        error(player, 'Invalid animationID.')
         return
     end
 
     local oldAnimation = targ:getAnimationSub()
-    targ:setAnimationSub( animationId )
-    player:PrintToPlayer(string.format("NPC ID: %i - %s | Old animationSub: %i | New animationSub: %i\n", targ:getID(), targ:getName(), oldAnimation, animationId))
+    targ:setAnimationSub(animationId)
+    player:PrintToPlayer(string.format('NPC ID: %i - %s | Old animationSub: %i | New animationSub: %i\n', targ:getID(), targ:getName(), oldAnimation, animationId))
 end
+
+return commandObj

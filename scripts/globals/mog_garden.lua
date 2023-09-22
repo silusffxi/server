@@ -1,8 +1,8 @@
 -----------------------------------
 -- Mog Garden Global
 -----------------------------------
-require("scripts/globals/utils")
-local ID = require("scripts/zones/Mog_Garden/IDs")
+require('scripts/globals/utils')
+local ID = zones[xi.zone.MOG_GARDEN]
 -----------------------------------
 xi = xi or {}
 xi.mog_garden = xi.mog_garden or {}
@@ -27,11 +27,11 @@ xi.mog_garden.onZoneIn = function(player, prevZone)
     -- TODO: System to un-hide specific NPCs for specific players
 end
 
-xi.mog_garden.onRegionEnter = function(player, region)
+xi.mog_garden.onTriggerAreaEnter = function(player, triggerArea)
 end
 
-xi.mog_garden.onEventUpdate = function(player, csid, option)
+xi.mog_garden.onEventUpdate = function(player, csid, option, npc)
 end
 
-xi.mog_garden.onEventFinish = function(player, csid, option)
+xi.mog_garden.onEventFinish = function(player, csid, option, npc)
 end

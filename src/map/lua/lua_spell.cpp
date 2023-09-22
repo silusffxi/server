@@ -21,9 +21,9 @@
 
 #include "common/logging.h"
 
-#include "../spell.h"
-#include "../utils/battleutils.h"
 #include "lua_spell.h"
+#include "spell.h"
+#include "utils/battleutils.h"
 
 /************************************************************************
  *                                                                        *
@@ -49,6 +49,11 @@ CLuaSpell::CLuaSpell(CSpell* PSpell)
 void CLuaSpell::setMsg(uint16 messageID)
 {
     m_PLuaSpell->setMessage(messageID);
+}
+
+void CLuaSpell::setModifier(uint8 modifier)
+{
+    m_PLuaSpell->setModifier(static_cast<MODIFIER>(modifier));
 }
 
 void CLuaSpell::setAoE(uint8 aoe)
@@ -84,6 +89,11 @@ uint32 CLuaSpell::getCastTime()
 void CLuaSpell::setCastTime(uint32 casttime)
 {
     m_PLuaSpell->setCastTime(casttime);
+}
+
+uint32 CLuaSpell::getPrimaryTargetID()
+{
+    return m_PLuaSpell->getPrimaryTargetID();
 }
 
 bool CLuaSpell::canTargetEnemy()
@@ -152,6 +162,7 @@ void CLuaSpell::Register()
 {
     SOL_USERTYPE("CSpell", CLuaSpell);
     SOL_REGISTER("setMsg", CLuaSpell::setMsg);
+    SOL_REGISTER("setModifier", CLuaSpell::setModifier);
     SOL_REGISTER("setAoE", CLuaSpell::setAoE);
     SOL_REGISTER("setFlag", CLuaSpell::setFlag);
     SOL_REGISTER("setRadius", CLuaSpell::setRadius);
@@ -170,6 +181,7 @@ void CLuaSpell::Register()
     SOL_REGISTER("getSpellFamily", CLuaSpell::getSpellFamily);
     SOL_REGISTER("getFlag", CLuaSpell::getFlag);
     SOL_REGISTER("getCastTime", CLuaSpell::getCastTime);
+    SOL_REGISTER("getPrimaryTargetID", CLuaSpell::getPrimaryTargetID);
 }
 
 std::ostream& operator<<(std::ostream& os, const CLuaSpell& spell)

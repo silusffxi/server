@@ -21,7 +21,7 @@ function Mission:new(areaId, missionId)
 end
 
 function Mission.getVarPrefix(areaId, missionId)
-    return string.format("Mission[%d][%d]", areaId, missionId)
+    return string.format('Mission[%d][%d]', areaId, missionId)
 end
 
 function Mission:getCheckArgs(player)
@@ -46,5 +46,6 @@ function Mission:complete(player)
 
         self:cleanup(player)
     end
+
     return didComplete
 end

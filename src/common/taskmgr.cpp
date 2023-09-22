@@ -21,11 +21,11 @@
 
 #include <utility>
 
-#include "../common/logging.h"
-#include "../common/taskmgr.h"
-#include "../common/timer.h"
-#include "../common/tracy.h"
-#include "../common/utils.h"
+#include "common/logging.h"
+#include "common/taskmgr.h"
+#include "common/timer.h"
+#include "common/tracy.h"
+#include "common/utils.h"
 
 CTaskMgr* CTaskMgr::_instance = nullptr;
 
@@ -43,15 +43,14 @@ void CTaskMgr::delInstance()
 {
     if (_instance)
     {
-        delete _instance;
-        _instance = nullptr;
+        destroy(_instance);
     }
 }
 
-CTaskMgr::CTask* CTaskMgr::AddTask(std::string InitName, time_point InitTick, std::any InitData, TASKTYPE InitType, TaskFunc_t InitFunc, duration InitInterval)
+CTaskMgr::CTask* CTaskMgr::AddTask(std::string const& InitName, time_point InitTick, std::any InitData, TASKTYPE InitType, TaskFunc_t InitFunc, duration InitInterval)
 {
     TracyZoneScoped;
-    return AddTask(new CTask(std::move(InitName), InitTick, std::move(InitData), InitType, InitFunc, InitInterval));
+    return AddTask(new CTask(InitName, InitTick, std::move(InitData), InitType, InitFunc, InitInterval));
 }
 
 CTaskMgr::CTask* CTaskMgr::AddTask(CTask* PTask)
@@ -131,7 +130,7 @@ duration CTaskMgr::DoTimer(time_point tick)
             case TASK_REMOVE:
             default:
             {
-                delete PTask; // suppose that all tasks were allocated by new
+                destroy(PTask); // suppose that all tasks were allocated by new
             }
             break;
         }

@@ -34,61 +34,11 @@
 #include <string>
 #include <thread>
 
-#include <concurrentqueue.h>
-
-moodycamel::ConcurrentQueue<std::function<void(SqlConnection*)>> asyncQueue;
-
-std::atomic<bool>            asyncRunning;
-std::unique_ptr<std::thread> asyncThread;
-
-void AsyncThreadBody(const char* user, const char* passwd, const char* host, uint16 port, const char* db)
-{
-    TracySetThreadName("Async DB Thread");
-    SqlConnection con(user, passwd, host, port, db);
-    while (asyncRunning)
-    {
-        con.HandleAsync();
-        std::this_thread::sleep_for(200ms); // TODO: This is bad and ugly. Replace with something better.
-    }
-}
-
-void SqlConnection::Async(std::function<void(SqlConnection*)>&& func)
-{
-    TracyZoneScoped;
-    asyncQueue.enqueue(std::move(func));
-}
-
-void SqlConnection::Async(std::string const& query)
-{
-    TracyZoneScoped;
-    TracyZoneString(query);
-
-    // clang-format off
-    Async([query = std::move(query)](SqlConnection* sql)
-    {
-        // Executed on worker thread
-        if (sql->QueryStr(query.c_str()) == SQL_ERROR)
-        {
-            ShowCritical("Asyc Query Error");
-        }
-    });
-    // clang-format on
-}
-
-void SqlConnection::HandleAsync()
-{
-    std::function<void(SqlConnection*)> func;
-    while (asyncQueue.try_dequeue(func))
-    {
-        TracyZoneScoped;
-        func(this);
-    }
-}
-
-void SqlConnection::SetLatencyWarning(bool _LatencyWarning)
-{
-    m_LatencyWarning = _LatencyWarning;
-}
+// TODO: Since kernel.cpp isn't used by the processes which now use Application, we can't
+//     : store this global flag there. So we're storing it here until all processes are
+//     : refactored to use Application. Once that's done this should be moved out of static
+//     : storage in this unit to a member of Application.
+std::atomic<bool> gProcessLoaded = false;
 
 SqlConnection::SqlConnection()
 : SqlConnection(settings::get<std::string>("network.SQL_LOGIN").c_str(),
@@ -97,11 +47,11 @@ SqlConnection::SqlConnection()
                 settings::get<uint16>("network.SQL_PORT"),
                 settings::get<std::string>("network.SQL_DATABASE").c_str())
 {
-    // Just forwarding the default credentials to the next contrictor
+    // Just forwarding the default credentials to the next constructor
 }
 
 SqlConnection::SqlConnection(const char* user, const char* passwd, const char* host, uint16 port, const char* db)
-: m_LatencyWarning(false)
+: m_ThreadId(std::this_thread::get_id())
 {
     TracyZoneScoped;
 
@@ -136,18 +86,20 @@ SqlConnection::SqlConnection(const char* user, const char* passwd, const char* h
 
     InitPreparedStatements();
 
+    // these members will be set up in SetupKeepalive(), they need to be init'd here to appease clang-tidy
+    m_PingInterval = 0;
+    m_LastPing     = 0;
     SetupKeepalive();
 }
 
 SqlConnection::~SqlConnection()
 {
     TracyZoneScoped;
-    asyncRunning = false;
     if (self)
     {
         mysql_close(&self->handle);
         FreeResult();
-        delete self;
+        destroy(self);
     }
 }
 
@@ -170,11 +122,10 @@ std::string SqlConnection::GetServerVersion()
 
 int32 SqlConnection::GetTimeout(uint32* out_timeout)
 {
-    TracyZoneScoped;
     if (out_timeout && SQL_SUCCESS == Query("SHOW VARIABLES LIKE 'wait_timeout'"))
     {
-        char*  data;
-        size_t len;
+        char*  data = nullptr;
+        size_t len  = 0;
         if (SQL_SUCCESS == NextRow() && SQL_SUCCESS == GetData(1, &data, &len))
         {
             *out_timeout = (uint32)strtoul(data, nullptr, 10);
@@ -190,10 +141,9 @@ int32 SqlConnection::GetTimeout(uint32* out_timeout)
 
 int32 SqlConnection::GetColumnNames(const char* table, char* out_buf, size_t buf_len, char sep)
 {
-    TracyZoneScoped;
-    char*  data;
-    size_t len;
-    size_t off = 0;
+    char*  data = nullptr;
+    size_t len  = 0;
+    size_t off  = 0;
 
     if (self == nullptr || SQL_ERROR == Query("EXPLAIN `%s`", table))
     {
@@ -221,7 +171,6 @@ int32 SqlConnection::GetColumnNames(const char* table, char* out_buf, size_t buf
 
 int32 SqlConnection::SetEncoding(const char* encoding)
 {
-    TracyZoneScoped;
     if (mysql_set_character_set(&self->handle, encoding) == 0)
     {
         return SQL_SUCCESS;
@@ -250,6 +199,35 @@ void SqlConnection::SetupKeepalive()
     // 30-second reserve
     uint8 reserve  = 30;
     m_PingInterval = timeout + reserve;
+}
+
+void SqlConnection::CheckCharset()
+{
+    // Check that the SQL charset is what we require
+    auto ret = QueryStr("SELECT @@character_set_database, @@collation_database;");
+    if (ret != SQL_ERROR && NumRows())
+    {
+        bool foundError = false;
+        while (NextRow() == SQL_SUCCESS)
+        {
+            auto charsetSetting   = GetStringData(0);
+            auto collationSetting = GetStringData(1);
+            if (!starts_with(charsetSetting, "utf8") || !starts_with(collationSetting, "utf8"))
+            {
+                foundError = true;
+                // clang-format off
+                ShowWarning(fmt::format("Unexpected character_set or collation setting in database: {}: {}. Expected utf8*.",
+                    charsetSetting, collationSetting).c_str());
+                // clang-format on
+            }
+        }
+
+        if (foundError)
+        {
+            ShowWarning("Non utf8 charset can result in data reads and writes being corrupted!");
+            ShowWarning("Non utf8 collation can be indicative that the database was not set up per required specifications.");
+        }
+    }
 }
 
 int32 SqlConnection::TryPing()
@@ -307,10 +285,26 @@ size_t SqlConnection::EscapeString(char* out_to, const char* from)
     return EscapeStringLen(out_to, from, strlen(from));
 }
 
+std::string SqlConnection::EscapeString(std::string const& input)
+{
+    TracyZoneScoped;
+    std::string escaped_full_string;
+    escaped_full_string.reserve(input.size() * 2 + 1);
+    EscapeString(escaped_full_string.data(), input.data());
+    return escaped_full_string;
+}
+
 int32 SqlConnection::QueryStr(const char* query)
 {
     TracyZoneScoped;
     TracyZoneCString(query);
+
+    auto currentThreadId = std::this_thread::get_id();
+    if (currentThreadId != m_ThreadId)
+    {
+        ShowError("SqlConnection::Query called on thread that doesn't own it. SqlConnection is not thread-safe!");
+        ShowError(query);
+    }
 
     DebugSQL(query);
 
@@ -325,7 +319,6 @@ int32 SqlConnection::QueryStr(const char* query)
     auto startTime = hires_clock::now();
 
     {
-        TracyZoneNamed(mysql_real_query_);
         self->buf += query;
         if (mysql_real_query(&self->handle, self->buf.c_str(), (unsigned int)self->buf.length()))
         {
@@ -336,7 +329,6 @@ int32 SqlConnection::QueryStr(const char* query)
     }
 
     {
-        TracyZoneNamed(mysql_store_result_);
         self->result = mysql_store_result(&self->handle);
         if (mysql_errno(&self->handle) != 0)
         {
@@ -348,15 +340,16 @@ int32 SqlConnection::QueryStr(const char* query)
 
     auto endTime = hires_clock::now();
     auto dTime   = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-    if (m_LatencyWarning)
+
+    if (gProcessLoaded && settings::get<bool>("logging.SQL_SLOW_QUERY_LOG_ENABLE"))
     {
-        if (dTime > 250ms)
+        if (dTime > std::chrono::milliseconds(settings::get<uint32>("logging.SQL_SLOW_QUERY_ERROR_TIME")))
         {
-            ShowError(fmt::format("Query took {}ms: {}", dTime.count(), self->buf));
+            ShowError(fmt::format("SQL query took {}ms: {}", dTime.count(), self->buf));
         }
-        else if (dTime > 100ms)
+        else if (dTime > std::chrono::milliseconds(settings::get<uint32>("logging.SQL_SLOW_QUERY_WARNING_TIME")))
         {
-            ShowWarning(fmt::format("Query took {}ms: {}", dTime.count(), self->buf));
+            ShowWarning(fmt::format("SQL query took {}ms: {}", dTime.count(), self->buf));
         }
     }
 
@@ -365,7 +358,6 @@ int32 SqlConnection::QueryStr(const char* query)
 
 uint64 SqlConnection::AffectedRows()
 {
-    TracyZoneScoped;
     if (self)
     {
         return (uint64)mysql_affected_rows(&self->handle);
@@ -375,7 +367,6 @@ uint64 SqlConnection::AffectedRows()
 
 uint64 SqlConnection::LastInsertId()
 {
-    TracyZoneScoped;
     if (self)
     {
         return (uint64)mysql_insert_id(&self->handle);
@@ -385,7 +376,6 @@ uint64 SqlConnection::LastInsertId()
 
 uint32 SqlConnection::NumColumns()
 {
-    TracyZoneScoped;
     if (self && self->result)
     {
         return mysql_num_fields(self->result);
@@ -395,7 +385,6 @@ uint32 SqlConnection::NumColumns()
 
 uint64 SqlConnection::NumRows()
 {
-    TracyZoneScoped;
     if (self && self->result)
     {
         return mysql_num_rows(self->result);
@@ -405,7 +394,6 @@ uint64 SqlConnection::NumRows()
 
 int32 SqlConnection::NextRow()
 {
-    TracyZoneScoped;
     if (self && self->result)
     {
         self->row = mysql_fetch_row(self->result);
@@ -427,7 +415,6 @@ int32 SqlConnection::NextRow()
 
 int32 SqlConnection::GetData(size_t col, char** out_buf, size_t* out_len)
 {
-    TracyZoneScoped;
     if (self && self->row)
     {
         if (col < NumColumns())
@@ -461,7 +448,6 @@ int32 SqlConnection::GetData(size_t col, char** out_buf, size_t* out_len)
 
 int8* SqlConnection::GetData(size_t col)
 {
-    TracyZoneScoped;
     if (self && self->row)
     {
         if (col < NumColumns())
@@ -476,7 +462,6 @@ int8* SqlConnection::GetData(size_t col)
 
 int32 SqlConnection::GetIntData(size_t col)
 {
-    TracyZoneScoped;
     if (self && self->row)
     {
         if (col < NumColumns())
@@ -491,7 +476,6 @@ int32 SqlConnection::GetIntData(size_t col)
 
 uint32 SqlConnection::GetUIntData(size_t col)
 {
-    TracyZoneScoped;
     if (self && self->row)
     {
         if (col < NumColumns())
@@ -506,12 +490,11 @@ uint32 SqlConnection::GetUIntData(size_t col)
 
 uint64 SqlConnection::GetUInt64Data(size_t col)
 {
-    TracyZoneScoped;
     if (self && self->row)
     {
         if (col < NumColumns())
         {
-            return (self->row[col] ? (uint64)strtoull(self->row[col], NULL, 10) : 0);
+            return (self->row[col] ? (uint64)strtoull(self->row[col], nullptr, 10) : 0);
         }
     }
     ShowCritical("Query: %s", self->buf);
@@ -521,7 +504,6 @@ uint64 SqlConnection::GetUInt64Data(size_t col)
 
 float SqlConnection::GetFloatData(size_t col)
 {
-    TracyZoneScoped;
     if (self && self->row)
     {
         if (col < NumColumns())
@@ -536,7 +518,6 @@ float SqlConnection::GetFloatData(size_t col)
 
 std::string SqlConnection::GetStringData(size_t col)
 {
-    TracyZoneScoped;
     if (self && self->row)
     {
         if (col < NumColumns())
@@ -551,7 +532,6 @@ std::string SqlConnection::GetStringData(size_t col)
 
 void SqlConnection::FreeResult()
 {
-    TracyZoneScoped;
     if (self && self->result)
     {
         mysql_free_result(self->result);
@@ -632,6 +612,56 @@ bool SqlConnection::TransactionRollback()
     ShowCritical("Query: %s", self->buf);
     ShowCritical("TransactionRollback: SQL_ERROR: %s (%u)", mysql_error(&self->handle), mysql_errno(&self->handle));
     return false;
+}
+
+// Prepares to profile a single query.
+// If you try to query multiple queries inside a start/end block,
+// only the most recent will print results.
+void SqlConnection::StartProfiling()
+{
+    TracyZoneScoped;
+    if (self && QueryStr("SET profiling = 1;") != SQL_ERROR)
+    {
+        return;
+    }
+
+    ShowCritical("Query: %s", self->buf);
+    ShowCritical("StartProfiling: SQL_ERROR: %s (%u)", mysql_error(&self->handle), mysql_errno(&self->handle));
+}
+
+// Finished profiling a single query.
+// Will print out a table corresponding to the results shown by `SHOW PROFILE;`
+// If you try to query multiple queries inside a start/end block,
+// only the most recent will print results.
+void SqlConnection::FinishProfiling()
+{
+    TracyZoneScoped;
+    if (!self)
+    {
+        return;
+    }
+
+    auto lastQuery = self->buf;
+    if (QueryStr("SHOW PROFILE;") != SQL_ERROR && NumRows() > 0)
+    {
+        std::string outStr = "SQL SHOW PROFILE:\n";
+        outStr += fmt::format("Query: {}\n", lastQuery);
+        outStr += fmt::format("| {:<31}| {:<8} |\n", "Status", "Duration");
+        outStr += fmt::format("|{:=<32}|{:=<10}|\n", "", "");
+
+        while (NextRow() == SQL_SUCCESS)
+        {
+            auto category    = GetStringData(0);
+            auto measurement = GetStringData(1);
+            outStr += fmt::format("| {:<31}| {:<8} |\n", category, measurement);
+        }
+        QueryStr("SET profiling = 0;");
+        ShowInfo(outStr);
+        return;
+    }
+
+    ShowCritical("Query: %s", self->buf);
+    ShowCritical("FinishProfiling: SQL_ERROR: %s (%u)", mysql_error(&self->handle), mysql_errno(&self->handle));
 }
 
 void SqlConnection::InitPreparedStatements()

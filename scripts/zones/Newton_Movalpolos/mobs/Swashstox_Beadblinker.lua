@@ -2,9 +2,6 @@
 -- Area: Newton Movalpolos
 --   NM: Swashstox Beadblinker
 -----------------------------------
-require("scripts/globals/hunts")
------------------------------------
-
 local entity = {}
 
 entity.onMobSpawn = function(mob)
@@ -36,6 +33,7 @@ entity.onMobRoam = function(mob)
     if guard1:isSpawned() then
         guard1:pathTo(mob:getXPos() + 1, mob:getYPos(), mob:getZPos())
     end
+
     if guard2:isSpawned() then
         guard2:pathTo(mob:getXPos() + 3, mob:getYPos(), mob:getZPos() + 1)
     end

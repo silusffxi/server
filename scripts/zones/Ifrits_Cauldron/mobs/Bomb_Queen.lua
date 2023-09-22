@@ -3,27 +3,24 @@
 --   NM: Bomb Queen
 --  Vid: https://www.youtube.com/watch?v=AVsEbYjSAHM
 -----------------------------------
-local ID = require("scripts/zones/Ifrits_Cauldron/IDs")
-require("scripts/globals/status")
------------------------------------
 local entity = {}
 
 entity.onMobInitialize = function(mob)
     mob:setMobMod(xi.mobMod.IDLE_DESPAWN, 180)
     mob:setMobMod(xi.mobMod.HP_STANDBACK, -1)
     mob:setMobMod(xi.mobMod.DRAW_IN, 1)
-    mob:setMod(xi.mod.STUNRES, 50)
+    mob:setMod(xi.mod.STUN_MEVA, 50)
 end
 
 entity.onMobSpawn = function(mob)
-    mob:setLocalVar("spawn_time", os.time() + 5) -- five seconds for first pet
+    mob:setLocalVar('spawn_time', os.time() + 5) -- five seconds for first pet
 end
 
 entity.onMobFight = function(mob, target)
     -- Every 30 seconds spawn a random Prince or Princess. If none remain then summon the Bastard.
     -- Retail confirmed
-    if os.time() >= mob:getLocalVar("spawn_time") then
-        mob:setLocalVar("spawn_time", os.time() + 30)
+    if os.time() >= mob:getLocalVar('spawn_time') then
+        mob:setLocalVar('spawn_time', os.time() + 30)
         local mobId = mob:getID()
         local canSpawnPet = false
         for id = mobId + 1, mobId + 5 do
@@ -32,13 +29,15 @@ entity.onMobFight = function(mob, target)
                 break
             end
         end
+
         if canSpawnPet then
-            mob:entityAnimationPacket("casm")
+            mob:entityAnimationPacket('casm')
             mob:timer(5000, function(bombQueen)
                 if bombQueen:isDead() then
                     return
                 end
-                bombQueen:entityAnimationPacket("shsm")
+
+                bombQueen:entityAnimationPacket('shsm')
                 local bombQueenId = mob:getID()
 
                 -- Pick a random Prince or Princess

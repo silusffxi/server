@@ -22,8 +22,8 @@
 #ifndef _CABILITY_H
 #define _CABILITY_H
 
-#include "../common/cbasetypes.h"
-#include "../common/mmo.h"
+#include "common/cbasetypes.h"
+#include "common/mmo.h"
 #include "packets/action.h"
 
 #include "entities/battleentity.h"
@@ -739,16 +739,16 @@ public:
     void setMeritModID(uint16 value);
     void setActionType(ACTIONTYPE type);
 
-    const int8* getName();
-    void        setName(int8* name);
+    const std::string& getName();
+    void               setName(const std::string& name);
 
 private:
     uint16      m_ID;
     JOBTYPE     m_Job;
     uint8       m_level;
     uint16      m_animationID;
-    duration    m_animationTime;
-    duration    m_castTime;
+    duration    m_animationTime{};
+    duration    m_castTime{};
     float       m_range;
     uint8       m_aoe;
     uint16      m_validTarget;
@@ -761,12 +761,12 @@ private:
     uint16      m_meritModID;
     std::string m_name;
     uint16      m_mobskillId;
-    ACTIONTYPE  m_actionType;
+    ACTIONTYPE  m_actionType{};
 };
 
 /************************************************************************
  *                                                                       *
- *  namespase для работы со способностями                                *
+ *  Namespace to work with abilities                                     *
  *                                                                       *
  ************************************************************************/
 

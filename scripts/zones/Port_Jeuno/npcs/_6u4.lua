@@ -3,8 +3,6 @@
 --  NPC: Door: Departures Exit (for San D'Oria)
 -- !pos -76 8 54 246
 -----------------------------------
-require("scripts/globals/keyitems")
------------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
@@ -12,7 +10,7 @@ end
 
 entity.onTrigger = function(player, npc)
     if
-        player:hasKeyItem(xi.ki.AIRSHIP_PASS) == true and
+        player:hasKeyItem(xi.ki.AIRSHIP_PASS) and
         player:getGil() >= 200
     then
         player:startEvent(38)
@@ -21,10 +19,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 38 then
         local zPos = player:getZPos()
 

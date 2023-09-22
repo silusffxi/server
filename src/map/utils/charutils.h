@@ -24,9 +24,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 
 #include "common/cbasetypes.h"
 
-#include "../entities/charentity.h"
-#include "../items/item_equipment.h"
-#include "../trait.h"
+#include "entities/charentity.h"
+#include "items/item_equipment.h"
+#include "trait.h"
 
 class CPetEntity;
 class CMobEntity;
@@ -108,6 +108,7 @@ namespace charutils
 
     void   CheckWeaponSkill(CCharEntity* PChar, uint8 skill);
     bool   HasItem(CCharEntity* PChar, uint16 ItemID);
+    uint32 getItemCount(CCharEntity* PChar, uint16 ItemID);
     uint8  AddItem(CCharEntity* PChar, uint8 LocationID, CItem* PItem, bool silence = false);
     uint8  AddItem(CCharEntity* PChar, uint8 LocationID, uint16 itemID, uint32 quantity = 1, bool silence = false);
     uint8  MoveItem(CCharEntity* PChar, uint8 LocationID, uint8 SlotID, uint8 NewSlotID);
@@ -124,8 +125,9 @@ namespace charutils
     bool   EquipArmor(CCharEntity* PChar, uint8 slotID, uint8 equipSlotID, uint8 containerID);
     void   CheckUnarmedWeapon(CCharEntity* PChar);
     void   SetStyleLock(CCharEntity* PChar, bool isStyleLocked);
-    void   UpdateWeaponStyle(CCharEntity* PChar, uint8 equipSlotID, CItemWeapon* PItem);
+    void   UpdateWeaponStyle(CCharEntity* PChar, uint8 equipSlotID, CItemEquipment* PItem);
     void   UpdateArmorStyle(CCharEntity* PChar, uint8 equipSlotID);
+    void   UpdateRemovedSlots(CCharEntity* PChar);
     void   AddItemToRecycleBin(CCharEntity* PChar, uint32 container, uint8 slotID, uint8 quantity);
     void   EmptyRecycleBin(CCharEntity* PChar);
 
@@ -143,9 +145,9 @@ namespace charutils
     int32 addLearnedAbility(CCharEntity* PChar, uint16 AbilityID); // добавляем заклинание
     int32 delLearnedAbility(CCharEntity* PChar, uint16 AbilityID); // улаляем заклинание
 
-    bool hasLearnedWeaponskill(CCharEntity* PChar, uint8 wsid);
-    void addLearnedWeaponskill(CCharEntity* PChar, uint8 wsid);
-    void delLearnedWeaponskill(CCharEntity* PChar, uint8 wsid);
+    bool hasLearnedWeaponskill(CCharEntity* PChar, uint8 wsUnlockId);
+    void addLearnedWeaponskill(CCharEntity* PChar, uint8 wsUnlockId);
+    void delLearnedWeaponskill(CCharEntity* PChar, uint8 wsUnlockId);
 
     int32 hasAbility(CCharEntity* PChar, uint16 AbilityID); // проверяем наличие ключевого предмета
     int32 addAbility(CCharEntity* PChar, uint16 AbilityID); // добавляем ключевой предмет
@@ -160,9 +162,9 @@ namespace charutils
     int32 addPetAbility(CCharEntity* PChar, uint16 AbilityID);
     int32 delPetAbility(CCharEntity* PChar, uint16 AbilityID);
 
-    int32 hasTrait(CCharEntity* PChar, uint8 TraitID); // check if pchar has trait by traitid and jobid
-    int32 addTrait(CCharEntity* PChar, uint8 TraitID); // add trait by traitid and jobid
-    int32 delTrait(CCharEntity* PChar, uint8 TraitID); // delete trait by traitid and jobid
+    int32 hasTrait(CCharEntity* PChar, uint16 TraitID); // check if pchar has trait by traitid and jobid
+    int32 addTrait(CCharEntity* PChar, uint16 TraitID); // add trait by traitid and jobid
+    int32 delTrait(CCharEntity* PChar, uint16 TraitID); // delete trait by traitid and jobid
 
     int32 addWeaponSkill(CCharEntity* PChar, uint16 WeaponSkillID); // declaration of function to add weapon skill
     int32 hasWeaponSkill(CCharEntity* PChar, uint16 WeaponSkillID); // declaration of function to check for weapon skill
@@ -209,7 +211,11 @@ namespace charutils
 
     uint16 AvatarPerpetuationReduction(CCharEntity* PChar);
 
-    void OpenSendBox(CCharEntity* PChar);
+    void OpenSendBox(CCharEntity* PChar, uint8 action, uint8 boxtype);
+    void OpenRecvBox(CCharEntity* PChar, uint8 action, uint8 boxtype);
+    bool isSendBoxOpen(CCharEntity* PChar);
+    bool isRecvBoxOpen(CCharEntity* PChar);
+    bool isAnyDeliveryBoxOpen(CCharEntity* PChar);
 
     bool CheckAbilityAddtype(CCharEntity* PChar, CAbility* PAbility);
 
@@ -233,15 +239,15 @@ namespace charutils
     bool  AddWeaponSkillPoints(CCharEntity*, SLOTTYPE, int);
 
     int32 GetCharVar(CCharEntity* PChar, std::string const& var);
-    void  SetCharVar(uint32 charId, std::string const& var, int32 value);
-    void  SetCharVar(CCharEntity* PChar, std::string const& var, int32 value);
+    void  SetCharVar(uint32 charId, std::string const& var, int32 value, uint32 expiry = 0);
+    void  SetCharVar(CCharEntity* PChar, std::string const& var, int32 value, uint32 expiry = 0);
     int32 ClearCharVarsWithPrefix(CCharEntity* PChar, std::string const& prefix);
     int32 RemoveCharVarsWithTag(CCharEntity* PChar, std::string const& varsTag);
     void  ClearCharVarFromAll(std::string const& varName, bool localOnly = false);
     void  IncrementCharVar(CCharEntity* PChar, std::string const& var, int32 value);
 
-    int32 FetchCharVar(uint32 charId, std::string const& var);
-    void  PersistCharVar(uint32 charId, std::string const& var, int32 value);
+    auto FetchCharVar(uint32 charId, std::string const& var) -> std::pair<int32, uint32>;
+    void PersistCharVar(uint32 charId, std::string const& var, int32 value, uint32 expiry = 0);
 
     uint16 getWideScanRange(JOBTYPE job, uint8 level);
     uint16 getWideScanRange(CCharEntity* PChar);

@@ -1,6 +1,6 @@
-----------------------------
+-----------------------------------
 ----- Event class
-----------------------------
+-----------------------------------
 require('scripts/globals/interaction/actions/action')
 
 Event = Action:new(Action.Type.Event)
@@ -22,6 +22,7 @@ function Event:perform(player, targetEntity)
     else
         player:startEvent(self.id, unpack(self.options))
     end
+
     return self.returnValue
 end
 

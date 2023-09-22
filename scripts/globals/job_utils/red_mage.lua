@@ -1,11 +1,7 @@
 -----------------------------------
 -- Red Mage Job Utilities
 -----------------------------------
-require('scripts/globals/items')
-require("scripts/globals/msg")
-require("scripts/globals/settings")
-require("scripts/globals/status")
-require("scripts/globals/utils")
+require('scripts/globals/utils')
 -----------------------------------
 xi = xi or {}
 xi.job_utils = xi.job_utils or {}
@@ -43,7 +39,10 @@ xi.job_utils.red_mage.useConvert = function(player, target, ability)
 
     if playerMP > 0 then
         -- Murgleis sword augments Convert
-        if player:getMod(xi.mod.AUGMENTS_CONVERT) > 0 and playerHP > player:getMaxHP() / 2 then
+        if
+            player:getMod(xi.mod.AUGMENTS_CONVERT) > 0 and
+            playerHP > player:getMaxHP() / 2
+        then
             playerHP = playerHP * player:getMod(xi.mod.AUGMENTS_CONVERT)
         end
 

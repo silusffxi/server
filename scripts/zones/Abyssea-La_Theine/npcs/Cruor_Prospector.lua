@@ -4,11 +4,6 @@
 -- Type: Cruor NPC
 -- !pos 132.000 -75.856 -822.000 15
 -----------------------------------
-require("scripts/globals/abyssea")
-require("scripts/globals/keyitems")
-require("scripts/globals/status")
-require("scripts/globals/settings")
------------------------------------
 local entity = {}
 
 local itemType = xi.abyssea.itemType
@@ -21,7 +16,7 @@ local localProspectorItems =
 
     [itemType.KEYITEM] =
     {
-     -- Sel     Item                                Cost
+    --  Sel     Item                                Cost
         [1] = { xi.ki.MAP_OF_ABYSSEA_LA_THEINE,     3500 },
         [2] = { xi.ki.IVORY_ABYSSITE_OF_SOJOURN,    6000 },
         [3] = { xi.ki.IVORY_ABYSSITE_OF_CONFLUENCE, 4800 },
@@ -39,10 +34,10 @@ entity.onTrigger = function(player, npc)
     xi.abyssea.visionsCruorProspectorOnTrigger(player, npc)
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     xi.abyssea.visionsCruorProspectorOnEventFinish(player, csid, option, localProspectorItems)
 end
 

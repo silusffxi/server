@@ -2,10 +2,6 @@
 -- Area: RoMaeve
 --   NM: Shikigami Weapon
 -----------------------------------
-require("scripts/globals/pathfind")
-require("scripts/globals/regimes")
-require("scripts/globals/status")
------------------------------------
 local entity = {}
 
 local pathNodes =
@@ -53,7 +49,7 @@ entity.onMobSpawn = function(mob)
 end
 
 entity.onMobEngaged = function(mob, target)
-    mob:setStatus(xi.status.MOB)
+    mob:setStatus(xi.status.UPDATE)
 end
 
 entity.onMobDisengage = function(mob)

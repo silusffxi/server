@@ -1,9 +1,8 @@
 -----------------------------------
 -- Zone: Davoi (149)
 -----------------------------------
-local ID = require("scripts/zones/Davoi/IDs")
-require("scripts/globals/conquest")
-require("scripts/globals/treasure")
+local ID = zones[xi.zone.DAVOI]
+require('scripts/quests/otherAreas/helpers')
 -----------------------------------
 local zoneObject = {}
 
@@ -14,18 +13,22 @@ end
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
-        player:setPos(282.292, 2.498, -17.908, 247)
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
+        player:setPos(218, 0, -5, 66)
     end
 
     return cs
 end
 
-zoneObject.onConquestUpdate = function(zone, updatetype)
-    xi.conq.onConquestUpdate(zone, updatetype)
+zoneObject.onConquestUpdate = function(zone, updatetype, influence, owner, ranking, isConquestAlliance)
+    xi.conq.onConquestUpdate(zone, updatetype, influence, owner, ranking, isConquestAlliance)
 end
 
-zoneObject.onRegionEnter = function(player, region)
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
 end
 
 zoneObject.onGameDay = function()
@@ -52,10 +55,20 @@ zoneObject.onGameDay = function()
     GetNPCByID(ID.npc.STORAGE_HOLE):setPos(newPosition.x, newPosition.y, newPosition.z)
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onGameHour = function(zone)
+    local jarMoveTime = GetServerVariable('Davoi_Jar_Move_Time')
+
+    if os.time() >= jarMoveTime then
+        local npc = GetNPCByID(ID.npc.JAR)
+
+        xi.otherAreas.helpers.TestMyMettle.moveJar(npc)
+    end
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
+end
+
+zoneObject.onEventFinish = function(player, csid, option, npc)
 end
 
 return zoneObject

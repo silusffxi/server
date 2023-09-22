@@ -62,7 +62,8 @@ CTCPRequestPacket::CTCPRequestPacket(SOCKET* socket)
 
 CTCPRequestPacket::~CTCPRequestPacket()
 {
-    delete[] m_data;
+    destroy_arr(m_data);
+    m_data = nullptr;
 
 #ifdef WIN32
     shutdown(*m_socket, SD_SEND);
@@ -85,7 +86,7 @@ int32 CTCPRequestPacket::GetSize() const
 
 int32 CTCPRequestPacket::ReceiveFromSocket()
 {
-    char recvbuf[DEFAULT_BUFLEN] = {};
+    char recvbuf[DEFAULT_BUFLEN]{};
 
     m_size = recv(*m_socket, recvbuf, DEFAULT_BUFLEN, 0);
     if (m_size == -1)
@@ -106,7 +107,9 @@ int32 CTCPRequestPacket::ReceiveFromSocket()
         ShowError("Search packetsize wrong. Size %d should be %d.", m_size, ref<uint16>(recvbuf, (0x00)));
         return 0;
     }
-    delete[] m_data;
+
+    destroy_arr(m_data);
+
     m_data = new uint8[m_size];
 
     memcpy(&m_data[0], &recvbuf[0], m_size);
@@ -125,7 +128,7 @@ int32 CTCPRequestPacket::ReceiveFromSocket()
 
 int32 CTCPRequestPacket::SendRawToSocket(uint8* data, uint32 length)
 {
-    int32 iResult;
+    int32 iResult = 0;
 
     iResult = send(*m_socket, (const char*)data, length, 0);
     if (iResult == SOCKET_ERROR)
@@ -142,7 +145,7 @@ int32 CTCPRequestPacket::SendRawToSocket(uint8* data, uint32 length)
 
 int32 CTCPRequestPacket::SendToSocket(uint8* data, uint32 length)
 {
-    int32 iResult;
+    int32 iResult = 0;
 
     ref<uint16>(data, (0x00)) = length;     // packet size
     ref<uint32>(data, (0x04)) = 0x46465849; // "IXFF"
@@ -178,7 +181,7 @@ int32 CTCPRequestPacket::SendToSocket(uint8* data, uint32 length)
 
 int32 CTCPRequestPacket::CheckPacketHash()
 {
-    uint8 PacketHash[16];
+    uint8 PacketHash[16]{};
 
     int32 toHash = m_size; // whole packet
 
@@ -201,7 +204,11 @@ int32 CTCPRequestPacket::CheckPacketHash()
 
 uint8 CTCPRequestPacket::GetPacketType()
 {
-    XI_DEBUG_BREAK_IF(m_data == nullptr)
+    if (m_data == nullptr)
+    {
+        ShowError("m_data is nullptr.");
+        return 0;
+    }
 
     return m_data[0x0B];
 }

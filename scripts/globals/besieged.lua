@@ -1,24 +1,20 @@
 -----------------------------------
---
---     Functions for Besieged system
---
+-- Functions for Besieged system
 -----------------------------------
-require('scripts/globals/keyitems')
 require('scripts/globals/npc_util')
-require('scripts/globals/status')
 require('scripts/globals/teleports')
-require('scripts/globals/settings')
-require('scripts/globals/items')
 require('scripts/globals/extravaganza')
 -----------------------------------
-
 xi = xi or {}
 xi.besieged = xi.besieged or {}
 
 xi.besieged.cipherValue = function()
     local active = xi.extravaganza.campaignActive()
 
-    if active == xi.extravaganza.campaign.SUMMER_NY or active == xi.extravaganza.campaign.BOTH then
+    if
+        active == xi.extravaganza.campaign.SUMMER_NY or
+        active == xi.extravaganza.campaign.BOTH
+    then
         return 65536 * 16384
     else
         return 0
@@ -53,9 +49,10 @@ end
 -----------------------------------
 -- function getISPItem(i) returns the item ID and cost of the imperial standing
 -- points item indexed by i (the same value  as that used by the vendor event.)
+-- TODO: Format table, use xi.items enum, and descriptive parameter name
 -----------------------------------
 local function getISPItem(i)
-    local IS_item =
+    local imperialStandingItems =
     {
         -- Common Items
         [1] = { id = 4182, price = 7 }, -- scroll of Instant Reraise
@@ -72,7 +69,7 @@ local function getISPItem(i)
         [45057] = { id = 3309, price = 5000 }, -- barrage turbine
         [53249] = { id = 3311, price = 5000 }, -- galvanizer
         [57345] = { id = 6409, price = 50000 },
-        [69633] = { id = xi.items.CIPHER_OF_MIHLIS_ALTER_EGO, price = 5000 }, -- mihli
+        [69633] = { id = xi.item.CIPHER_OF_MIHLIS_ALTER_EGO, price = 5000 }, -- mihli
         -- Private Second Class
         -- Map Key Items (handled separately)
         -- Private First Class
@@ -116,7 +113,7 @@ local function getISPItem(i)
         [417] = { id = 15912, price = 56000 }, -- lieutenant's sash
         [673] = { id = 16230, price = 56000 } -- lieutenant's cape
     }
-    local item = IS_item[i]
+    local item = imperialStandingItems[i]
     if item then
         return item.id, item.price
     end
@@ -150,24 +147,24 @@ xi.besieged.onTrigger = function(player, npc, eventBase)
         player:startEvent(eventBase + 1, npc)
     else
         local maps = getMapBitmask(player)
-        player:startEvent(eventBase, player:getCurrency("imperial_standing"), (maps + xi.besieged.cipherValue()), mercRank, 0, unpack(getImperialDefenseStats()))
+        player:startEvent(eventBase, player:getCurrency('imperial_standing'), (maps + xi.besieged.cipherValue()), mercRank, 0, unpack(getImperialDefenseStats()))
     end
 end
 
-xi.besieged.onEventUpdate = function(player, csid, option)
+xi.besieged.onEventUpdate = function(player, csid, option, npc)
     local itemId = getISPItem(option)
     if itemId and option < 0x40000000 then
         local maps = getMapBitmask(player)
-        player:updateEvent(player:getCurrency("imperial_standing"), (maps + xi.besieged.cipherValue()), xi.besieged.getMercenaryRank(player), player:canEquipItem(itemId) and 2 or 1, unpack(getImperialDefenseStats()))
+        player:updateEvent(player:getCurrency('imperial_standing'), (maps + xi.besieged.cipherValue()), xi.besieged.getMercenaryRank(player), player:canEquipItem(itemId) and 2 or 1, unpack(getImperialDefenseStats()))
     end
 end
 
-xi.besieged.onEventFinish = function(player, csid, option)
+xi.besieged.onEventFinish = function(player, csid, option, npc)
     local ID = zones[player:getZoneID()]
     if option == 0 or option == 16 or option == 32 or option == 48 then
         -- Sanction
         if option ~= 0 then
-            player:delCurrency("imperial_standing", 100)
+            player:delCurrency('imperial_standing', 100)
         end
 
         player:delStatusEffectsByFlag(xi.effectFlag.INFLUENCE, true)
@@ -179,13 +176,13 @@ xi.besieged.onEventFinish = function(player, csid, option)
         -- Player bought a map
         local ki = xi.ki.MAP_OF_MAMOOK + bit.rshift(option, 8)
         npcUtil.giveKeyItem(player, ki)
-        player:delCurrency("imperial_standing", 1000)
+        player:delCurrency('imperial_standing', 1000)
     elseif option < 0x40000000 then
         -- Player bought an item
         local item, price = getISPItem(option)
         if item then
             if npcUtil.giveItem(player, item) then
-                player:delCurrency("imperial_standing", price)
+                player:delCurrency('imperial_standing', price)
             end
         end
     end
@@ -194,13 +191,6 @@ end
 -----------------------------------
 -- Variable for addTeleport and getRegionPoint
 -----------------------------------
-LEUJAOAM_ASSAULT_POINT   = 0
-MAMOOL_ASSAULT_POINT     = 1
-LEBROS_ASSAULT_POINT     = 2
-PERIQIA_ASSAULT_POINT    = 3
-ILRUSI_ASSAULT_POINT     = 4
-NYZUL_ISLE_ASSAULT_POINT = 5
-
 xi.besieged.addRunicPortal = function(player, portal)
     player:addTeleport(xi.teleport.type.RUNIC_PORTAL, portal)
 end

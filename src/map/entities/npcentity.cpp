@@ -21,11 +21,11 @@
 
 #include "common/taskmgr.h"
 
-#include "../ai/ai_container.h"
-#include "../utils/zoneutils.h"
+#include "ai/ai_container.h"
 #include "npcentity.h"
+#include "utils/zoneutils.h"
 
-#include "../packets/entity_update.h"
+#include "packets/entity_update.h"
 
 /************************************************************************
  *                                                                       *
@@ -34,13 +34,13 @@
  ************************************************************************/
 
 CNpcEntity::CNpcEntity()
+: m_flags(0)
+, name_prefix(0)
+, widescan(1)
 {
-    objtype     = TYPE_NPC;
-    look.face   = 0x32;
-    widescan    = 1;
-    allegiance  = ALLEGIANCE_TYPE::MOB;
-    m_flags     = 0;
-    name_prefix = 0;
+    objtype    = TYPE_NPC;
+    look.face  = 0x32;
+    allegiance = ALLEGIANCE_TYPE::MOB;
 
     PAI = std::make_unique<CAIContainer>(this);
 }
@@ -104,7 +104,7 @@ bool CNpcEntity::isWideScannable()
 void CNpcEntity::PostTick()
 {
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-    if (loc.zone && updatemask && now > m_nextUpdateTimer)
+    if (loc.zone && updatemask && status != STATUS_TYPE::DISAPPEAR && now > m_nextUpdateTimer)
     {
         m_nextUpdateTimer = now + 250ms;
         loc.zone->UpdateEntityPacket(this, ENTITY_UPDATE, updatemask);

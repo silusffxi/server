@@ -1,9 +1,8 @@
----------------------------------
+-----------------------------------
 --  Area: Kuftal Tunnel
 --  NM: Amemet
----------------------------------
-require("scripts/globals/hunts")
----------------------------------
+-----------------------------------
+-----------------------------------
 local entity = {}
 
 local pathStart =
@@ -84,73 +83,78 @@ local pathFind =
             local pathRnd = math.random(0, 1)
             local reverseCheck = math.random(0, 2)
             if pathRnd == 1 then
-                mob:setLocalVar("mobPath", 2)
+                mob:setLocalVar('mobPath', 2)
                 if reverseCheck ~= 2 then
-                    mob:setLocalVar("reversePath", 0)
+                    mob:setLocalVar('reversePath', 0)
                     pathNodes = pathA
                 else
-                    mob:setLocalVar("reversePath", 1)
+                    mob:setLocalVar('reversePath', 1)
                     pathNodes = pathAb
                 end
             else
-                mob:setLocalVar("mobPath", 4)
+                mob:setLocalVar('mobPath', 4)
                 if reverseCheck ~= 2 then
-                    mob:setLocalVar("reversePath", 0)
+                    mob:setLocalVar('reversePath', 0)
                     pathNodes = pathB
                 else
-                    mob:setLocalVar("reversePath", 1)
+                    mob:setLocalVar('reversePath', 1)
                     pathNodes = pathBb
                 end
             end
         end
+
         return pathNodes
     end,
+
     ['pathFind2'] = function(mob, reversePath)
-        local pathNodes = {}
-        mob:setLocalVar("mobPath", 3)
+        local pathNodes = pathA
+        mob:setLocalVar('mobPath', 3)
         if reversePath == 0 then
             pathNodes = pathAb
-        else
-            pathNodes = pathA
         end
+
         return pathNodes
     end,
+
     ['pathFind3'] = function(mob, reversePath)
         local pathNodes = {}
         if reversePath == 0 or reversePath == 1 then
-            mob:setLocalVar("mobPath", 1)
+            mob:setLocalVar('mobPath', 1)
             pathNodes = pathStart
         end
+
         return pathNodes
     end,
+
     ['pathFind4'] = function(mob, reversePath)
-        local pathNodes = {}
-        mob:setLocalVar("mobPath", 3)
+        local pathNodes = pathB
+        mob:setLocalVar('mobPath', 3)
         if reversePath == 0 then
             pathNodes = pathBb
-        else
-            pathNodes = pathB
         end
+
         return pathNodes
     end,
 }
 
 entity.onMobSpawn = function(mob)
-    mob:setLocalVar("isPaused", 0)
-    mob:setLocalVar("mobPath", 1)
+    mob:setLocalVar('isPaused', 0)
+    mob:setLocalVar('mobPath', 1)
     mob:pathThrough(pathStart, xi.path.flag.COORDS)
 end
 
 entity.onPath = function(mob)
     if not mob:isFollowingPath() then
-        if mob:getLocalVar("isPaused") ~= 0 then
-            local currentPath = "pathFind" .. mob:getLocalVar("mobPath")
-            local reversePath = mob:getLocalVar("reversePath")
-            local pathNodes = {}
-            mob:setLocalVar("isPaused", 0)
+        if mob:getLocalVar('isPaused') ~= 0 then
+            local currentPath = 'pathFind' .. mob:getLocalVar('mobPath')
+            local reversePath = mob:getLocalVar('reversePath')
+
+            mob:setLocalVar('isPaused', 0)
             mob:clearPath()
-            pathNodes = pathFind[currentPath](mob, reversePath)
-            local newReverse = mob:getLocalVar("reversePath")
+
+            local pathNodes = pathFind[currentPath](mob, reversePath)
+
+            local newReverse = mob:getLocalVar('reversePath')
             if newReverse == 0 then
                 mob:pathThrough(pathNodes, xi.path.flag.COORDS)
             else
@@ -183,8 +187,9 @@ entity.onPath = function(mob)
                     }
                 end
             end
+
             mob:pathThrough(pauses, xi.path.flag.COORDS)
-            mob:setLocalVar("isPaused", 1)
+            mob:setLocalVar('isPaused', 1)
         end
     end
 end
@@ -196,7 +201,7 @@ entity.onMobFight = function(mob)
     end
 end
 
-entity.onMobDisengage = function (mob)
+entity.onMobDisengage = function(mob)
     mob:setMod(xi.mod.REGAIN, 0)
 end
 

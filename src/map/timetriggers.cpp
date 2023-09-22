@@ -20,8 +20,10 @@
 */
 
 #include "timetriggers.h"
+
+#include "common/vana_time.h"
+
 #include "lua/luautils.h"
-#include "vana_time.h"
 
 std::unique_ptr<CTriggerHandler> CTriggerHandler::_instance;
 
@@ -38,7 +40,7 @@ CTriggerHandler* CTriggerHandler::getInstance()
 void CTriggerHandler::insertTrigger(Trigger_t trigger)
 {
     trigger.lastTrigger = (CVanaTime::getInstance()->getDate() - trigger.minuteOffset) / trigger.period;
-    triggerList.push_back(trigger);
+    triggerList.emplace_back(trigger);
 }
 
 void CTriggerHandler::triggerTimer()

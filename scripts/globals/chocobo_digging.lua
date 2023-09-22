@@ -3,14 +3,10 @@
 -- http://ffxiclopedia.wikia.com/wiki/Chocobo_Digging
 -- https://www.bg-wiki.com/bg/Category:Chocobo_Digging
 -----------------------------------
-require("scripts/globals/roe")
-require("scripts/globals/settings")
-require("scripts/globals/status")
-require("scripts/globals/utils")
-require("scripts/globals/zone")
-require("scripts/missions/amk/helpers")
+require('scripts/globals/roe')
+require('scripts/globals/utils')
+require('scripts/missions/amk/helpers')
 -----------------------------------
-
 xi = xi or {}
 xi.chocoboDig = xi.chocoboDig or {}
 
@@ -847,9 +843,15 @@ local function canDig(player)
 
     -- neither player nor zone have reached their dig limit
 
-    if (digCount < 100 and zoneItemsDug < 20) or xi.settings.main.DIG_FATIGUE == 0 then
+    if
+        (digCount < 100 and zoneItemsDug < 20) or
+        xi.settings.main.DIG_FATIGUE == 0
+    then
         -- pesky delays
-        if (zoneInTime + areaDigDelay) <= currentTime and (lastDigTime + digDelay) <= currentTime then
+        if
+            (zoneInTime + areaDigDelay) <= currentTime and
+            (lastDigTime + digDelay) <= currentTime
+        then
             return true
         end
     end
@@ -935,7 +937,12 @@ local function getChocoboDiggingItem(player)
             itemId = 0
         end
     elseif itemId == 1255 then
-        if weather >= xi.weather.CLOUDS and moon >= 10 and moon <= 40 and player:getSkillRank(xi.skill.DIG) >= 7 then
+        if
+            weather >= xi.weather.CLOUDS and
+            moon >= 10 and
+            moon <= 40 and
+            player:getSkillRank(xi.skill.DIG) >= 7
+        then
             itemId = oreMap[VanadielDayOfTheWeek()]
         else
             itemId = 0
@@ -989,7 +996,7 @@ xi.chocoboDig.start = function(player, precheck)
                     player:messageSpecial(text.DIG_THROW_AWAY, itemId)
                 end
 
-                player:triggerRoeEvent(xi.roe.triggers.chocoboDigSuccess)
+                player:triggerRoeEvent(xi.roeTrigger.CHOCOBO_DIG_SUCCESS)
 
             -- got a crystal ore, but lacked weather or skill to dig it up
             else

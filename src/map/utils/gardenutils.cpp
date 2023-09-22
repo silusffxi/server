@@ -23,14 +23,15 @@
 
 #include "gardenutils.h"
 
+#include "common/vana_time.h"
+
 #include <cmath>
 
-#include "../entities/charentity.h"
-#include "../item_container.h"
-#include "../items/item_flowerpot.h"
-#include "../map.h"
-#include "../packets/inventory_item.h"
-#include "../vana_time.h"
+#include "entities/charentity.h"
+#include "item_container.h"
+#include "items/item_flowerpot.h"
+#include "map.h"
+#include "packets/inventory_item.h"
 
 #define MAX_RESULTID 2500
 
@@ -254,10 +255,12 @@ namespace gardenutils
                     CItem* PItemContained = PContainer->GetItem(slotID);
                     if (PItemContained != nullptr && PItemContained->isType(ITEM_FURNISHING))
                     {
-                        CItemFurnishing* PFurniture = static_cast<CItemFurnishing*>(PItemContained);
-                        if (PFurniture->isInstalled())
+                        auto PFurniture = dynamic_cast<CItemFurnishing*>(PItemContained);
+                        if (PFurniture && PFurniture->isInstalled())
                         {
-                            auras[PFurniture->getElement()] += PFurniture->getAura();
+                            // -1 because element values range from 1-8
+                            // Converts from lua 1 based index to c/c++ 0 based index
+                            auras[PFurniture->getElement() - 1] += PFurniture->getAura();
                         }
                     }
                 }
@@ -267,10 +270,7 @@ namespace gardenutils
             uint16 dominantAura = 0;
             for (uint8 elementID = 0; elementID < 8; ++elementID)
             {
-                if (elements[elementID] > dominantAura)
-                {
-                    dominantAura = elements[elementID];
-                }
+                dominantAura = std::max(auras[elementID], dominantAura);
             }
             strength += dominantAura / 10;
         }
@@ -296,8 +296,17 @@ namespace gardenutils
             item = resultList.back();
         }
 
+        // The percentage of strength between the item's minimum weight to maximum weight
         float percentage = (strength - (cumulativeWeight - item.Weight)) / float(item.Weight);
-        uint8 quantity   = item.MinQuantity + int((item.MaxQuantity - item.MinQuantity) * percentage + 0.1);
+        // Split the quantity range n into n+1 evenly-distributed buckets across 0-100%. Yields of 20-35 is a range of 15 with 16 possible outcomes.
+        // Ex. For a yield of 4-8 which has a range of 4 and a percentage p, it's split into 5 equal buckets:
+        // 4 = p < 0.2
+        // 5 = 0.2 <= p < 0.4
+        // 6 = 0.4 <= p < 0.6
+        // 7 = 0.6 <= p < 0.8
+        // 8 = p >= 0.8
+        // The final result is truncated instead of rounded, so only p>=1.0 will return a higher than maximum yield. It's special-cased to avoid this.
+        const uint8 quantity = percentage >= 1.0f ? item.MaxQuantity : (item.MinQuantity + percentage * (1 + item.MaxQuantity - item.MinQuantity));
 
         return std::make_tuple(item.ItemID, quantity);
     }

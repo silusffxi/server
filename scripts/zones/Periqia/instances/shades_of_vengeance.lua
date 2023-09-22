@@ -2,10 +2,7 @@
 -- TOAU-31: Shades of Vengeance
 -- !instance 5600
 -----------------------------------
-require("scripts/globals/instance")
-require("scripts/globals/keyitems")
-require("scripts/globals/missions")
-local ID = require("scripts/zones/Periqia/IDs")
+local ID = zones[xi.zone.PERIQIA]
 -----------------------------------
 local instanceObject = {}
 
@@ -27,7 +24,7 @@ instanceObject.afterInstanceRegister = function(player)
         player:delKeyItem(xi.ki.PERIQIA_ASSAULT_AREA_ENTRY_PERMIT)
     end
 
-    player:addTempItem(xi.items.CAGE_OF_DVUCCA_FIREFLIES)
+    player:addTempItem(xi.item.CAGE_OF_DVUCCA_FIREFLIES)
     player:messageSpecial(ID.text.TIME_TO_COMPLETE, instance:getTimeLimit())
 end
 
@@ -59,7 +56,7 @@ instanceObject.onInstanceFailure = function(instance)
 end
 
 instanceObject.onInstanceProgressUpdate = function(instance, progress)
-    if progress >= 10 and instance:completed() == false then
+    if progress >= 10 and not instance:completed() then
         instance:complete()
     end
 end

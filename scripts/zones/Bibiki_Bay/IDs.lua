@@ -1,9 +1,6 @@
 -----------------------------------
 -- Area: Bibiki_Bay
 -----------------------------------
-require("scripts/globals/zone")
------------------------------------
-
 zones = zones or {}
 
 zones[xi.zone.BIBIKI_BAY] =
@@ -50,20 +47,6 @@ zones[xi.zone.BIBIKI_BAY] =
     },
     mob =
     {
-        SERRA_PH =
-        {
-            [16793645] = 16793646, -- -348 0.001 -904
-        },
-        INTULO_PH =
-        {
-            [16793741] = 16793742, -- 480 -3 743
-        },
-        SPLACKNUCK_PH =
-        {
-            [16793775] = 16793776,
-        },
-        DALHAM = 16793858,
-        SHEN   = 16793859,
     },
     npc =
     {

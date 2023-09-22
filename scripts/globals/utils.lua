@@ -1,6 +1,5 @@
-require("scripts/globals/common")
-require("scripts/globals/status")
-require("scripts/globals/interaction/quest")
+require('scripts/globals/common')
+require('scripts/globals/interaction/quest')
 
 utils = {}
 
@@ -33,7 +32,67 @@ local function mergen(...)
             res[res.n] = t[j]
         end
     end
+
     return res
+end
+
+-- https://stackoverflow.com/questions/49979017/how-to-get-current-function-call-stack-depth-in-lua
+-- NOTE: Supposedly this is slow. Only use this during debugging and not for live!
+function utils.getStackDepth()
+    local depth = 0
+    while true do
+        if not debug.getinfo(3 + depth) then
+            break
+        end
+
+        depth = depth + 1
+    end
+
+    return depth
+end
+
+-- https://www.lua.org/pil/23.1.1.html
+function utils.getObjectFromScope(objName, depth)
+    local idx = 1
+    while true do
+        local name, value = debug.getlocal(depth, idx)
+        if not name then
+            break
+        end
+
+        if name == objName then
+            return value
+        end
+
+        idx = idx + 1
+    end
+
+    return nil
+end
+
+function utils.getDebugPrinter(printEntityName, settingOrCondition, prefix)
+    return function(...)
+        if settingOrCondition then
+            local t = { ... }
+            if prefix then
+                t = { prefix, ... }
+            end
+
+            local str = tostring(unpack(t))
+
+            print(str)
+
+            local depth  = utils.getStackDepth()
+            local player = utils.getObjectFromScope(printEntityName, depth + 1)
+            if player then
+                player:PrintToPlayer(str, xi.msg.channel.SYSTEM_3, '')
+            end
+        end
+    end
+end
+
+function utils.getDebugPlayerPrinter(settingOrCondition, prefix)
+    return utils.getDebugPrinter('player', settingOrCondition, prefix)
 end
 
 function utils.bind(func, ...)
@@ -70,6 +129,7 @@ function utils.shuffle(inputTable)
 
     return shuffledTable
 end
+
 utils.append = nil
 
 -- Recursively appends the input table into the provided base table.
@@ -83,6 +143,7 @@ function utils.append(base, input)
             base[k] = v
         end
     end
+
     return base
 end
 
@@ -95,8 +156,19 @@ function utils.join(input1, input2)
     return result
 end
 
+-- For use alongside os.time()
 function utils.minutes(minutes)
     return minutes * 60
+end
+
+-- For use alongside os.time()
+function utils.hours(hours)
+    return hours * 60 * 60
+end
+
+-- For use alongside os.time()
+function utils.days(days)
+    return days * 60 * 60 * 24
 end
 
 -- Generates a random permutation of integers >= min_val and <= max_val
@@ -130,7 +202,7 @@ function utils.uniqueRandomTable(minVal, maxVal, numEntries)
     local shuffledTable = utils.permgen(maxVal, minVal)
 
     if numEntries > #shuffledTable then
-        print("utils.uniqueRandomTable(): numEntries exceeds length of shuffledTable!")
+        print('utils.uniqueRandomTable(): numEntries exceeds length of shuffledTable!')
         return nil
     end
 
@@ -151,7 +223,130 @@ function utils.clamp(input, min_val, max_val)
     elseif max_val ~= nil and input > max_val then
         input = max_val
     end
+
     return input
+end
+
+--  Returns a table containing all the elements in the specified range.
+--  Source: https://github.com/mebens/range
+function utils.range(from, to, step)
+    local t = {}
+    local argType = type(from)
+    step = step or 1
+
+    if argType == 'number' then
+        for i = from, to, step do t[#t + 1] = i end
+    elseif argType == 'string' then
+        local e = string.byte(to)
+        for i = string.byte(from), e, step do t[#t + 1] = string.char(i) end
+    elseif argType == 'table' then
+        local metaNext = getmetatable(from).__next
+
+        if metaNext then
+            local i = from
+
+            while i < to do
+                t[#t + 1] = i
+                i = metaNext(i, step)
+            end
+
+            t[#t + 1] = to
+        end
+    end
+
+    return t
+end
+
+-----------------------------------
+--
+-- Functional
+--
+-- Functional methods provide a means to simplify logic that consists in
+-- simple operations when iterating a table.
+-- In general, they can make code much more concise and readable, but they
+-- can also end up making it a cluttered mess, so use your judgement
+-- when deciding if you want to use these methods
+-----------------------------------
+
+-- Given a table and a mapping function, returns a new table created by
+-- applying the given mapping function to the given table elements
+function utils.map(tbl, func)
+    local t = {}
+
+    for k, v in pairs(tbl) do
+        t[k] = func(k, v)
+    end
+
+    return t
+end
+
+-- Given a table and a filter function, returns a new table composed of the
+-- elements that pass the given filter.
+-- e.g: utils.filter({ 'a', 'b', 'c', 'd' }, function(k, v) return v >= 'c' end)  --> { 'c', 'd }
+function utils.filter(tbl, func)
+    local out = {}
+
+    for k, v in pairs(tbl) do
+        if func(k, v) then
+            out[k] = v
+        end
+    end
+
+    return out
+end
+
+-- Given a table and a filter function, returns a new table composed of the
+-- elements that pass the given filter.
+-- Unlike utils.filter, this method will return an iterable table.
+-- e.g utils.filterArray({ 'a', 'b', 'c', 'd' }, function(k, v) return v >= 'c' end)  --> { 1 => 'c', 2 => 'd' }
+function utils.filterArray(tbl, func)
+    local out = {}
+
+    for k, v in pairs(tbl) do
+        if func(k, v) then
+            table.insert(out, v)
+        end
+    end
+
+    return out
+end
+
+-- Returns true if any member of the given table passes the given
+-- predicate function
+function utils.any(tbl, predicate)
+    for k, v in pairs(tbl) do
+        if predicate(k, v) then
+            return true
+        end
+    end
+
+    return false
+end
+
+-- Returns the sum of applying the given function to each element of the given table
+-- e.g: utils.sum({ 1, 2, 3 }, function(k, v) return v end)  --> 6
+function utils.sum(tbl, func)
+    local sum = 0
+
+    for k, v in pairs(tbl) do
+        sum = sum + func(k, v)
+    end
+
+    return sum
+end
+
+-- To be used with utils.sum.
+-- Used to count the number of times an element in a table
+-- matches the given predicate
+-- e.g: utils.sum({ 'a, 'a', 'b' }, utils.counter(function (k, v) return v == 'a' end)) --> 2
+function utils.counter(predicate)
+    return function(k, v)
+        if predicate(k, v) then
+            return 1
+        else
+            return 0
+        end
+    end
 end
 
 -- returns unabsorbed damage
@@ -174,7 +369,7 @@ function utils.stoneskin(target, dmg)
     return dmg
 end
 
--- returns reduced magic damage from RUN buff, "One for All"
+-- returns reduced magic damage from RUN buff, 'One for All'
 function utils.oneforall(target, dmg)
     if dmg > 0 then
         local oneForAllEffect = target:getStatusEffect(xi.effect.ONE_FOR_ALL)
@@ -259,35 +454,34 @@ function utils.takeShadows(target, dmg, shadowbehav)
     return dmg
 end
 
-function utils.conalDamageAdjustment(attacker, target, skill, max_damage, minimum_percentage)
-    local final_damage = 1
+function utils.conalDamageAdjustment(attacker, target, skill, maxDamage, minimumPercentage)
     -- #TODO: Currently all cone attacks use static 45 degree (360 scale) angles in core, when cone attacks
     -- have different angles and there's a method to fetch the angle, use a line like the below
-    -- local cone_angle = skill:getConalAngle()
-    local cone_angle = 32 -- 256-degree based, equivalent to "45 degrees" on 360 degree scale
+    -- local coneAngle = skill:getConalAngle()
+    local coneAngle = 32 -- 256-degree based, equivalent to '45 degrees' on 360 degree scale
 
-    -- #TODO: Conal attacks hit targets in a cone with a center line of the "primary" target (the mob's
+    -- #TODO: Conal attacks hit targets in a cone with a center line of the 'primary' target (the mob's
     -- highest enmity target). These primary targets can be within 128 degrees of the mob's front. However,
     -- there's currently no way for a conal skill to store (and later check) the primary target a mob skill
-    -- was trying to hit. Therefore the "damage drop off" here is based from an origin of the mob's rotation
+    -- was trying to hit. Therefore the 'damage drop off' here is based from an origin of the mob's rotation
     -- instead. Should conal skills become capable of identifying their primary target, this should be changed
     -- to be based on the degree difference from the primary target instead.
-    local conal_angle_power = cone_angle - math.abs(attacker:getFacingAngle(target))
+    local conalAnglePower = coneAngle - math.abs(attacker:getFacingAngle(target))
 
-    if conal_angle_power < 0 then
+    if conalAnglePower < 0 then
         -- #TODO The below print will be a valid print upon fixing to-do above relating to beam center orgin
-        conal_angle_power = 0
+        conalAnglePower = 0
     end
 
     -- Calculate the amount of damage to add above the minimum percentage based on how close
     -- the target is to the center of the conal (0 degrees from the attacker's facing)
-    local minimum_damage = max_damage * minimum_percentage
-    local damage_per_angle = (max_damage - minimum_damage) / cone_angle
-    local additional_damage = damage_per_angle * conal_angle_power
+    local minimumDamage    = maxDamage * minimumPercentage
+    local damagePerAngle   = (maxDamage - minimumDamage) / coneAngle
+    local additionalDamage = damagePerAngle * conalAnglePower
 
-    final_damage = math.max(1, math.ceil(minimum_damage + additional_damage))
+    local finalDamage = math.max(1, math.ceil(minimumDamage + additionalDamage))
 
-    return final_damage
+    return finalDamage
 end
 
 -- returns true if taken by third eye
@@ -311,12 +505,23 @@ function utils.thirdeye(target)
     return false
 end
 
+function utils.getActiveJobLevel(actor, job)
+    local jobLevel = 0
+
+    if actor:getMainJob() == job then
+        jobLevel = actor:getMainLvl()
+    elseif actor:getSubJob() == job then
+        jobLevel = actor:getSubLvl()
+    end
+
+    return jobLevel
+end
+
 -----------------------------------
 --     SKILL LEVEL CALCULATOR
 --     Returns a skill level based on level and rating.
 --
---    See the translation of aushacho's work by Themanii:
---    http://home.comcast.net/~themanii/skill.html
+--    See: https://wiki.ffo.jp/html/2570.html
 --
 --    The arguments are skill rank (numerical), and level.  1 is A+, 2 is A-, and so on.
 -----------------------------------
@@ -326,87 +531,113 @@ end
 -- Original formula: ((level - <baseInRange>) * <multiplier>) + <additive>; where level is a range defined in utils.getSkillLvl
 local skillLevelTable =
 {
-    --         A+             A-             B+             B              B-             C+             C              C-             D              E              F
-    [1]  = { { 3.00,   6 }, { 3.00,   6 }, { 2.90,   5 }, { 2.90,   5 }, { 2.90,   5 }, { 2.80,   5 }, { 2.80,   5 }, { 2.80,   5 }, { 2.70,   4 }, { 2.50,   4 }, { 2.30,   4 } }, -- Level <= 50
-    [50] = { { 5.00, 153 }, { 5.00, 153 }, { 4.90, 147 }, { 4.90, 147 }, { 4.90, 147 }, { 4.80, 142 }, { 4.80, 142 }, { 4.80, 142 }, { 4.70, 136 }, { 4.50, 126 }, { 4.30, 116 } }, -- Level > 50 and Level <= 60
-    [60] = { { 4.85, 203 }, { 4.10, 203 }, { 3.70, 196 }, { 3.23, 196 }, { 2.70, 196 }, { 2.50, 190 }, { 2.25, 190 }, { 2.00, 190 }, { 1.85, 183 }, { 1.95, 171 }, { 2.05, 159 } }, -- Level > 60 and Level <= 70
-    [70] = { { 5.00, 251 }, { 5.00, 244 }, { 3.70, 233 }, { 3.23, 228 }, { 2.70, 223 }, { 3.00, 215 }, { 2.60, 212 }, { 2.00, 210 }, { 1.85, 201 }, { 1.95, 190 }, { 2.00, 179 } }, -- Level > 70
+    --         A+             A-             B+             B              B-             C+             C              C-             D              E              F             G
+    [  0] = { { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 }, { 0.00,   0 } }, -- No level/Fallback
+    [  1] = { { 3.00,   6 }, { 3.00,   6 }, { 2.90,   5 }, { 2.90,   5 }, { 2.90,   5 }, { 2.80,   5 }, { 2.80,   5 }, { 2.80,   5 }, { 2.70,   4 }, { 2.50,   4 }, { 2.30,   4 }, { 2.00,   3 } }, -- Level <= 50
+    [ 50] = { { 5.00, 153 }, { 5.00, 153 }, { 4.90, 147 }, { 4.90, 147 }, { 4.90, 147 }, { 4.80, 142 }, { 4.80, 142 }, { 4.80, 142 }, { 4.70, 136 }, { 4.50, 126 }, { 4.30, 116 }, { 4.00, 101 } }, -- Level > 50 and Level <= 60
+    [ 60] = { { 4.85, 203 }, { 4.10, 203 }, { 3.70, 196 }, { 3.23, 196 }, { 2.70, 196 }, { 2.50, 190 }, { 2.25, 190 }, { 2.00, 190 }, { 1.85, 183 }, { 1.95, 171 }, { 2.05, 159 }, { 2.00, 141 } }, -- Level > 60 and Level <= 70
+    [ 70] = { { 5.00, 251 }, { 5.00, 244 }, { 4.60, 233 }, { 4.40, 228 }, { 3.40, 223 }, { 3.00, 215 }, { 2.60, 212 }, { 2.00, 210 }, { 1.85, 201 }, { 2.00, 190 }, { 2.00, 179 }, { 2.00, 161 } }, -- Level > 70 and Level <= 75
+    [ 75] = { { 5.00, 251 }, { 5.00, 244 }, { 5.00, 256 }, { 5.00, 250 }, { 5.00, 240 }, { 5.00, 230 }, { 5.00, 225 }, { 5.00, 220 }, { 4.00, 210 }, { 3.00, 200 }, { 2.00, 189 }, { 2.00, 171 } }, -- Level > 75 and Level <= 80
+    [ 80] = { { 6.00, 301 }, { 6.00, 294 }, { 6.00, 281 }, { 6.00, 275 }, { 6.00, 265 }, { 6.00, 255 }, { 6.00, 250 }, { 6.00, 245 }, { 5.00, 230 }, { 4.00, 215 }, { 3.00, 199 }, { 2.00, 181 } }, -- Level > 80 and Level <= 90
+    [ 90] = { { 7.00, 361 }, { 7.00, 354 }, { 7.00, 341 }, { 7.00, 335 }, { 7.00, 325 }, { 7.00, 315 }, { 7.00, 310 }, { 7.00, 305 }, { 6.00, 280 }, { 5.00, 255 }, { 4.00, 229 }, { 2.00, 201 } }, -- Level > 90
+    [100] = { { 1.00, 424 }, { 1.00, 417 }, { 1.00, 404 }, { 1.00, 398 }, { 1.00, 388 }, { 1.00, 378 }, { 1.00, 373 }, { 1.00, 368 }, { 1.00, 334 }, { 1.00, 300 }, { 1.00, 265 }, { 1.00, 219 } }, -- Level > 99
 }
 
 -- Get the corresponding table entry to use in skillLevelTable based on level range
 -- TODO: Minval for ranges 2 and 3 in the conditional is probably not necessary
-local function getSkillLevelIndex(level)
-    local rangeId = nil
+local function getSkillLevelIndex(level, rank)
+    local rangeId = 100
 
     if level <= 50 then
         rangeId = 1
-    elseif level > 50 and level <= 60 then
+    elseif level <= 60 then
         rangeId = 50
-    elseif level > 60 and level <= 70 then
+    elseif level <= 70 then
         rangeId = 60
-    else
+    elseif level <= 75 and rank > 2 then -- If this is Rank A+ or A- then skip
+        rangeId = 75
+    elseif level <= 80 then -- If B+ or below do this
         rangeId = 70
+    elseif level <= 90 then
+        rangeId = 80
+    elseif level <= 99 then
+        rangeId = 90
     end
 
     return rangeId
 end
 
 function utils.getSkillLvl(rank, level)
-    local levelTableIndex = getSkillLevelIndex(level)
-    return ((level - levelTableIndex) * skillLevelTable[levelTableIndex][rank][1]) + skillLevelTable[levelTableIndex][rank][2]
+    local levelTableIndex = getSkillLevelIndex(level, rank)
+    local skillLevel      = (level - levelTableIndex) * skillLevelTable[levelTableIndex][rank][1] + skillLevelTable[levelTableIndex][rank][2]
+
+    return skillLevel
 end
 
 function utils.getMobSkillLvl(rank, level)
-     if level > 50 then
-         if rank == 1 then
-             return 153 + (level - 50) * 5
-         end
-         if rank == 2 then
-             return 147 + (level - 50) * 4.9
-         end
-         if rank == 3 then
-             return 136 + (level - 50) * 4.8
-         end
-         if rank == 4 then
-             return 126 + (level - 50) * 4.7
-         end
-         if rank == 5 then
-             return 116 + (level - 50) * 4.5
-         end
-         if rank == 6 then
-             return 106 + (level - 50) * 4.4
-         end
-         if rank == 7 then
-             return 96 + (level - 50) * 4.3
-         end
-     end
+    if level > 50 then
+        if rank == 1 then
+            return 153 + (level - 50) * 5
+        end
 
-     if rank == 1 then
-         return 6 + (level - 1) * 3
-     end
-     if rank == 2 then
-         return 5 + (level - 1) * 2.9
-     end
-     if rank == 3 then
-         return 5 + (level - 1) * 2.8
-     end
-     if rank == 4 then
-         return 4 + (level - 1) * 2.7
-     end
-     if rank == 5 then
-         return 4 + (level - 1) * 2.5
-     end
-     if rank == 6 then
-         return 3 + (level - 1) * 2.4
-     end
-     if rank == 7 then
-         return 3 + (level - 1) * 2.3
-     end
+        if rank == 2 then
+            return 147 + (level - 50) * 4.9
+        end
+
+        if rank == 3 then
+            return 136 + (level - 50) * 4.8
+        end
+
+        if rank == 4 then
+            return 126 + (level - 50) * 4.7
+        end
+
+        if rank == 5 then
+            return 116 + (level - 50) * 4.5
+        end
+
+        if rank == 6 then
+            return 106 + (level - 50) * 4.4
+        end
+
+        if rank == 7 then
+            return 96 + (level - 50) * 4.3
+        end
+    end
+
+    if rank == 1 then
+        return 6 + (level - 1) * 3
+    end
+
+    if rank == 2 then
+        return 5 + (level - 1) * 2.9
+    end
+
+    if rank == 3 then
+        return 5 + (level - 1) * 2.8
+    end
+
+    if rank == 4 then
+        return 4 + (level - 1) * 2.7
+    end
+
+    if rank == 5 then
+        return 4 + (level - 1) * 2.5
+    end
+
+    if rank == 6 then
+        return 3 + (level - 1) * 2.4
+    end
+
+    if rank == 7 then
+        return 3 + (level - 1) * 2.3
+    end
+
     return 0
 end
 
 -- System Strength Bonus table.  This is used by xi.mobskills.mobBreathMove, but determines weakness of
--- a definding system, vs the attacking system.  This table is indexed by the attacker.
+-- a defending system, vs the attacking system.  This table is indexed by the attacker.
 -- This table can scale beyond two values, but at this time, no data has been recorded.
 -- Values: 1 == Bonus, -1 == Weakness, 0 == Default (No Weakness or Bonus)
 local systemStrengthTable =
@@ -422,14 +653,11 @@ local systemStrengthTable =
     [xi.eco.ARCANA  ] = { [xi.eco.UNDEAD  ] = 1, },
     [xi.eco.DRAGON  ] = { [xi.eco.DEMON   ] = 1, },
     [xi.eco.DEMON   ] = { [xi.eco.DRAGON  ] = 1, },
-    [xi.eco.LUMORIAN] = { [xi.eco.LUMINION] = 1, },
-    [xi.eco.LUMINION] = { [xi.eco.LUMORIAN] = 1, },
+    [xi.eco.LUMINIAN] = { [xi.eco.LUMINION] = 1, },
+    [xi.eco.LUMINION] = { [xi.eco.LUMINIAN] = 1, },
 }
 
-function utils.getSystemStrengthBonus(attacker, defender)
-    local attackerSystem = attacker:getSystem()
-    local defenderSystem = defender:getSystem()
-
+function utils.getEcosystemStrengthBonus(attackerSystem, defenderSystem)
     for k, v in pairs(systemStrengthTable) do
         if k == attackerSystem then
             for defId, weakValue in pairs(systemStrengthTable[k]) do
@@ -456,9 +684,9 @@ utils.mask =
     setBit = function(mask, pos, val)
         local state = false
 
-        if type(val) == "boolean" then
+        if type(val) == 'boolean' then
             state = val
-        elseif type(val) == "number" then
+        elseif type(val) == 'number' then
             state = (val ~= 0)
         end
 
@@ -506,7 +734,7 @@ function utils.prequire(...)
         return result
     else
         local vars = { ... }
-        printf("Error while trying to load '%s': %s", vars[1], result)
+        printf('Error while trying to load \'%s\': %s', vars[1], result)
     end
 end
 
@@ -514,6 +742,10 @@ end
 -- used for tables that do not define specific indices.
 -- See: Sigil NPCs
 function utils.contains(value, collection)
+    if collection == nil then
+        return false
+    end
+
     for _, v in pairs(collection) do
         if value == v then
             return true
@@ -569,16 +801,33 @@ function utils.setQuestVar(player, logId, questId, varName, value)
     player:setCharVar(charVarName, value)
 end
 
--- utils.splitStr("a.b.c", ".") => { "a", "b", "c" }
+-- utils.splitStr('a.b.c', '.') => { 'a', 'b', 'c' }
 function utils.splitStr(s, sep)
     local fields = {}
-    local pattern = string.format("([^%s]+)", sep)
-    local _ = string.gsub(s, pattern, function(c) fields[#fields + 1] = c end)
+    local pattern = string.format('([^%s]+)', sep)
+    local _ = string.gsub(s, pattern, function(c)
+        fields[#fields + 1] = c
+    end)
+
     return fields
 end
 
-function utils.mobTeleport(mob, hideDuration, pos, disAnim, reapAnim)
+-- Remove whitespace from the beginning and end of a string
+function utils.trimStr(s)
+    local s1 = string.gsub(s, '^s%+', '')
+    return string.gsub(s1, '%s+$', '')
+end
 
+-- Split a single string argument into multiple arguments
+function utils.splitArg(s)
+    local comma   = string.gsub(s, ',', ' ')
+    local spaces  = string.gsub(comma, '%s+', ' ')
+    local trimmed = utils.trimStr(spaces)
+
+    return utils.splitStr(trimmed, ' ')
+end
+
+function utils.mobTeleport(mob, hideDuration, pos, disAnim, reapAnim)
     --TODO Table of animations that are used for teleports for reference
 
     if hideDuration == nil then
@@ -586,11 +835,11 @@ function utils.mobTeleport(mob, hideDuration, pos, disAnim, reapAnim)
     end
 
     if disAnim == nil then
-        disAnim = "kesu"
+        disAnim = 'kesu'
     end
 
     if reapAnim == nil then
-        reapAnim = "deru"
+        reapAnim = 'deru'
     end
 
     if pos == nil then
@@ -610,9 +859,9 @@ function utils.mobTeleport(mob, hideDuration, pos, disAnim, reapAnim)
     mob:entityAnimationPacket(disAnim)
     mob:hideName(true)
     mob:setUntargetable(true)
-    mob:SetAutoAttackEnabled(false)
-    mob:SetMagicCastingEnabled(false)
-    mob:SetMobAbilityEnabled(false)
+    mob:setAutoAttackEnabled(false)
+    mob:setMagicCastingEnabled(false)
+    mob:setMobAbilityEnabled(false)
     mob:setPos(pos, 0)
     mob:setSpeed(0)
 
@@ -620,9 +869,9 @@ function utils.mobTeleport(mob, hideDuration, pos, disAnim, reapAnim)
         mobArg:setPos(pos, 0)
         mobArg:hideName(false)
         mobArg:setUntargetable(false)
-        mobArg:SetAutoAttackEnabled(true)
-        mobArg:SetMagicCastingEnabled(true)
-        mobArg:SetMobAbilityEnabled(true)
+        mobArg:setAutoAttackEnabled(true)
+        mobArg:setMagicCastingEnabled(true)
+        mobArg:setMobAbilityEnabled(true)
         mobArg:setSpeed(mobSpeed)
         mobArg:entityAnimationPacket(reapAnim)
 
@@ -632,6 +881,9 @@ function utils.mobTeleport(mob, hideDuration, pos, disAnim, reapAnim)
     end)
 end
 
+-----------------------------------
+-- Spatial position utilities
+-----------------------------------
 local ffxiRotConversionFactor = 360.0 / 255.0
 
 function utils.ffxiRotToDegrees(ffxiRot)
@@ -641,14 +893,14 @@ end
 function utils.lateralTranslateWithOriginRotation(origin, translation)
     local degrees = utils.ffxiRotToDegrees(origin.rot)
     local rads = math.rad(degrees)
-    local new_coords = {}
+    local newCoords = {}
 
-    new_coords.x = origin.x + ((math.cos(rads) * translation.x) + (math.sin(rads) * translation.z))
-    new_coords.z = origin.z + ((math.cos(rads) * translation.z) - (math.sin(rads) * translation.x))
-    new_coords.y = origin.y
-    new_coords.rot = origin.rot
+    newCoords.x = origin.x + ((math.cos(rads) * translation.x) + (math.sin(rads) * translation.z))
+    newCoords.z = origin.z + ((math.cos(rads) * translation.z) - (math.sin(rads) * translation.x))
+    newCoords.y = origin.y
+    newCoords.rot = origin.rot
 
-    return new_coords
+    return newCoords
 end
 
 function utils.getNearPosition(origin, offset, radians)
@@ -709,7 +961,10 @@ end
 
 function utils.getAngleDifference(a, b)
     local diff = math.abs(b - a)
-    if diff > math.pi then diff = 2 * math.pi - diff end
+    if diff > math.pi then
+        diff = 2 * math.pi - diff
+    end
+
     return diff
 end
 
@@ -719,7 +974,7 @@ function utils.angleWithin(origin, A, B, within)
 end
 
 local ffxiRotationToAngleFactor = 2.0 * math.pi / 256.0
-local ffxiAngleToRotationFactor  = 256.0 / (2.0 * math.pi)
+local ffxiAngleToRotationFactor = 256.0 / (2.0 * math.pi)
 
 function utils.rotationToAngle(ffxiRotation)
     return ffxiRotation * ffxiRotationToAngleFactor
@@ -727,4 +982,23 @@ end
 
 function utils.angleToRotation(radians)
     return radians * ffxiAngleToRotationFactor
+end
+
+-- Returns 24h Clock Time (example: 04:30 = 430, 21:30 = 2130)
+function utils.vanadielClockTime()
+    return tonumber(VanadielHour() .. string.format('%02d', VanadielMinute()))
+end
+
+-- Converts a number to a binary string
+function utils.intToBinary(x)
+    local bin = ''
+
+    while x > 1 do
+        bin = tostring(x % 2) .. bin
+        x = math.floor(x / 2)
+    end
+
+    bin = tostring(x) .. bin
+
+    return bin
 end

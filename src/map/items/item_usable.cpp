@@ -19,12 +19,12 @@
 ===========================================================================
 */
 
-#include "common/utils.h"
-
 #include "item_usable.h"
 
-#include "../map.h"
-#include "../vana_time.h"
+#include "common/utils.h"
+#include "common/vana_time.h"
+
+#include "map.h"
 
 CItemUsable::CItemUsable(uint16 id)
 : CItem(id)
@@ -149,22 +149,10 @@ void CItemUsable::setAoE(uint16 AoE)
     m_AoE = AoE;
 }
 
-/************************************************************************
- *                                                                        *
- *  Время экипировки предмета (VanaTime)                                 *
- *                                                                        *
- ************************************************************************/
-
 void CItemUsable::setAssignTime(uint32 VanaTime)
 {
     m_AssignTime = VanaTime;
 }
-
-/************************************************************************
- *                                                                        *
- *  Оставшееся время до следующего использования предмета                *
- *                                                                        *
- ************************************************************************/
 
 uint32 CItemUsable::getReuseTime()
 {

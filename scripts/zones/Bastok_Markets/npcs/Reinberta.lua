@@ -4,10 +4,7 @@
 -- Type: Goldsmithing Guild Master
 -- !pos -190.605 -7.814 -59.432 235
 -----------------------------------
-local ID = require("scripts/zones/Bastok_Markets/IDs")
-require("scripts/globals/crafting")
-require("scripts/globals/roe")
-require("scripts/globals/status")
+local ID = zones[xi.zone.BASTOK_MARKETS]
 -----------------------------------
 local entity = {}
 
@@ -17,42 +14,38 @@ entity.onTrade = function(player, npc, trade)
 
     if
         newRank > 9 and
-        player:getCharVar("GoldsmithingExpertQuest") == 1 and
+        player:getCharVar('GoldsmithingExpertQuest') == 1 and
         player:hasKeyItem(xi.keyItem.WAY_OF_THE_GOLDSMITH)
     then
         if signed ~= 0 then
             player:setSkillRank(xi.skill.GOLDSMITHING, newRank)
             player:startEvent(301, 0, 0, 0, 0, newRank, 1)
-            player:setCharVar("GoldsmithingExpertQuest", 0)
-            player:setLocalVar("GoldsmithingTraded", 1)
+            player:setCharVar('GoldsmithingExpertQuest', 0)
+            player:setLocalVar('GoldsmithingTraded', 1)
         else
             player:startEvent(301, 0, 0, 0, 0, newRank, 0)
         end
     elseif newRank ~= 0 and newRank <= 9 then
         player:setSkillRank(xi.skill.GOLDSMITHING, newRank)
         player:startEvent(301, 0, 0, 0, 0, newRank)
-        player:setLocalVar("GoldsmithingTraded", 1)
+        player:setLocalVar('GoldsmithingTraded', 1)
     end
 end
 
 entity.onTrigger = function(player, npc)
     local craftSkill  = player:getSkillLevel(xi.skill.GOLDSMITHING)
     local testItem    = xi.crafting.getTestItem(player, npc, xi.skill.GOLDSMITHING)
-    local guildMember = xi.crafting.isGuildMember(player, 6)
+    local guildMember = xi.crafting.hasJoinedGuild(player, xi.crafting.guild.GOLDSMITHING) and 150995375 or 0
     local rankCap     = xi.crafting.getCraftSkillCap(player, xi.skill.GOLDSMITHING)
     local rank        = player:getSkillRank(xi.skill.GOLDSMITHING)
     local realSkill   = (craftSkill - rank) / 32
     local expertQuestStatus = 0
 
-    if guildMember == 1 then
-        guildMember = 150995375
-    end
-
     if xi.crafting.unionRepresentativeTriggerRenounceCheck(player, 300, realSkill, rankCap, 184549887) then
         return
     end
 
-    if player:getCharVar("GoldsmithingExpertQuest") == 1 then
+    if player:getCharVar('GoldsmithingExpertQuest') == 1 then
         if player:hasKeyItem(xi.keyItem.WAY_OF_THE_GOLDSMITH) then
             expertQuestStatus = 600
         else
@@ -63,7 +56,7 @@ entity.onTrigger = function(player, npc)
     player:startEvent(300, testItem, realSkill, rankCap, guildMember, expertQuestStatus, 0, 0, 0)
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
     if
         csid == 300 and
         option >= xi.skill.WOODWORKING and
@@ -73,12 +66,10 @@ entity.onEventUpdate = function(player, csid, option)
     end
 end
 
-entity.onEventFinish = function(player, csid, option)
-    local guildMember = xi.crafting.isGuildMember(player, 6)
-
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 300 and option == 2 then
-        if guildMember == 1 then
-            player:setCharVar("GoldsmithingExpertQuest", 1)
+        if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.GOLDSMITHING) then
+            player:setCharVar('GoldsmithingExpertQuest', 1)
         end
     elseif csid == 300 and option == 1 then
         local crystal = 4096 -- fire crystal
@@ -87,12 +78,12 @@ entity.onEventFinish = function(player, csid, option)
         else
             player:addItem(crystal)
             player:messageSpecial(ID.text.ITEM_OBTAINED, crystal)
-            xi.crafting.signupGuild(player, xi.crafting.guild.goldsmithing)
+            xi.crafting.signupGuild(player, xi.crafting.guild.GOLDSMITHING)
         end
     else
-        if player:getLocalVar("GoldsmithingTraded") == 1 then
+        if player:getLocalVar('GoldsmithingTraded') == 1 then
             player:tradeComplete()
-            player:setLocalVar("GoldsmithingTraded", 0)
+            player:setLocalVar('GoldsmithingTraded', 0)
         end
     end
 

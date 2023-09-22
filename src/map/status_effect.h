@@ -22,8 +22,8 @@
 #ifndef _STATUSEFFECT_H
 #define _STATUSEFFECT_H
 
-#include "../common/cbasetypes.h"
-#include "../common/mmo.h"
+#include "common/cbasetypes.h"
+#include "common/mmo.h"
 
 #include <vector>
 
@@ -727,7 +727,7 @@ enum EFFECT
     EFFECT_PROWESS_WS_DMG        = 787, // (Unimplemented) 2% per tier.
     EFFECT_PROWESS_KILLER        = 788, // *flat +4 for now
     // End GoV Prowess fakery
-    EFFECT_FIELD_SUPPORT_FOOD  = 789, // Used by Fov/GoV food buff.
+
     EFFECT_MARK_OF_SEED        = 790, // Tracks 30 min timer in ACP mission "Those Who Lurk in Shadows (II)"
     EFFECT_ALL_MISS            = 791, // All attacks miss (ie - Tiamat while flying)
     EFFECT_SUPER_BUFF          = 792, // Boss buff (ie - Nidhogg "2hour")
@@ -744,12 +744,14 @@ enum EFFECT
     EFFECT_FULL_SPEED_AHEAD    = 803, // Used to track Full Speed Ahead quest minigame
     EFFECT_HYSTERIA            = 804, // Used for Hysteroanima to stop after readying a weaponskill with no msg.
     EFFECT_TOMAHAWK            = 805, // Silent status effect inflicted by a Warrior using the "Tomahawk" job ability
-    // EFFECT_PLACEHOLDER           = 806  // Description
-    // 806-1022
+    EFFECT_NUKE_WALL           = 806, // Custom effect for NM type mobs only. Applied by elemental magic damage sources
+
+    // 789
+    // 807-1022
     // EFFECT_PLACEHOLDER           = 1023 // The client dat file seems to have only this many "slots", results of exceeding that are untested.
 };
 
-#define MAX_EFFECTID 806 // 768 real + 38 custom
+#define MAX_EFFECTID 807 // 768 real + 39 custom
 
 /************************************************************************
  *                                                                       *
@@ -771,9 +773,9 @@ public:
     uint16 GetPower() const;
     uint16 GetSubPower() const;
     uint16 GetTier() const;
-    uint32 GetFlag() const;
-    uint16 GetType() const;
-    uint8  GetSlot() const;
+    uint32 GetEffectFlags() const;
+    uint16 GetEffectType() const;
+    uint8  GetEffectSlot() const;
 
     uint32         GetTickTime() const;
     uint32         GetDuration() const;
@@ -781,10 +783,12 @@ public:
     time_point     GetStartTime();
     CBattleEntity* GetOwner();
 
-    void SetFlag(uint32 Flag);
-    void UnsetFlag(uint32 Flag);
-    void SetType(uint16 Type);
-    void SetSlot(uint8 Slot);
+    void SetEffectFlags(uint32 Flags);
+    void AddEffectFlag(uint32 Flag);
+    void DelEffectFlag(uint32 Flag);
+    bool HasEffectFlag(uint32 Flag);
+    void SetEffectType(uint16 Type);
+    void SetEffectSlot(uint8 Slot);
     void SetIcon(uint16 Icon);
     void SetPower(uint16 Power);
     void SetSubPower(uint16 subPower);
@@ -798,10 +802,9 @@ public:
 
     void addMod(Mod modType, int16 amount);
 
-    void SetName(std::string name);
-    void SetName(const int8* name);
+    void SetEffectName(std::string name);
 
-    const int8* GetName();
+    const std::string& GetName();
 
     std::vector<CModifier> modList; // список модификаторов
     bool                   deleted{ false };
@@ -819,7 +822,7 @@ private:
     uint16 m_Power{ 0 };              // сила эффекта
     uint16 m_SubPower{ 0 };           // Secondary power of the effect
     uint16 m_Tier{ 0 };               // Tier of the effect
-    uint32 m_Flag{ 0 };               // флаг эффекта (условия его исчезновения)
+    uint32 m_Flags{ 0 };              // флаг эффекта (условия его исчезновения)
     uint16 m_Type{ 0 };               // used to enforce only one
     uint8  m_Slot{ 0 };               // used to determine slot order for songs/rolls
 

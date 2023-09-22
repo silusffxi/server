@@ -5,11 +5,6 @@
 -- Involved in Quest: Riding on the Clouds
 -- !pos 25 -6 6 248
 -----------------------------------
-local ID = require("scripts/zones/Selbina/IDs")
-require("scripts/globals/keyitems")
-require("scripts/globals/npc_util")
-require("scripts/globals/quests")
------------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
@@ -18,45 +13,42 @@ entity.onTrade = function(player, npc, trade)
             player:startEvent(62, 0, 4366)
         elseif npcUtil.tradeHas(trade, { { 629, 3 } }) then -- Millioncorn x3
             player:startEvent(63, 0, 629)
-        elseif npcUtil.tradeHas(trade, 919) then -- Boyahda Moss x1
-            player:startEvent(64, 0, 919)
+        elseif npcUtil.tradeHas(trade, xi.item.CLUMP_OF_BOYAHDA_MOSS) then -- Boyahda Moss x1
+            player:startEvent(64, 0, xi.item.CLUMP_OF_BOYAHDA_MOSS)
         end
     end
 end
 
 entity.onTrigger = function(player, npc)
     if player:getQuestStatus(xi.quest.log_id.OTHER_AREAS, xi.quest.id.otherAreas.ONLY_THE_BEST) == QUEST_AVAILABLE then
-        player:startEvent(60, 4366, 629, 919) -- Start quest "Only the Best"
+        player:startEvent(60, 4366, 629, xi.item.CLUMP_OF_BOYAHDA_MOSS) -- Start quest "Only the Best"
     else
-        player:startEvent(61, 4366, 629, 919) -- During & after completed quest "Only the Best"
+        player:startEvent(61, 4366, 629, xi.item.CLUMP_OF_BOYAHDA_MOSS) -- During & after completed quest "Only the Best"
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 60 and option == 10 then
         player:addQuest(xi.quest.log_id.OTHER_AREAS, xi.quest.id.otherAreas.ONLY_THE_BEST)
     elseif csid == 62 and option == 11 then
-        player:addGil(100)
-        player:messageSpecial(ID.text.GIL_OBTAINED, 100)
+        npcUtil.giveCurrency(player, 'gil', 100)
         player:addFame(xi.quest.fame_area.BASTOK, 10)
         player:addFame(xi.quest.fame_area.SANDORIA, 10)
         player:addFame(xi.quest.fame_area.JEUNO, 10)
         player:completeQuest(xi.quest.log_id.OTHER_AREAS, xi.quest.id.otherAreas.ONLY_THE_BEST)
         player:confirmTrade()
     elseif csid == 63 and option == 12 then
-        player:addGil(120)
-        player:messageSpecial(ID.text.GIL_OBTAINED, 120)
+        npcUtil.giveCurrency(player, 'gil', 120)
         player:addFame(xi.quest.fame_area.BASTOK, 20)
         player:addFame(xi.quest.fame_area.SANDORIA, 20)
         player:addFame(xi.quest.fame_area.JEUNO, 20)
         player:completeQuest(xi.quest.log_id.OTHER_AREAS, xi.quest.id.otherAreas.ONLY_THE_BEST)
         player:confirmTrade()
     elseif csid == 64 and option == 13 then
-        player:addGil(600)
-        player:messageSpecial(ID.text.GIL_OBTAINED, 600)
+        npcUtil.giveCurrency(player, 'gil', 600)
         player:addFame(xi.quest.fame_area.BASTOK, 30)
         player:addFame(xi.quest.fame_area.SANDORIA, 30)
         player:addFame(xi.quest.fame_area.JEUNO, 30)

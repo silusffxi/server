@@ -5,11 +5,6 @@
 -- !addmission 12 8
 -- Ploh Trishbahk : !pos 100.580 -40.150 -63.830 257
 -----------------------------------
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.SOA, xi.mission.id.soa.MEETING_OF_THE_MINDS)
 
@@ -39,7 +34,6 @@ mission.sections =
                     else
                         return mission:progressEvent(1501) -- 257, 2 seem to be consistent parameters (first 2), could be animation, Ploh extends a hand
                     end
-
                 end,
             },
 

@@ -9,6 +9,7 @@ import shutil
 import importlib
 import pathlib
 
+
 # Pre-flight sanity checks
 def preflight_exit():
     # If double clicked on Windows: pause with an input so the user can read the error...
@@ -20,7 +21,7 @@ def preflight_exit():
 # - git should installed and available
 try:
     subprocess.call(["git"], stdout=subprocess.PIPE)
-except:  # lgtm [py/catch-base-exception]
+except Exception:
     print(
         "ERROR: Make sure git is installed and available on your system's PATH environment variable."
     )
@@ -68,6 +69,11 @@ except Exception as e:
     )
     preflight_exit()
 
+GREEN = colorama.Fore.GREEN
+RED = colorama.Fore.RED
+RESET = colorama.Style.RESET_ALL
+NOOP = lambda *args, **kwargs: None
+
 
 def print_red(str):
     print(colorama.Fore.RED + str)
@@ -92,10 +98,91 @@ def populate_migrations():
 # Migrations are automatically scraped from the migrations folder
 migrations = populate_migrations()
 
+
+# NOTE: Everything is returned as a dict of dicts of strings. If you are looking for bools or values
+#     : you'll need to convert them yourself.
+def populate_settings():
+    settings = {}
+    default_settings = {}
+
+    def load_into_dict(filename, settings):
+        if os.path.exists(filename) and os.path.isfile(filename):
+            try:
+                with open(filename) as f:
+                    filename_key = filename[:-4].split(os.sep)[-1]
+
+                    # Get or default, so we update any existing dict
+                    # instead of wiping it out
+                    current_settings = settings.get(filename_key, {})
+                    for line in f.readlines():
+                        if not line:
+                            break
+
+                        if "=" in line:
+                            # remove newline
+                            line = line.replace("\n", "")
+
+                            # NOTE: Do not use split or rsplit in herewithout a counter,
+                            #     : to make sure you leave the contents of val alone!
+                            parts = line.split("=", 1)
+
+                            key = parts[0].strip()
+                            val = parts[1].strip()
+
+                            # ignore commented out entries
+                            if key.startswith("--"):
+                                continue
+
+                            # strip off comments
+                            val = val.rsplit("--")[0].strip()
+
+                            # pop off leading quote
+                            if val.startswith('"'):
+                                val = val[1:]
+
+                            # pop off trailing comma
+                            if val.endswith(","):
+                                val = val[:-1]
+
+                            # pop off trailing quote
+                            if val.endswith('"'):
+                                val = val[:-1]
+
+                            current_settings[key] = val
+
+                        settings[filename_key] = current_settings
+            except Exception as e:
+                print_red("Error fetching settings.")
+                print(e)
+                return False
+
+    for filename in os.listdir(from_server_path("settings/default")):
+        full_path = from_server_path("settings/default")
+        load_into_dict(os.path.join(full_path, filename), default_settings)
+        load_into_dict(os.path.join(full_path, filename), settings)
+
+    for filename in os.listdir(from_server_path("settings")):
+        full_path = from_server_path("settings")
+        load_into_dict(os.path.join(full_path, filename), settings)
+
+    # DEBUG:
+    # for k, v in settings.items():
+    #     for ik, iv in v.items():
+    #         print(f"| {k} | {ik} | {iv} |")
+    # exit()
+
+    return settings, default_settings
+
+
+# Settings are automatically scraped from the settings folder(s)
+settings, default_settings = populate_settings()
+
+
 # These are the 'protected' files
 player_data = [
     "accounts.sql",
     "accounts_banned.sql",
+    "auction_house_items.sql",
     "auction_house.sql",
     "char_blacklist.sql",
     "char_chocobos.sql",
@@ -158,6 +245,7 @@ else:
     exe = ""
 colorama.init(autoreset=True)
 
+
 # Redirect errors through this to hide annoying password warning
 def fetch_errors(result):
     for line in result.stderr.splitlines():
@@ -166,66 +254,53 @@ def fetch_errors(result):
             print_red(line)
 
 
+def db_query(query):
+    result = subprocess.run(
+        [
+            f"{mysql_bin}mysql{exe}",
+            f"-h{host}",
+            f"-P{str(port)}",
+            f"-u{login}",
+            f"-p{password}",
+            database,
+            f"-e {query}",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    fetch_errors(result)
+    return result
+
+
 def fetch_credentials():
-    global database, host, port, login, password
-    credentials = {}
-    # Grab mysql credentials
-    filename = from_server_path("settings/default/network.lua")
-    if from_server_path("settings/network.lua"):
-        filename = from_server_path("settings/network.lua")
-    try:
-        with open(filename) as f:
-            while True:
-                line = f.readline()
-                if not line:
-                    break
-                if "SQL_" in line:
-                    line = line.replace(",", "").replace('"', "").replace("\n", "")
-                    parts = line.split("=")
-                    type = parts[0].strip()
-                    val = parts[1].strip()
-                    credentials[type] = val
-        database = os.getenv("XI_NETWORK_SQL_DATABASE") or credentials["SQL_DATABASE"]
-        host = os.getenv("XI_NETWORK_SQL_HOST") or credentials["SQL_HOST"]
-        port = os.getenv("XI_NETWORK_SQL_PORT") or int(credentials["SQL_PORT"])
-        login = os.getenv("XI_NETWORK_SQL_LOGIN") or credentials["SQL_LOGIN"]
-        password = os.getenv("XI_NETWORK_SQL_PASSWORD") or credentials["SQL_PASSWORD"]
-    except:  # lgtm [py/catch-base-exception]
-        print_red("Error fetching credentials.\nCheck settings/network.lua.")
-        return False
-    return True
+    global settings, database, host, port, login, password
+    database = (
+        os.getenv("XI_NETWORK_SQL_DATABASE") or settings["network"]["SQL_DATABASE"]
+    )
+    host = os.getenv("XI_NETWORK_SQL_HOST") or settings["network"]["SQL_HOST"]
+    port = os.getenv("XI_NETWORK_SQL_PORT") or int(settings["network"]["SQL_PORT"])
+    login = os.getenv("XI_NETWORK_SQL_LOGIN") or settings["network"]["SQL_LOGIN"]
+    password = (
+        os.getenv("XI_NETWORK_SQL_PASSWORD") or settings["network"]["SQL_PASSWORD"]
+    )
 
 
 def fetch_versions():
     global current_client, release_version, release_client
-    current_client = release_version = release_client = None
+
+    current_client = None
+    release_version = None
+    release_client = None
+
     try:
         release_version = repo.git.rev_parse(repo.head.object.hexsha, short=4)
-    except:  # lgtm [py/catch-base-exception]
+    except Exception as e:
         print_red("Unable to read current version hash.")
-    try:
-        with open(from_server_path("settings/default/login.lua")) as f:
-            while True:
-                line = f.readline()
-                if not line:
-                    break
-                match = re.match(r'\s+?CLIENT_VER =\s+"(\S+)"', line)
-                if match:
-                    release_client = match.group(1)
-    except:  # lgtm [py/catch-base-exception]
-        print_red("Unable to read settings/default/login.lua.")
-    if os.path.exists(from_server_path("settings/login.lua")):
-        try:
-            with open(from_server_path("settings/login.lua")) as f:
-                while True:
-                    line = f.readline()
-                    if not line:
-                        break
-                    match = re.match(r'\s+?CLIENT_VER =\s+"(\S+)"', line)
-                    if match:
-                        current_client = match.group(1)
-        except:  # lgtm [py/catch-base-exception]
-            print_red("Unable to read settings/login.lua")
+        print(e)
+
+    release_client = default_settings["login"]["CLIENT_VER"]
+    current_client = settings["login"]["CLIENT_VER"]
+
     if db_ver and release_version:
         fetch_files(True)
     else:
@@ -235,21 +310,24 @@ def fetch_versions():
 def fetch_configs():
     global mysql_bin, auto_backup, auto_update_client, db_ver
     try:
-        with open(from_dbtool_path("config.yaml")) as file:
-            configs = yaml.full_load(file)
-            for config in configs:
-                for key, value in config.items():
-                    if key == "mysql_bin":
-                        if value != "":
-                            mysql_bin = value
-                    if key == "auto_backup":
-                        auto_backup = int(value)
-                    if key == "auto_update_client":
-                        auto_update_client = bool(value)
-                    if key == "db_ver":
-                        db_ver = value
-    except:  # lgtm [py/catch-base-exception]
-        write_configs()
+        if os.path.exists(from_dbtool_path("config.yaml")):
+            with open(from_dbtool_path("config.yaml")) as file:
+                configs = yaml.full_load(file)
+                for config in configs:
+                    for key, value in config.items():
+                        if key == "mysql_bin":
+                            if value != "":
+                                mysql_bin = value
+                        if key == "auto_backup":
+                            auto_backup = int(value)
+                        if key == "auto_update_client":
+                            auto_update_client = bool(value)
+                        if key == "db_ver":
+                            db_ver = value
+        else:
+            write_configs()
+    except Exception as e:
+        print(e)
 
 
 def write_configs():
@@ -269,7 +347,7 @@ def fetch_module_files():
             if not line.startswith("#") and line.strip() and not line in ["\n", "\r\n"]:
                 line = from_server_path("modules/" + line.strip())
                 if pathlib.Path(line).is_dir():
-                    for filename in pathlib.Path(line).glob("**/*.sql"):
+                    for filename in sorted(pathlib.Path(line).glob("**/*.sql")):
                         import_files.append(str(filename).replace("\\", "/"))
                 else:
                     if line.endswith(".sql"):
@@ -324,19 +402,22 @@ def fetch_files(express=False):
                     > 0
                 ):
                     express_enabled = True
-        except:  # lgtm [py/catch-base-exception]
+        except Exception as e:
             print_red("Error checking diffs.\nCheck that hash is valid in config.yaml.")
+            print(e)
     else:
-        for (_, _, filenames) in os.walk(from_server_path("sql/")):
-            for filename in filenames:
-                import_files.append(from_server_path("sql/" + filename))
+        for _, _, filenames in os.walk(from_server_path("sql/")):
+            for filename in sorted(filenames):
+                if filename.endswith(".sql"):
+                    import_files.append(from_server_path("sql/" + filename))
             break
     check_protected()
     backups.clear()
-    for (_, _, filenames) in os.walk(from_server_path("sql/backups/")):
-        for file in filenames:
+    for _, _, filenames in os.walk(from_server_path("sql/backups/")):
+        for file in sorted(filenames):
             if not ".gitignore" in file:
-                backups.append(from_server_path("sql/backups/" + file))
+                if file.endswith(".sql"):
+                    backups.append(from_server_path("sql/backups/" + file))
         break
     backups.sort()
     import_files.sort()
@@ -344,7 +425,7 @@ def fetch_files(express=False):
         import_files.append(
             import_files.pop(import_files.index(from_server_path("sql/triggers.sql")))
         )
-    except:  # lgtm [py/catch-base-exception]
+    except Exception:
         pass
     fetch_module_files()
 
@@ -372,9 +453,10 @@ def write_version(silent=False):
             if update_client:
                 print_green("Updated client version!")
             fetch_versions()
-        except:  # lgtm [py/catch-base-exception]
+        except Exception as e:
             fileinput.close()
             print_red("Error writing version.")
+            print(e)
 
 
 def import_file(file):
@@ -386,20 +468,7 @@ def import_file(file):
         return
     print("Importing " + file)
     query = f"SET autocommit=0; SET unique_checks=0; SET foreign_key_checks=0; SOURCE {file}; SET unique_checks=1; SET foreign_key_checks=1; COMMIT;"
-    result = subprocess.run(
-        [
-            f"{mysql_bin}mysql{exe}",
-            f"-h{host}",
-            f"-P{str(port)}",
-            f"-u{login}",
-            f"-p{password}",
-            database,
-            f"-e {query}",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    fetch_errors(result)
+    _ = db_query(query)
 
 
 def connect():
@@ -414,7 +483,7 @@ def connect():
             print_red(
                 "Incorrect mysql_login or mysql_password, update settings/network.lua."
             )
-            close()
+            quit()
         elif err.errno == mariadb.constants.ERR.ER_BAD_DB_ERROR:
             print_red("Database " + database + " does not exist.")
             if (
@@ -442,7 +511,8 @@ def connect():
             else:
                 quit()
         else:
-            print_red(err)
+            print_red(str(err))
+            quit()
         return False
     return True
 
@@ -701,40 +771,7 @@ def bad_selection():
     time.sleep(0.5)
 
 
-# fmt: off
-def menu():
-    print(
-        colorama.Fore.GREEN + "o" + colorama.Fore.RED + "---------------------------------------" + colorama.Fore.GREEN + "o\n"
-        + colorama.Fore.RED + "| " + colorama.Style.RESET_ALL + "LandSandBoat Database Management Tool" + colorama.Fore.RED + " |\n"
-        "| " + colorama.Style.RESET_ALL + str("Connected to " + database).center(37) + colorama.Fore.RED + " |"
-    )
-    if db_ver:
-        print(
-            colorama.Fore.RED + "| " + colorama.Style.RESET_ALL + str("#" + db_ver).center(37) + colorama.Fore.RED + " |"
-        )
-    print(
-        colorama.Fore.GREEN + "o" + colorama.Fore.RED + "---------------------------------------" + colorama.Fore.GREEN + "o"
-    )
-    if express_enabled:
-        print(
-            colorama.Fore.RED + "|" + colorama.Fore.GREEN + "e" + colorama.Style.RESET_ALL + ". Express Update " + str("(#" + release_version + ")").ljust(21) + colorama.Fore.RED + "|"
-        )
-    print(
-        colorama.Fore.RED +
-        "|" + colorama.Fore.GREEN + "1" + colorama.Style.RESET_ALL + str(". Update DB").ljust(38) + colorama.Fore.RED + "|\n"
-        "|" + colorama.Fore.GREEN + "2" + colorama.Style.RESET_ALL + str(". Check migrations").ljust(38) + colorama.Fore.RED + "|\n"
-        "|" + colorama.Fore.GREEN + "3" + colorama.Style.RESET_ALL + str(". Backup").ljust(38) + colorama.Fore.RED + "|\n"
-        "|" + colorama.Fore.GREEN + "4" + colorama.Style.RESET_ALL + str(". Restore/Import").ljust(38) + colorama.Fore.RED + "|\n"
-        "|" + colorama.Fore.GREEN + "r" + colorama.Style.RESET_ALL + str(". Reset DB").ljust(38) + colorama.Fore.RED + "|\n"
-        "|" + colorama.Fore.GREEN + "t" + colorama.Style.RESET_ALL + str(". Tasks").ljust(38) + colorama.Fore.RED + "|\n"
-        "|" + colorama.Fore.GREEN + "s" + colorama.Style.RESET_ALL + str(". Settings").ljust(38) + colorama.Fore.RED + "|\n"
-        "|" + colorama.Fore.GREEN + "q" + colorama.Style.RESET_ALL + str(". Quit").ljust(38) + colorama.Fore.RED + "|\n"
-        + colorama.Fore.GREEN + "o" + colorama.Fore.RED + "---------------------------------------" + colorama.Fore.GREEN + "o"
-    )
-# fmt: on
-
-
-def settings():
+def settings_menu():
     fetch_configs()
     print_green("Current MySQL bin location: " + colorama.Style.RESET_ALL + mysql_bin)
     if input("Change this location? [y/N] ").lower() == "y":
@@ -758,29 +795,18 @@ def settings():
 
 def set_external_ip(ip_str):
     global mysql_bin, exe
-    query = f"UPDATE zone_settings SET zoneip = '{ip_str}';"
+    query = f"""
+    UPDATE zone_settings SET zoneip = '{ip_str}';
+    """
     print("Executing query:")
     print(query)
-    result = subprocess.run(
-        [
-            f"{mysql_bin}mysql{exe}",
-            f"-h{host}",
-            f"-P{str(port)}",
-            f"-u{login}",
-            f"-p{password}",
-            database,
-            f"-e {query}",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    fetch_errors(result)
+    _ = db_query(query)
 
 
-def tasks():
+def set_external_ip_dialog():
+    import urllib.request
+
     if input("Make server public-facing? [y/N] ").lower() == "y":
-        import urllib.request
-
         external_ip = urllib.request.urlopen("https://ident.me").read().decode("utf8")
         print_green(f"Detected your public-facing IP as: {external_ip}")
         if input("Is this correct? [y/N] ").lower() == "y":
@@ -791,11 +817,391 @@ def tasks():
                 set_external_ip(external_ip)
 
 
+def print_db_tables_by_size():
+    global mysql_bin, exe
+
+    query = """
+    SELECT table_name AS 'Table',
+    ROUND(((data_length + index_length) / 1024 / 1024), 2) AS 'Size (MB)'
+    FROM information_schema.TABLES
+    WHERE ROUND(((data_length + index_length) / 1024 / 1024), 2) > 1.0
+    ORDER BY (data_length + index_length) DESC;
+    """
+
+    print("Executing query:")
+    print(query)
+    result = db_query(query)
+    print(result.stdout)
+
+
+def offload_to_auction_house_history():
+    global mysql_bin, exe
+
+    if (
+        input(
+            "This feature is very slow, and runs the risk of wiping out some or all of your auction_house history.\n"
+            + RED
+            + "USE AT YOUR OWN RISK!\n"
+            + RESET
+            + "Do you wish to continue? [y/N] "
+        ).lower()
+        != "y"
+    ):
+        return
+
+    if not cur:
+        connect()
+
+    ah_before = db_query("SELECT COUNT(*) FROM auction_house;").stdout
+    ah_history_before = db_query("SELECT COUNT(*) FROM auction_house_history;").stdout
+
+    cur.execute("SELECT DISTINCT itemid FROM auction_house;")
+
+    items = cur.fetchall()
+    index = 0
+    for itemid in items:
+        if index % 500 == 0:
+            percent = (index / len(items)) * 100
+            print(
+                f"Offloading historical data auction_house data: {percent:.1f}% ({index}/{len(items)})"
+            )
+        index = index + 1
+
+        query = f"""
+        START TRANSACTION;
+        SET @itemid = {itemid[0]};
+
+        -- Insert into history table
+        INSERT INTO auction_house_history
+        SELECT * FROM auction_house
+        WHERE
+            itemid = @itemid AND
+            buyer_name IS NOT NULL AND -- Sold
+            id NOT IN (
+                SELECT id
+                FROM (
+                    -- Most recent 20 unsold listings for item @itemid
+                    SELECT id, itemid, buyer_name
+                    FROM auction_house
+                    WHERE
+                        itemid = @itemid AND
+                        buyer_name IS NOT NULL
+                    ORDER BY sell_date DESC
+                    LIMIT 20
+                ) listed
+            );
+
+        -- Delete from non-history (same query as above, just for deleting)
+        DELETE auction_house.*
+        FROM auction_house
+        WHERE
+            itemid = @itemid AND
+            buyer_name IS NOT NULL AND -- Sold
+            id NOT IN (
+                SELECT id
+                FROM (
+                    -- Most recent 20 unsold listings for item @itemid
+                    SELECT id, itemid, buyer_name
+                    FROM auction_house
+                    WHERE
+                        itemid = @itemid AND
+                        buyer_name IS NOT NULL
+                    ORDER BY sell_date DESC
+                    LIMIT 20
+                ) listed
+            );
+        COMMIT;
+        """
+        db_query(query)
+
+    print("Done!")
+
+    print("Number of rows in auction_house (before):")
+    print(ah_before)
+
+    print("Number of rows in auction_house_history (before):")
+    print(ah_history_before)
+
+    print("Number of rows in auction_house (after):")
+    print(db_query("SELECT COUNT(*) FROM auction_house;").stdout)
+
+    print("Number of rows in auction_house_history (after):")
+    print(db_query("SELECT COUNT(*) FROM auction_house_history;").stdout)
+
+
+def announce_menu():
+    from announce import send_server_message
+
+    message = input("What message would you like to send to the whole server?\n> ")
+    if (
+        input(
+            "Are you sure you want to send the this to the whole server? [y/N]"
+        ).lower()
+        == "y"
+    ):
+        send_server_message(message)
+
+
+# fmt: off
+def present_menu(title, contents):
+    # Determine width of entire menu, including multiline titles
+    # and menu items
+    length = 0
+    title_parts = title.split("\n")
+
+    for part in title_parts:
+        length = max(len(part), length)
+
+    for value in contents.values():
+        length = max(len(value[0]), length)
+
+    # Add some more padding to account for the manual styling of
+    # menu options and spacings
+    option_pad = 3
+    length = length + option_pad
+
+    LEFT  = "| "
+    RIGHT = " |"
+
+    # Present title
+    print(
+        GREEN + "o" + RED + "-" + "-" * length + "-" + GREEN + "o"
+    )
+    for part in title_parts:
+        print(
+            RED + LEFT + RESET + part.center(length) + RED + RIGHT
+        )
+    print(
+        GREEN + "o" + RED + "-" + "-" * length + "-" + GREEN + "o"
+    )
+
+    # Menu options
+    for key, value in contents.items():
+        description = value[0]
+        print(
+            RED + LEFT + GREEN + key + RESET + ". " + description + " " * (length - len(description) - option_pad) + RED + RIGHT
+        )
+
+    # Footer
+    print(colorama.Fore.GREEN + "o" + colorama.Fore.RED + "-" + "-" * length + "-" + colorama.Fore.GREEN + "o\n")
+
+    # Handle inputs
+    selection = input("> ").lower()
+    print(colorama.ansi.clear_screen())
+    contents.get(selection, ["", bad_selection])[1]()
+# fmt: on
+
+
+def configure_and_launch_multi_process_by_zonetype():
+    db_query(
+        f"""
+        UPDATE xidb.zone_settings SET zoneport = 54230 WHERE zonetype = 0;
+        UPDATE xidb.zone_settings SET zoneport = 54231 WHERE zonetype = 1;
+        UPDATE xidb.zone_settings SET zoneport = 54232 WHERE zonetype = 2;
+        UPDATE xidb.zone_settings SET zoneport = 54233 WHERE zonetype = 3;
+        UPDATE xidb.zone_settings SET zoneport = 54234 WHERE zonetype = 4;
+        UPDATE xidb.zone_settings SET zoneport = 54235 WHERE zonetype = 5;
+        UPDATE xidb.zone_settings SET zoneport = 54236 WHERE zonetype = 6;
+        """
+    )
+
+    result = db_query(
+        f"""
+        SELECT DISTINCT zoneport from zone_settings ORDER BY zoneport ASC;
+        """
+    )
+
+    ports = result.stdout.split("\n")[1:-1]
+
+    executable = from_server_path(f"xi_map{exe}")
+
+    # fmt: off
+    for port in ports:
+        print(f"Launching {executable} --log log/map-server-{port}.log --ip 127.0.0.1 --port {port}")
+        subprocess.Popen(
+            [executable, "--log", f"log/map-server-{port}.log", "--ip", "127.0.0.1", "--port", port],
+            shell=True,
+            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+            cwd=server_dir_path,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    # fmt: on
+
+
+def update_submodules():
+    # fmt: off
+    result = subprocess.run(
+        ["git", "submodule", "update", "--init", "--recursive", "--progress"], capture_output=True, text=True).stdout
+    print(result)
+    # fmt: on
+
+
+def update_sql_from_db(table_name):
+    try:
+        # Fetch all rows from the specified table
+        cur.execute(f"SELECT * FROM {table_name};")
+        rows = cur.fetchall()
+
+        # Read the SQL file
+        with open(
+            from_server_path(f"sql/{table_name}.sql"), "r", encoding="utf-8"
+        ) as file:
+            sql_lines = file.readlines()
+
+        sql_variables = {}
+        updated_lines = []
+        row_index = 0
+
+        # Iterate over the lines in the file
+        for line in sql_lines:
+            # Scan for variables
+            if line.strip().startswith("SET @"):
+                parts = line.strip().split("=")
+                var_name = parts[0].split()[1]
+                var_value = parts[1].replace(";", "").split("--")[0].strip()
+                sql_variables[var_value] = var_name
+            # Scan for INSERT
+            lowercase_line = line.strip().lower()
+            insert_start = re.match(
+                rf"insert into `{table_name}` values \(", lowercase_line
+            )
+            if insert_start:
+                # Build a string using the values pulled from the database
+                values = rows[row_index]
+                updated_values = []
+                for i, value in enumerate(values):
+                    # NULL
+                    if value is None:
+                        updated_values.append("NULL")
+                    # Binary
+                    elif isinstance(value, bytes):
+                        if len(value) == 0:
+                            updated_values.append(f"''")
+                        # npc_list name field is binary but should be decoded for the sql files
+                        elif table_name == "npc_list" and i == 1:
+                            text = True
+                            for j in value:
+                                if j < 32 or j > 126:  # ascii printable characters
+                                    text = False
+                                    break
+                            if text:
+                                updated_values.append(f"'{value.decode('latin_1')}'")
+                            # If the value contains non-printable characters, use hex instead
+                            else:
+                                hex_value = value.hex().upper()
+                                updated_values.append(f"0x{hex_value}")
+                        # Otherwise print binary in 0x hex form
+                        else:
+                            hex_value = value.hex().upper()
+                            updated_values.append(f"0x{hex_value}")
+                    # String
+                    elif isinstance(value, str):
+                        escaped_value = value.replace("'", "\\'")
+                        updated_values.append(f"'{escaped_value}'")
+                    # Number
+                    else:
+                        # mob_droplist and pet_skills use variables for certain fields
+                        if (
+                            table_name == "mob_droplist"
+                            and i == 5
+                            and str(value) in sql_variables
+                        ):
+                            updated_values.append(sql_variables[str(value)])
+                        elif table_name == "pet_skills" and i == 9:
+                            var_list = []
+                            for var in sql_variables.keys():
+                                if value & int(var):
+                                    var_list.append(sql_variables[var])
+                            updated_values.append(" | ".join(var_list))
+                        else:
+                            # Get float formatting from the cursor description.
+                            # https://github.com/mariadb-corporation/mariadb-connector-python/blob/67d3062ad597cca8d5419b2af2ad8b62528204e5/mariadb/mariadb_cursor.c#L777-L787
+                            if (
+                                cur.description[i][1]
+                                == mariadb.constants.FIELD_TYPE.FLOAT
+                                and cur.description[i][5] > 0
+                            ):
+                                updated_values.append(
+                                    f"{value:.{cur.description[i][5]}f}"
+                                )
+                            else:
+                                updated_values.append(str(value))
+                values = ",".join(updated_values)
+                # Replace the values in the current line with the values pulled from the database
+                updated_line = line[: insert_start.end()] + f"{values});"
+                # Append any comments, preserving whitespace
+                if "--" in line:
+                    insert_end = line.index(");") + 2
+                    before_comment = line[insert_end:].split("--")[0]
+                    updated_line = f"{updated_line}{before_comment}{line[insert_end + len(before_comment):]}"
+                else:
+                    updated_line = f"{updated_line}\n"
+                updated_lines.append(updated_line)
+                row_index += 1
+            # Otherwise just save the line as-is
+            else:
+                updated_lines.append(line)
+
+        # Write the updated content back to the file
+        with open(
+            from_server_path(f"sql/{table_name}.sql"), "w", encoding="utf-8"
+        ) as file:
+            file.writelines(updated_lines)
+
+    except Exception as e:
+        print_red(f"Error: {e}")
+
+
+def dump_table(table_name=None, silent=False):
+    if not silent:
+        table_name = input("Which table would you like to dump?\n> ")
+    update_sql_from_db(table_name)
+    print_green(f"Replaced values in {table_name}.sql with data from the database.")
+
+
+def dump_all_tables(silent=False):
+    if silent or input("Dump all database tables to .sql files? [y/N] ").lower() == "y":
+        dump_tables = []
+        for _, _, filenames in os.walk(from_server_path("sql/")):
+            for filename in sorted(filenames):
+                if filename.endswith(".sql"):
+                    dump_tables.append(filename)
+            break
+        dump_tables.remove("triggers.sql")
+        for table in dump_tables:
+            if table not in player_data:
+                update_sql_from_db(table[:-4])
+        print_green(f"Replaced values in all .sql files with data from the database.")
+
+
+def tasks_menu():
+    present_menu(
+        "Maintenance Tasks",
+        {
+            "1": ["Update git submodules", update_submodules],
+            "2": ["Set zone IP addresses", set_external_ip_dialog],
+            "3": ["Server-wide announcement", announce_menu],
+            "4": ["Show table sizes (min 2MB)", print_db_tables_by_size],
+            # "5": [
+            #     "Offload historical auction data to auction_house_history",
+            #     offload_to_auction_house_history,
+            # ],
+            "c": [
+                "Configure and launch multi-process server (by zonetype, 7 processes)",
+                configure_and_launch_multi_process_by_zonetype,
+            ],
+            "d": ["Dump Table", dump_table],
+            "a": ["Dump All Tables", dump_all_tables],
+            "q": ["Quit to main menu", NOOP],
+        },
+    )
+
+
 def main():
     try:
         global mysql_bin, exe
-        if fetch_credentials() == False:
-            return
+        fetch_credentials()
         fetch_configs()
         # Check MySQL path/availability
         if not os.path.exists(mysql_bin + "mysql" + exe):
@@ -853,29 +1259,44 @@ def main():
                     fetch_errors(result)
                     setup_db()
                 return
+            elif "dump" == arg1:
+                if len(sys.argv) > 2:
+                    dump_table(str(sys.argv[2]), True)
+                else:
+                    dump_all_tables(True)
+                return
         # Main loop
         print(colorama.ansi.clear_screen())
         connect()
-        actions = {
-            "1": update_db,
-            "2": run_all_migrations,
-            "3": backup_db,
-            "4": restore_backup,
-            "r": reset_db,
-            "t": tasks,
-            "s": settings,
-        }
         while cur:
-            menu()
-            selection = input("> ").lower()
-            print(colorama.ansi.clear_screen())
-            if "q" == selection:
-                close()
-            if "e" == selection and express_enabled:
-                express_update()
-                continue
-            use_tool = actions.get(selection, bad_selection)
-            use_tool()
+            colorama.init(autoreset=True)
+            title = (
+                "LandSandBoat Database Management Tool\n" + "Connected to " + database
+            )
+            if db_ver:
+                title = title + "\n" + str("#" + db_ver)
+
+            options = {
+                "1": ["Update DB", update_db],
+                "2": ["Check migrations", run_all_migrations],
+                "3": ["Backup", backup_db],
+                "4": ["Restore/Import", restore_backup],
+                "r": ["Reset DB", reset_db],
+                "t": ["Maintenance Tasks", tasks_menu],
+                "s": ["Settings", settings_menu],
+                "q": ["Quit", close],
+            }
+
+            if express_enabled:
+                append = {
+                    "e": [
+                        "Express Update " + "(#" + release_version + ")",
+                        express_update,
+                    ],
+                }
+                options = {**append, **options}
+
+            present_menu(title, options)
     except KeyboardInterrupt:
         try:
             sys.exit(0)

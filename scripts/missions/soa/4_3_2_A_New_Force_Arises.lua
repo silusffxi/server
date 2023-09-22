@@ -9,13 +9,8 @@
 -- Effigy of Sealing 2 : !pos -424 -178 -376 274
 -- _7mw                : !pos 197 58 -20 274
 -----------------------------------
-require('scripts/globals/missions')
-require('scripts/globals/titles')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
-local kamihrID        = require('scripts/zones/Mount_Kamihr/IDs')
-local outerRaKaznarID = require('scripts/zones/Outer_RaKaznar/IDs')
+local kamihrID        = zones[xi.zone.MOUNT_KAMIHR]
+local outerRaKaznarID = zones[xi.zone.OUTER_RAKAZNAR]
 -----------------------------------
 
 local mission = Mission:new(xi.mission.log_id.SOA, xi.mission.id.soa.A_NEW_FORCE_ARISES)
@@ -48,11 +43,11 @@ end
 local function scaleMessage(player)
     local numScales = getNumScales(player)
 
-     player:messageSpecial(outerRaKaznarID.text.HAVE_FOUND_SCALES, numScales)
+    player:messageSpecial(outerRaKaznarID.text.HAVE_FOUND_SCALES, numScales)
 
-     if numScales == 3 then
-        player:messageSpecial(outerRaKaznarID.text.SOOTHING_SIGH_FALLS)
-     end
+    if numScales == 3 then
+    player:messageSpecial(outerRaKaznarID.text.SOOTHING_SIGH_FALLS)
+    end
 end
 
 mission.sections =

@@ -2,11 +2,12 @@
 -- func: !addallatma
 -- desc: Adds all Atma Key Items to the given player.
 -----------------------------------
+local commandObj = {}
 
-cmdprops =
+commandObj.cmdprops =
 {
     permission = 1,
-    parameters = "s"
+    parameters = 's'
 }
 
 local keyIds =
@@ -31,12 +32,12 @@ local keyIds =
     1699,
 }
 
-function error(player, msg)
+local function error(player, msg)
     player:PrintToPlayer(msg)
-    player:PrintToPlayer("!addallatma (player)")
+    player:PrintToPlayer('!addallatma (player)')
 end
 
-function onTrigger(player, target)
+commandObj.onTrigger = function(player, target)
     -- validate target
     local targ
     if target == nil then
@@ -44,14 +45,17 @@ function onTrigger(player, target)
     else
         targ = GetPlayerByName(target)
         if targ == nil then
-            error(player, string.format("Player named '%s' not found!", target))
+            error(player, string.format('Player named "%s" not found!', target))
             return
         end
     end
 
     -- add maps
-    for _, v in ipairs( keyIds ) do
+    for _, v in ipairs(keyIds) do
         targ:addKeyItem(v)
     end
-    player:PrintToPlayer(string.format("%s now has all Abyssea Atma.", targ:getName()))
+
+    player:PrintToPlayer(string.format('%s now has all Abyssea Atma.', targ:getName()))
 end
+
+return commandObj

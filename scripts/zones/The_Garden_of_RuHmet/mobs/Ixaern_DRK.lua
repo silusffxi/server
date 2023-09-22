@@ -6,18 +6,14 @@
 -- !pos -560 5.00 239 35
 -- !pos -600 5.00 440 35
 -----------------------------------
-local ID = require("scripts/zones/The_Garden_of_RuHmet/IDs")
-mixins = { require("scripts/mixins/job_special") }
-require("scripts/globals/mobskills")
-require("scripts/globals/settings")
-require("scripts/globals/status")
+mixins = { require('scripts/mixins/job_special') }
 -----------------------------------
 local entity = {}
 
 entity.onMobInitialize = function(IxAernDrkMob)
-    IxAernDrkMob:addListener("DEATH", "AERN_DEATH", function(mob, killer)
-        local timesReraised = mob:getLocalVar("AERN_RERAISES")
-        if(math.random (1, 10) < 10) then
+    IxAernDrkMob:addListener('DEATH', 'AERN_DEATH', function(mob, killer)
+        local timesReraised = mob:getLocalVar('AERN_RERAISES')
+        if math.random (1, 10) < 10 then
             -- reraise
             local target = mob:getTarget()
             if
@@ -26,6 +22,7 @@ entity.onMobInitialize = function(IxAernDrkMob)
             then
                 target = target:getMaster()
             end
+
             mob:setMobMod(xi.mobMod.NO_DROPS, 1)
             mob:timer(9000, function(mobArg)
                 mobArg:setHP(mob:getMaxHP())
@@ -50,13 +47,15 @@ entity.onMobInitialize = function(IxAernDrkMob)
                             elseif i == partySize then --if all checks fail just disengage
                                 mobArg:disengage()
                             end
+
                             i = i + 1
                         end
                     else
                         mobArg:disengage()
                     end
                 end
-                mobArg:triggerListener("AERN_RERAISE", mobArg, timesReraised)
+
+                mobArg:triggerListener('AERN_RERAISE', mobArg, timesReraised)
             end)
         else
             -- death
@@ -66,8 +65,8 @@ entity.onMobInitialize = function(IxAernDrkMob)
         end
     end)
 
-    IxAernDrkMob:addListener("AERN_RERAISE", "IX_DRK_RERAISE", function(mob, timesReraised)
-        mob:setLocalVar("AERN_RERAISES", timesReraised + 1)
+    IxAernDrkMob:addListener('AERN_RERAISE', 'IX_DRK_RERAISE', function(mob, timesReraised)
+        mob:setLocalVar('AERN_RERAISES', timesReraised + 1)
         mob:timer(5000, function(mobArg)
             mobArg:setAnimationSub(1)
         end)
@@ -85,9 +84,9 @@ entity.onMobSpawn = function(mob)
                 hpp = math.random(90, 95),
                 cooldown = 120,
                 endCode = function(mobArg)
-                    mobArg:SetMagicCastingEnabled(false)
+                    mobArg:setMagicCastingEnabled(false)
                     mobArg:timer(30000, function(mobTimerArg)
-                        mobTimerArg:SetMagicCastingEnabled(true)
+                        mobTimerArg:setMagicCastingEnabled(true)
                     end)
                 end,
             }
@@ -99,7 +98,7 @@ entity.onMobDeath = function(mob, player, optParams)
 end
 
 entity.onMobDespawn = function(mob)
-    mob:setLocalVar("AERN_RERAISES", 0)
+    mob:setLocalVar('AERN_RERAISES', 0)
 end
 
 return entity

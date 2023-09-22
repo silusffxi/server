@@ -2,16 +2,13 @@
 -- behind_the_sluices
 -- !instance 25900
 -----------------------------------
-require('scripts/globals/instance')
-require('scripts/globals/keyitems')
-require('scripts/globals/allyassist')
-local ID = require('scripts/zones/Rala_Waterways_U/IDs')
+local ID = zones[xi.zone.RALA_WATERWAYS_U]
 -----------------------------------
 local instanceObject = {}
 
 instanceObject.registryRequirements = function(player)
     return player:hasKeyItem(xi.ki.WATERWAY_FACILITY_CRANK) and
-           player:getMissionStatus(xi.mission.log_id.SOA) == 2
+        player:getMissionStatus(xi.mission.log_id.SOA) == 2
 end
 
 instanceObject.entryRequirements = function(player)
@@ -52,7 +49,6 @@ instanceObject.onInstanceCreated = function(instance)
     -- This causes skillchains to happen on players so take care.
     -- Alter Ego Trusts may be summoned in this fight.
     -- At 119 this fight is not a problem with 5 Trusts.
-
 end
 
 instanceObject.onInstanceCreatedCallback = function(player, instance)
@@ -127,7 +123,7 @@ instanceObject.onInstanceTimeUpdate = function(instance, elapsed)
                 end,
             }
         else -- Arciela
-            if instance:getLocalVar("FIGHT_STARTED") == 1 then
+            if instance:getLocalVar('FIGHT_STARTED') == 1 then
                 xi.ally.startAssist(mob, xi.ally.ASSIST_RANDOM)
             end
         end

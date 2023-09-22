@@ -1,11 +1,6 @@
 -----------------------------------
 -- Paladin Job Utilities
 -----------------------------------
-require('scripts/globals/items')
-require("scripts/globals/settings")
-require("scripts/globals/status")
-require("scripts/globals/msg")
------------------------------------
 xi = xi or {}
 xi.job_utils = xi.job_utils or {}
 xi.job_utils.paladin = xi.job_utils.paladin or {}
@@ -82,7 +77,7 @@ xi.job_utils.paladin.useCover = function(player, target, ability)
     local duration     = baseDuration + bonusTime + player:getMerit(xi.merit.COVER_EFFECT_LENGTH) + player:getMod(xi.mod.COVER_DURATION) + jpValue
 
     player:addStatusEffect(xi.effect.COVER, player:getMod(xi.mod.COVER_TO_MP), 0, duration)
-    player:setLocalVar("COVER_ABILITY_TARGET", target:getID())
+    player:setLocalVar('COVER_ABILITY_TARGET', target:getID())
     ability:setMsg(xi.msg.basic.COVER_SUCCESS)
 end
 
@@ -160,16 +155,16 @@ xi.job_utils.paladin.useRampart = function(player, target, ability)
 end
 
 xi.job_utils.paladin.useSentinel = function(player, target, ability)
-   -- Whether feet have to be equipped before using ability, or if they can be swapped in
-   -- is disputed.  Source used: http://wiki.bluegartr.com/bg/Sentinel
+    -- Whether feet have to be equipped before using ability, or if they can be swapped in
+    -- is disputed.  Source used: http://wiki.bluegartr.com/bg/Sentinel
     local power       = (90 + player:getMod(xi.mod.SENTINEL_EFFECT)) * 100
     local guardian    = player:getMerit(xi.merit.GUARDIAN)
     local enhGuardian = player:getMod(xi.mod.ENHANCES_GUARDIAN) * (guardian / 19)
     local jpValue     = player:getJobPointLevel(xi.jp.SENTINEL_EFFECT)
     local duration    = 30 + enhGuardian
 
-   -- Sent as positive power because UINTs, man.
-   player:addStatusEffect(xi.effect.SENTINEL, power, 3, duration, 0, guardian + jpValue)
+    -- Sent as positive power because UINTs, man.
+    player:addStatusEffect(xi.effect.SENTINEL, power, 3, duration, 0, guardian + jpValue)
 end
 
 xi.job_utils.paladin.useSepulcher = function(player, target, ability)

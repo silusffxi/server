@@ -4,9 +4,7 @@
 -- Type: Smithing Synthesis Image Support
 -- !pos -182.300 10.999 146.650 231
 -----------------------------------
-require("scripts/globals/status")
-require("scripts/globals/crafting")
-local ID = require("scripts/zones/Northern_San_dOria/IDs")
+local ID = zones[xi.zone.NORTHERN_SAN_DORIA]
 -----------------------------------
 local entity = {}
 
@@ -14,12 +12,11 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-    local guildMember = xi.crafting.isGuildMember(player, 8)
     local skillCap = xi.crafting.getCraftSkillCap(player, xi.skill.SMITHING)
     local skillLevel = player:getSkillLevel(xi.skill.SMITHING)
 
-    if guildMember == 1 then
-        if player:hasStatusEffect(xi.effect.SMITHING_IMAGERY) == false then
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.SMITHING) then
+        if not player:hasStatusEffect(xi.effect.SMITHING_IMAGERY) then
             player:startEvent(630, skillCap, skillLevel, 2, 205, player:getGil(), 0, 90, 0)
         else
             player:startEvent(630, skillCap, skillLevel, 2, 205, player:getGil(), 7054, 90, 0)
@@ -29,10 +26,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 630 and option == 1 then
         player:messageSpecial(ID.text.IMAGE_SUPPORT, 0, 2, 2)
         player:addStatusEffect(xi.effect.SMITHING_IMAGERY, 1, 0, 120)

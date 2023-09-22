@@ -1,10 +1,7 @@
 -----------------------------------
 -- Zone: Gusgen Mines (196)
 -----------------------------------
-local ID = require('scripts/zones/Gusgen_Mines/IDs')
-require('scripts/globals/conquest')
-require('scripts/globals/treasure')
-require('scripts/globals/helm')
+local ID = zones[xi.zone.GUSGEN_MINES]
 -----------------------------------
 local zoneObject = {}
 
@@ -16,24 +13,28 @@ end
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
-        player:setPos(100.007, -61.63, -237.441, 187)
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
+        player:setPos(45, -67, -340, 250)
     end
 
     return cs
 end
 
-zoneObject.onConquestUpdate = function(zone, updatetype)
-    xi.conq.onConquestUpdate(zone, updatetype)
+zoneObject.onConquestUpdate = function(zone, updatetype, influence, owner, ranking, isConquestAlliance)
+    xi.conq.onConquestUpdate(zone, updatetype, influence, owner, ranking, isConquestAlliance)
 end
 
-zoneObject.onRegionEnter = function(player, region)
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
 end
 
 zoneObject.onGameHour = function(zone)
@@ -53,7 +54,7 @@ zoneObject.onGameHour = function(zone)
 
         for i = 1, 6 do
             ghost = ghostTable[i].nm
-            if not ghost:isSpawned() and os.time() > ghost:getLocalVar("cooldown") then
+            if not ghost:isSpawned() and os.time() > ghost:getLocalVar('cooldown') then
                 SpawnMob(ghostTable[i].id)
             end
         end

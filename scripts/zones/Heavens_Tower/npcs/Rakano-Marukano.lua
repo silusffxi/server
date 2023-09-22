@@ -4,8 +4,6 @@
 -- Type: Immigration NPC
 -- !pos 6.174 -1 32.285 242
 -----------------------------------
-require("scripts/globals/conquest")
------------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
@@ -18,7 +16,10 @@ entity.onTrigger = function(player, npc)
 
     if oldNation == newNation then
         player:startEvent(10004, 0, 0, 0, oldNation)
-    elseif player:getCurrentMission(oldNation) ~= xi.mission.id.nation.NONE or player:getMissionStatus(player:getNation()) ~= 0 then
+    elseif
+        player:getCurrentMission(oldNation) ~= xi.mission.id.nation.NONE or
+        player:getMissionStatus(player:getNation()) ~= 0
+    then
         player:startEvent(10003, 0, 0, 0, newNation)
     elseif oldNation ~= newNation then
         local hasGil = 0
@@ -40,10 +41,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 10002 and option == 1 then
         local newNation = xi.nation.WINDURST
         local rank = GetNationRank(newNation)

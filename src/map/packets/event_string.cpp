@@ -23,7 +23,7 @@
 
 #include <cstring>
 
-#include "../entities/charentity.h"
+#include "entities/charentity.h"
 #include "event_string.h"
 
 CEventStringPacket::CEventStringPacket(CCharEntity* PChar, EventInfo* eventInfo)
@@ -52,9 +52,19 @@ CEventStringPacket::CEventStringPacket(CCharEntity* PChar, EventInfo* eventInfo)
     ref<uint16>(0x08) = npcLocalID;
     ref<uint16>(0x0A) = PChar->getZone();
     ref<uint16>(0x0C) = eventInfo->eventId;
-    ref<uint8>(0x0E)  = 8; // camera "jumps" behind the character if < 8 params
 
-    for (auto stringPair : eventInfo->strings)
+    if (eventInfo->eventFlags != 0)
+    {
+        // Note that only the first 16 bits are supported by this packet type.
+        ref<uint16>(0x0E) = eventInfo->eventFlags & 0xFFFF;
+    }
+    else
+    {
+        // Backwards compatibility
+        ref<uint16>(0x0E) = 8; // if the parameter is less than 8, then after the event is over the camera will "jump" behind the character
+    }
+
+    for (auto const& stringPair : eventInfo->strings)
     {
         memcpy(data + 0x10 + 0x10 * stringPair.first, stringPair.second.c_str(), stringPair.second.size());
     }

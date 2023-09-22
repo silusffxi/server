@@ -6,21 +6,14 @@
 -- Chateau d'Oraguille, Curilla,     !pos 27 0.1 0.1 233
 -- Northern San'doria,  Pagisalis,   !pos 97 0.1 113 231
 -----------------------------------
-require('scripts/globals/items')
-require("scripts/globals/keyitems")
-require('scripts/globals/npc_util')
-require('scripts/globals/quests')
-require("scripts/globals/status")
-require('scripts/globals/interaction/quest')
------------------------------------
-local crawlersID = require("scripts/zones/Crawlers_Nest/IDs")
+local crawlersID = zones[xi.zone.CRAWLERS_NEST]
 -----------------------------------
 
 local quest = Quest:new(xi.quest.log_id.SANDORIA, xi.quest.id.sandoria.ENVELOPED_IN_DARKNESS)
 
 quest.reward =
 {
-    item     = xi.items.WARLOCKS_BOOTS,
+    item     = xi.item.WARLOCKS_BOOTS,
     fame     = 30,
     fameArea = xi.quest.fame_area.SANDORIA,
 }
@@ -118,7 +111,10 @@ quest.sections =
                                 return quest:messageSpecial(crawlersID.text.EQUIPMENT_NOT_PURIFIED) -- Purification incomplete.
                             end
                         else
-                            if player:hasKeyItem(xi.ki.CRAWLER_BLOOD) and player:hasKeyItem(xi.ki.OLD_BOOTS) then
+                            if
+                                player:hasKeyItem(xi.ki.CRAWLER_BLOOD) and
+                                player:hasKeyItem(xi.ki.OLD_BOOTS)
+                            then
                                 return quest:progressEvent(4) -- Loose key items. Start boot purification.
                             else
                                 return quest:messageSpecial(crawlersID.text.SOMEONE_HAS_BEEN_DIGGING_HERE)
@@ -140,7 +136,7 @@ quest.sections =
                         player:delKeyItem(xi.ki.OLD_BOOTS)
 
                         -- Message when acepting to bury boots and blood.
-                        player:messageSpecial(ID.text.YOU_BURY_THE, xi.ki.OLD_BOOTS, xi.ki.CRAWLER_BLOOD)
+                        player:messageSpecial(crawlersID.text.YOU_BURY_THE, xi.ki.OLD_BOOTS, xi.ki.CRAWLER_BLOOD)
                     end
                 end,
 
@@ -155,7 +151,7 @@ quest.sections =
             ['Pagisalis'] =
             {
                 onTrade = function(player, npc, trade)
-                    if npcUtil.tradeHasExactly(trade, xi.items.SQUARE_OF_VELVET_CLOTH) then
+                    if npcUtil.tradeHasExactly(trade, xi.item.SQUARE_OF_VELVET_CLOTH) then
                         return quest:progressEvent(37)
                     end
                 end,

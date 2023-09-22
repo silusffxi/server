@@ -1,19 +1,20 @@
 -----------------------------------
 -- Zone: Abyssea - Altepa
 -----------------------------------
-local ID = require('scripts/zones/Abyssea-Altepa/IDs')
-require('scripts/globals/abyssea')
------------------------------------
 local zoneObject = {}
 
 zoneObject.onInitialize = function(zone)
-    zone:registerRegion(1, 375, -10, 259, 460, 10, 420)
+    zone:registerTriggerArea(1, 375, -10, 259, 460, 10, 420)
 end
 
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
         player:setPos(435, 0, 320, 136)
     end
 
@@ -26,28 +27,29 @@ zoneObject.afterZoneIn = function(player)
     xi.abyssea.afterZoneIn(player)
 end
 
-zoneObject.onRegionEnter = function(player, region)
-    switch (region:GetRegionID()): caseof
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
+    switch (triggerArea:GetTriggerAreaID()): caseof
     {
         [1] = function()
-            xi.abyssea.onWardRegionEnter(player)
+            xi.abyssea.onWardTriggerAreaEnter(player)
         end,
     }
 end
 
-zoneObject.onRegionLeave = function(player, region)
-    switch (region:GetRegionID()): caseof
+zoneObject.onTriggerAreaLeave = function(player, triggerArea)
+    switch (triggerArea:GetTriggerAreaID()): caseof
     {
         [1] = function()
-            xi.abyssea.onWardRegionLeave(player)
+            xi.abyssea.onWardTriggerAreaLeave(player)
         end,
     }
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
+    xi.abyssea.onEventFinish(player, csid, option, npc)
 end
 
 return zoneObject

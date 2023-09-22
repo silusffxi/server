@@ -1,4 +1,4 @@
-/*
+﻿/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -22,6 +22,7 @@
 #include "command_handler.h"
 
 #include "autotranslate.h"
+#include "common/async.h"
 #include "common/utils.h"
 #include "entities/charentity.h"
 #include "lua/lua_baseentity.h"
@@ -37,11 +38,6 @@
 
 // NOTE: Auto-translate blocks are dealt with as a string of bytes
 using CommandArg = std::variant<bool, int, double, std::string>;
-
-namespace
-{
-    std::unordered_map<std::string, std::string> registeredCommands;
-}
 
 // The below section is a proposed rewrite of commandhandler.
 // It can automatically deduce the types of strings that are passed to it.
@@ -150,25 +146,12 @@ std::vector<CommandArg> splitToArgs(std::string const& input)
 }
 */
 
-int32 CCommandHandler::call(sol::state& lua, CCharEntity* PChar, const int8* commandline)
+int32 CCommandHandler::call(sol::state& lua, CCharEntity* PChar, const std::string& commandline)
 {
     TracyZoneScoped;
 
-    // On the way out of this function, clear the globals it leaves behind
-    // clang-format off
-    ScopeGuard guard([&]()
-    {
-        lua.set("onTrigger", sol::lua_nil);
-        lua.set("cmdprops", sol::lua_nil);
-    });
-    // clang-format on
-
-    // Before we begin, make sure these globals are cleared (just in case!)
-    lua.set("onTrigger", sol::lua_nil);
-    lua.set("cmdprops", sol::lua_nil);
-
     // TODO: stringstreams are slow. Replace with something else.
-    std::istringstream clstream((char*)commandline);
+    std::istringstream clstream(commandline);
     std::string        cmdname;
 
     clstream >> cmdname;
@@ -186,48 +169,42 @@ int32 CCommandHandler::call(sol::state& lua, CCharEntity* PChar, const int8* com
     }
 
     TracyZoneString(PChar->name);
-    TracyZoneIString(commandline);
+    TracyZoneString(commandline);
 
-    auto filename = fmt::format("./scripts/commands/{}.lua", cmdname.c_str());
-    if (auto maybeRegisteredCommand = registeredCommands.find(cmdname);
-        maybeRegisteredCommand != registeredCommands.end())
+    auto commandObj = lua["xi"]["commands"][cmdname];
+    if (!commandObj.valid())
     {
-        filename = (*maybeRegisteredCommand).second;
-    }
-
-    auto loadResult = lua.safe_script_file(filename);
-    if (!loadResult.valid())
-    {
-        sol::error err = loadResult;
-        ShowError("cmdhandler::call: (%s): %s", cmdname.c_str(), err.what());
+        ShowError("cmdhandler::call: Function does not exist (%s)", cmdname);
         return -1;
     }
 
-    if (!lua["cmdprops"].valid())
+    sol::table commandTable = commandObj;
+
+    if (!commandTable["cmdprops"].valid())
     {
-        ShowError("cmdhandler::call: (%s): Undefined 'cmdprops' table", cmdname.c_str());
+        ShowError("cmdhandler::call: (%s): Undefined 'cmdprops' table", cmdname);
         return -1;
     }
 
-    if (!lua["cmdprops"]["permission"].valid())
+    if (!commandTable["cmdprops"]["permission"].valid())
     {
-        ShowError("cmdhandler::call: (%s): Invalid or no permission field set in cmdprops", cmdname.c_str());
+        ShowError("cmdhandler::call: (%s): Invalid or no permission field set in cmdprops", cmdname);
         return -1;
     }
 
-    if (!lua["cmdprops"]["parameters"].valid())
+    if (!commandTable["cmdprops"]["parameters"].valid())
     {
-        ShowError("cmdhandler::call: (%s): Invalid or no parameters field set in cmdprops", cmdname.c_str());
+        ShowError("cmdhandler::call: (%s): Invalid or no parameters field set in cmdprops", cmdname);
         return -1;
     }
 
-    int8        permission = lua["cmdprops"]["permission"];
-    std::string parameters = lua["cmdprops"]["parameters"];
+    int8        permission = commandTable["cmdprops"]["permission"];
+    std::string parameters = commandTable["cmdprops"]["parameters"];
 
     // Ensure this user can use this command
     if (permission > PChar->m_GMlevel)
     {
-        ShowWarning("cmdhandler::call: Character %s attempting to use higher permission command %s", PChar->name.c_str(), cmdname.c_str());
+        ShowWarning("cmdhandler::call: Character %s attempting to use higher permission command %s", PChar->name, cmdname);
         return -1;
     }
     else
@@ -235,32 +212,30 @@ int32 CCommandHandler::call(sol::state& lua, CCharEntity* PChar, const int8* com
         if (settings::get<uint8>("map.AUDIT_GM_CMD") <= permission && settings::get<uint8>("map.AUDIT_GM_CMD") > 0)
         {
             std::string name       = PChar->name;
-            std::string cmdlinestr = autotranslate::replaceBytes((const char*)commandline);
+            std::string cmdlinestr = autotranslate::replaceBytes(commandline);
 
-            char escaped_name[16 * 2 + 1];
-            sql->EscapeString(escaped_name, name.c_str());
-
-            std::string escaped_gm_cmd;
-            escaped_gm_cmd.reserve(cmdname.length() * 2 + 1);
-            sql->EscapeString(escaped_gm_cmd.data(), (char*)cmdname.c_str());
-
-            std::string escaped_full_string;
-            escaped_full_string.reserve(strlen((char*)commandline) * 2 + 1);
-            sql->EscapeString(escaped_full_string.data(), (char*)cmdlinestr.c_str());
-
-            const char* fmtQuery = "INSERT into audit_gm (date_time,gm_name,command,full_string) VALUES(current_timestamp(),'%s','%s','%s')";
-            if (sql->Query(fmtQuery, escaped_name, escaped_gm_cmd.data(), escaped_full_string.data()) == SQL_ERROR)
+            // clang-format off
+            Async::getInstance()->query([name, cmdname, cmdlinestr](SqlConnection* _sql)
             {
-                ShowError("cmdhandler::call: Failed to log GM command.");
-            }
+                auto escaped_name        = _sql->EscapeString(name);
+                auto escaped_cmdname     = _sql->EscapeString(cmdname);
+                auto escaped_commandline = _sql->EscapeString(cmdlinestr);
+
+                const char* fmtQuery = "INSERT into audit_gm (date_time,gm_name,command,full_string) VALUES(current_timestamp(),'%s','%s','%s')";
+                if (_sql->Query(fmtQuery, escaped_name.data(), escaped_cmdname.data(), escaped_commandline.data()) == SQL_ERROR)
+                {
+                    ShowError("cmdhandler::call: Failed to log GM command.");
+                }
+            });
+            // clang-format on
         }
     }
 
     // Ensure the onTrigger function exists for this command
-    auto onTrigger = lua.get<sol::function>("onTrigger");
+    sol::function onTrigger = commandTable["onTrigger"];
     if (!onTrigger.valid())
     {
-        ShowError("cmdhandler::call: (%s) missing onTrigger function", cmdname.c_str());
+        ShowError("cmdhandler::call: (%s) missing onTrigger function", cmdname);
         return -1;
     }
 
@@ -268,22 +243,21 @@ int32 CCommandHandler::call(sol::state& lua, CCharEntity* PChar, const int8* com
 
     // Prepare parameters
     std::string param;
-    std::string cmdparameters(parameters);
-    auto        parameter = cmdparameters.cbegin();
+    auto        parameter = parameters.cbegin();
 
     // Parse and push parameters based on symbol string
-    while (parameter != cmdparameters.cend() && !clstream.eof())
+    while (parameter != parameters.cend() && !clstream.eof())
     {
         clstream >> param;
 
         switch (*parameter)
         {
             case 'b':
-                args.emplace_back(std::string((const char*)commandline));
+                args.emplace_back(std::string(commandline));
                 break;
 
             case 's':
-                if (cmdparameters.size() == 1)
+                if (parameters.size() == 1)
                 {
                     std::string str = param;
                     while (!clstream.eof())
@@ -323,11 +297,4 @@ int32 CCommandHandler::call(sol::state& lua, CCharEntity* PChar, const int8* com
     }
 
     return 0;
-}
-
-void CCommandHandler::registerCommand(std::string const& commandName, std::string const& path)
-{
-    registeredCommands[commandName] = path;
-    lua["cmdprops"]                 = sol::lua_nil;
-    lua["onTrigger"]                = sol::lua_nil;
 }

@@ -1,17 +1,19 @@
 -- Uses a mixture of mob and player WS formulas
-require("scripts/globals/weaponskills")
-require("scripts/globals/magicburst")
-require("scripts/globals/status")
-require("scripts/globals/utils")
-require("scripts/globals/magic")
-require("scripts/globals/msg")
+require('scripts/globals/weaponskills')
+require('scripts/globals/magicburst')
+require('scripts/globals/utils')
+require('scripts/globals/magic')
+
+-- TODO: Consolidate this with weaponskills
+xi = xi or {}
+xi.autows = xi.autows or {}
 
 local function getAutoHitRate(attacker, defender, capHitRate, bonus, melee)
     local acc = (melee and attacker:getACC() or attacker:getRACC()) + (bonus or 0)
     local eva = defender:getEVA()
 
     local levelbonus = 0
-    if (attacker:getMainLvl() > defender:getMainLvl()) then
+    if attacker:getMainLvl() > defender:getMainLvl() then
         levelbonus = 2 * (attacker:getMainLvl() - defender:getMainLvl())
     end
 
@@ -19,9 +21,10 @@ local function getAutoHitRate(attacker, defender, capHitRate, bonus, melee)
     hitrate = hitrate / 100
 
     -- Applying hitrate caps
-    if (capHitRate) then -- this isn't capped for when acc varies with tp, as more penalties are due
+    if capHitRate then -- this isn't capped for when acc varies with tp, as more penalties are due
         hitrate = utils.clamp(hitrate, 0.2, 0.95)
     end
+
     return hitrate
 end
 
@@ -163,13 +166,13 @@ local function getMeleeCRatio(attacker, defender, params, ignoredDef)
 end
 
 -- params contains: ftp100, ftp200, ftp300, str_wsc, dex_wsc, vit_wsc, int_wsc, mnd_wsc, canCrit, crit100, crit200, crit300, acc100, acc200, acc300, ignoresDef, ignore100, ignore200, ignore300, atkmulti, kick, accBonus, weaponType, weaponDamage
-function doAutoPhysicalWeaponskill(attacker, target, wsID, tp, primaryMsg, action, taChar, wsParams, skill)
-
+xi.autows.doAutoPhysicalWeaponskill = function(attacker, target, wsID, tp, primaryMsg, action, taChar, wsParams, skill)
     -- Determine cratio and ccritratio
     local ignoredDef = 0
-    if (wsParams.ignoresDef == not nil and wsParams.ignoresDef == true) then
-        ignoredDef = calculatedIgnoredDef(tp, target:getStat(xi.mod.DEF), wsParams.ignored100, wsParams.ignored200, wsParams.ignored300)
+    if wsParams.ignoresDef then
+        ignoredDef = xi.weaponskills.calculatedIgnoredDef(tp, target:getStat(xi.mod.DEF), wsParams.ignored100, wsParams.ignored200, wsParams.ignored300)
     end
+
     local cratio, ccritratio = getMeleeCRatio(attacker, target, wsParams, ignoredDef)
 
     -- Set up conditions and wsParams used for calculating weaponskill damage
@@ -187,7 +190,7 @@ function doAutoPhysicalWeaponskill(attacker, target, wsID, tp, primaryMsg, actio
     }
 
     local calcParams = {}
-    calcParams.weaponDamage = getMeleeDmg(attacker, attack.weaponType, wsParams.kick)
+    calcParams.weaponDamage = xi.weaponskills.getMeleeDmg(attacker, attack.weaponType, wsParams.kick)
     calcParams.attackInfo = attack
     calcParams.fSTR = utils.clamp(attacker:getStat(xi.mod.STR) - target:getStat(xi.mod.VIT), -10, 10)
     calcParams.cratio = cratio
@@ -195,7 +198,7 @@ function doAutoPhysicalWeaponskill(attacker, target, wsID, tp, primaryMsg, actio
     calcParams.accStat = attacker:getACC()
     calcParams.melee = true
     calcParams.mustMiss = target:hasStatusEffect(xi.effect.PERFECT_DODGE) or
-                          (target:hasStatusEffect(xi.effect.ALL_MISS) and not wsParams.hitsHigh)
+        (target:hasStatusEffect(xi.effect.ALL_MISS) and not wsParams.hitsHigh)
 
     calcParams.sneakApplicable = false
     calcParams.taChar = taChar
@@ -216,20 +219,23 @@ function doAutoPhysicalWeaponskill(attacker, target, wsID, tp, primaryMsg, actio
     calcParams.skillType = attack.weaponType
 
     -- Send our wsParams off to calculate our raw WS damage, hits landed, and shadows absorbed
-    calcParams = calculateRawWSDmg(attacker, target, wsID, tp, action, wsParams, calcParams)
+    calcParams = xi.weaponskills.calculateRawWSDmg(attacker, target, wsID, tp, action, wsParams, calcParams)
     local finaldmg = calcParams.finalDmg
-
-    -- Delete statuses that may have been spent by the WS
-    attacker:delStatusEffectSilent(xi.effect.BUILDING_FLOURISH)
 
     -- Calculate reductions
     if not wsParams.formless then
         --finaldmg = target:physicalDmgTaken(finaldmg, attack.damageType)
-        if (attack.weaponType == xi.skill.HAND_TO_HAND) then
+        if attack.weaponType == xi.skill.HAND_TO_HAND then
             finaldmg = finaldmg * target:getMod(xi.mod.HTH_SDT) / 1000
-        elseif (attack.weaponType == xi.skill.DAGGER or attack.weaponType == xi.skill.POLEARM) then
+        elseif
+            attack.weaponType == xi.skill.DAGGER or
+            attack.weaponType == xi.skill.POLEARM
+        then
             finaldmg = finaldmg * target:getMod(xi.mod.PIERCE_SDT) / 1000
-        elseif (attack.weaponType == xi.skill.CLUB or attack.weaponType == xi.skill.STAFF) then
+        elseif
+            attack.weaponType == xi.skill.CLUB or
+            attack.weaponType == xi.skill.STAFF
+        then
             finaldmg = finaldmg * target:getMod(xi.mod.IMPACT_SDT) / 1000
         else
             finaldmg = finaldmg * target:getMod(xi.mod.SLASH_SDT) / 1000
@@ -240,7 +246,7 @@ function doAutoPhysicalWeaponskill(attacker, target, wsID, tp, primaryMsg, actio
     calcParams.finalDmg = finaldmg
 
     if calcParams.tpHitsLanded + calcParams.extraHitsLanded > 0 then
-        finaldmg = takeWeaponskillDamage(target, attacker, wsParams, primaryMsg, attack, calcParams, action)
+        finaldmg = xi.weaponskills.takeWeaponskillDamage(target, attacker, wsParams, primaryMsg, attack, calcParams, action)
     else
         skill:setMsg(xi.msg.basic.SKILL_MISS)
     end
@@ -249,12 +255,13 @@ function doAutoPhysicalWeaponskill(attacker, target, wsID, tp, primaryMsg, actio
 end
 
 -- params contains: ftp100, ftp200, ftp300, str_wsc, dex_wsc, vit_wsc, int_wsc, mnd_wsc, canCrit, crit100, crit200, crit300, acc100, acc200, acc300, ignoresDef, ignore100, ignore200, ignore300, atkmulti, accBonus, weaponDamage
-function doAutoRangedWeaponskill(attacker, target, wsID, wsParams, tp, primaryMsg, skill, action)
+xi.autows.doAutoRangedWeaponskill = function(attacker, target, wsID, wsParams, tp, primaryMsg, skill, action)
     -- Determine cratio and ccritratio
     local ignoredDef = 0
-    if (wsParams.ignoresDef == not nil and wsParams.ignoresDef == true) then
-        ignoredDef = calculatedIgnoredDef(tp, target:getStat(xi.mod.DEF), wsParams.ignored100, wsParams.ignored200, wsParams.ignored300)
+    if wsParams.ignoresDef then
+        ignoredDef = xi.weaponskills.calculatedIgnoredDef(tp, target:getStat(xi.mod.DEF), wsParams.ignored100, wsParams.ignored200, wsParams.ignored300)
     end
+
     local cratio, ccritratio = getRangedCRatio(attacker, target, wsParams, ignoredDef)
 
     -- Set up conditions and wsParams used for calculating weaponskill damage
@@ -300,7 +307,7 @@ function doAutoRangedWeaponskill(attacker, target, wsID, wsParams, tp, primaryMs
     calcParams.skillType = attack.weaponType
 
     -- Send our params off to calculate our raw WS damage, hits landed, and shadows absorbed
-    calcParams = calculateRawWSDmg(attacker, target, wsID, tp, action, wsParams, calcParams)
+    calcParams = xi.weaponskills.calculateRawWSDmg(attacker, target, wsID, tp, action, wsParams, calcParams)
     local finaldmg = calcParams.finalDmg
 
     -- Calculate reductions
@@ -311,7 +318,7 @@ function doAutoRangedWeaponskill(attacker, target, wsID, wsParams, tp, primaryMs
     calcParams.finalDmg = finaldmg
 
     if calcParams.tpHitsLanded + calcParams.extraHitsLanded > 0 then
-        finaldmg = takeWeaponskillDamage(target, attacker, wsParams, primaryMsg, attack, calcParams, action)
+        finaldmg = xi.weaponskills.takeWeaponskillDamage(target, attacker, wsParams, primaryMsg, attack, calcParams, action)
     else
         skill:setMsg(xi.msg.basic.SKILL_MISS)
     end

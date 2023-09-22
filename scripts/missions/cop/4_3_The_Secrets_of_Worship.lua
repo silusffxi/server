@@ -9,12 +9,7 @@
 -- Wooden Gate : !pos 45.500 -1.500 10.000 28
 -- ???         : !pos 102.669 -3.111 127.279 28 (Varies in area)
 -----------------------------------
-require('scripts/globals/interaction/mission')
-require('scripts/globals/missions')
-require('scripts/globals/titles')
-require('scripts/globals/zone')
------------------------------------
-local sacrariumID = require("scripts/zones/Sacrarium/IDs")
+local sacrariumID = zones[xi.zone.SACRARIUM]
 -----------------------------------
 
 local mission = Mission:new(xi.mission.log_id.COP, xi.mission.id.cop.THE_SECRETS_OF_WORSHIP)
@@ -32,6 +27,7 @@ local profQmOnTrigger = function(player, npc)
         for i = 1, 2 do
             GetMobByID(sacrariumID.mob.OLD_PROFESSOR_MARISELLE + i):setSpawn(npc:getXPos(), npc:getYPos(), npc:getZPos(), 0)
         end
+
         npcUtil.popFromQM(player, npc, sacrariumID.mob.OLD_PROFESSOR_MARISELLE, { radius = 2, hide = 0 })
         return mission:messageSpecial(sacrariumID.text.EVIL_PRESENCE)
     elseif

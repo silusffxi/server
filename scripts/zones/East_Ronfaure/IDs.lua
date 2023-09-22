@@ -1,10 +1,6 @@
 -----------------------------------
 -- Area: East_Ronfaure
 -----------------------------------
-require("scripts/globals/zone")
-require("scripts/globals/keyitems")
------------------------------------
-
 zones = zones or {}
 
 zones[xi.zone.EAST_RONFAURE] =
@@ -28,6 +24,13 @@ zones[xi.zone.EAST_RONFAURE] =
         FIND_NOTHING                  = 7256,  -- You dig and you dig, but find nothing.
         RAYOCHINDOT_DIALOG            = 7421,  -- If you are outmatched, run to the city as quickly as you can.
         CROTEILLARD_DIALOG            = 7422,  -- Sorry, no chatting while I'm on duty.
+        ANDELAIN_DIALOG               = 7423,  -- My name is Andelain. As part of my devotions, I come here each day to pray.
+        MAY_ONLY_EAT                  = 7424,  -- During this time, I may eat only three <item> a day for nourishment. No more, no less. And no other food may I eat.
+        THANKS_TO_GODDESS             = 7425,  -- Thanks be to the Goddess in her benevolence!
+        CANNOT_ACCEPT_ALMS            = 7426,  -- I am currently undergoing devotions, and as such, am not allowed to take alms from those on the road. I am sorry, but I cannot accept this.
+        GATES_OF_PARADISE_OPEN        = 7427,  -- May the Gates of Paradise open to all...
+        APPRECIATE_OFFER_DECLINE      = 7428,  -- I appreciate your offer, but I only need one <item>. Thank you for your kindness.
+        THE_WATER_SPARKLES            = 7446,  -- The water sparkles in the light.
         CHEVAL_RIVER_WATER            = 7447,  -- You fill your waterskin with water from the river. You now have <item>.
         BLESSED_WATERSKIN             = 7466,  -- To get water, trade the waterskin you hold with the river.
         LOGGING_IS_POSSIBLE_HERE      = 7497,  -- Logging is possible here if you have <item>.
@@ -38,17 +41,17 @@ zones[xi.zone.EAST_RONFAURE] =
         NO_COMBINATION                = 7516,  -- You were unable to enter a combination.
         VOIDWALKER_DESPAWN            = 7547,  -- The monster fades before your eyes, a look of disappointment on its face.
         UNITY_WANTED_BATTLE_INTERACT  = 7578,  -- Those who have accepted % must pay # Unity accolades to participate. The content for this Wanted battle is #. [Ready to begin?/You do not have the appropriate object set, so your rewards will be limited.]
-        REGIME_REGISTERED             = 9888,  -- New training regime registered!
-        VOIDWALKER_NO_MOB             = 11061, -- The <keyitem> quivers ever so slightly, but emits no light. There seem to be no monsters in the area.
-        VOIDWALKER_MOB_TOO_FAR        = 11062, -- The <keyitem> quivers ever so slightly and emits a faint light. There seem to be no monsters in the immediate vicinity.
-        VOIDWALKER_MOB_HINT           = 11063, -- The <keyitem> resonates [feebly/softly/solidly/strongly/very strongly/furiously], sending a radiant beam of light lancing towards a spot roughly <number> [yalm/yalms] [east/southeast/south/southwest/west/northwest/north/northeast] of here.
-        VOIDWALKER_SPAWN_MOB          = 11064, -- A monster materializes out of nowhere!
-        VOIDWALKER_UPGRADE_KI_1       = 11066, -- The <keyitem> takes on a slightly deeper hue and becomes <keyitem>!
-        VOIDWALKER_UPGRADE_KI_2       = 11067, -- The <keyitem> takes on a deeper, richer hue and becomes <keyitem>!
-        VOIDWALKER_BREAK_KI           = 11068, -- The <keyitem> shatters into tiny fragments.
-        VOIDWALKER_OBTAIN_KI          = 11069, -- Obtained key item: <keyitem>!
-        LEARNS_SPELL                  = 11959, -- <name> learns <spell>!
-        UNCANNY_SENSATION             = 11961, -- You are assaulted by an uncanny sensation.
+        REGIME_REGISTERED             = 9876,  -- New training regime registered!
+        VOIDWALKER_NO_MOB             = 11049, -- The <keyitem> quivers ever so slightly, but emits no light. There seem to be no monsters in the area.
+        VOIDWALKER_MOB_TOO_FAR        = 11050, -- The <keyitem> quivers ever so slightly and emits a faint light. There seem to be no monsters in the immediate vicinity.
+        VOIDWALKER_MOB_HINT           = 11051, -- The <keyitem> resonates [feebly/softly/solidly/strongly/very strongly/furiously], sending a radiant beam of light lancing towards a spot roughly <number> [yalm/yalms] [east/southeast/south/southwest/west/northwest/north/northeast] of here.
+        VOIDWALKER_SPAWN_MOB          = 11052, -- A monster materializes out of nowhere!
+        VOIDWALKER_UPGRADE_KI_1       = 11054, -- The <keyitem> takes on a slightly deeper hue and becomes <keyitem>!
+        VOIDWALKER_UPGRADE_KI_2       = 11055, -- The <keyitem> takes on a deeper, richer hue and becomes <keyitem>!
+        VOIDWALKER_BREAK_KI           = 11056, -- The <keyitem> shatters into tiny fragments.
+        VOIDWALKER_OBTAIN_KI          = 11057, -- Obtained key item: <keyitem>!
+        LEARNS_SPELL                  = 11947, -- <name> learns <spell>!
+        UNCANNY_SENSATION             = 11949, -- You are assaulted by an uncanny sensation.
     },
 
     mob =
@@ -103,15 +106,7 @@ zones[xi.zone.EAST_RONFAURE] =
 
     npc =
     {
-        LOGGING =
-        {
-            17191530,
-            17191531,
-            17191532,
-            17191533,
-            17191534,
-            17191535,
-        },
+        LOGGING = GetTableOfIDs('Logging_Point'),
     },
 }
 

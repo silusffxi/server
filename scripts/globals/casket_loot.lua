@@ -4,9 +4,6 @@
 -- this is because some zones have high mobs and low mobs,
 -- and the drops are level dependant.
 -----------------------------------
-
-require("scripts/globals/zone")
-
 xi = xi or {}
 xi.casket_loot = xi.casket_loot or {}
 
@@ -90,7 +87,7 @@ xi.casket_loot.casketItems =
         {
         -----------------------------------
         -- { weight, itemId }
-         -----------------------------------
+        -----------------------------------
             { 1060, 4112 }, -- Potion
             {  790, 4113 }, -- Potion +1
             {  425, 4114 }, -- Potion +2
@@ -112,7 +109,7 @@ xi.casket_loot.casketItems =
         {
         -----------------------------------
         -- { weight, itemId }
-         -----------------------------------
+        -----------------------------------
             { 1700,   505 }, -- Sheepskin
             { 4500,   640 }, -- Copper Ore
             { 2500,   641 }, -- Tin Ore

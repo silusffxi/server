@@ -3,9 +3,6 @@
 --  NPC: Shomo Pochachilo
 -- !pos 28.369 -0.199 30.061 231
 -----------------------------------
-require("scripts/globals/settings")
-require("scripts/globals/quests")
------------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
@@ -13,20 +10,19 @@ end
 
 entity.onTrigger = function(player, npc)
     -- TODO: Verify this, and move to quest script
-    local quest_FatherAndSon = player:getQuestStatus(xi.quest.log_id.SANDORIA, xi.quest.id.sandoria.FATHER_AND_SON)
+    local questFatherAndSon = player:getQuestStatus(xi.quest.log_id.SANDORIA, xi.quest.id.sandoria.FATHER_AND_SON)
 
-    if quest_FatherAndSon == QUEST_COMPLETED then
+    if questFatherAndSon == QUEST_COMPLETED then
         player:startEvent(696)
     else
         player:startEvent(675)
     end
-
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

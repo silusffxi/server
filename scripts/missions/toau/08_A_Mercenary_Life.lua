@@ -4,13 +4,6 @@
 -----------------------------------
 -- !addmission 4 7
 -----------------------------------
-require('scripts/globals/items')
-require('scripts/globals/missions')
-require('scripts/globals/npc_util')
-require('scripts/globals/keyitems')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.TOAU, xi.mission.id.toau.A_MERCENARY_LIFE)
 
@@ -42,9 +35,9 @@ mission.sections =
         {
             -- NOTE: Check Naja after zoning
 
-            onRegionEnter =
+            onTriggerAreaEnter =
             {
-                [3] = function(player, region)
+                [3] = function(player, triggerArea)
                     return mission:progressEvent(3050, 3, 3, 3, 3, 3, 3, 3, 3, 0)
                 end,
             },

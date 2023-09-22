@@ -4,18 +4,12 @@
 -- Fochacha, Whitegate , !pos 3 -1 -10.781 50
 -- Qutiba, Whitegate, !pos 92 -7.5 -130 50
 -----------------------------------
-require('scripts/globals/items')
-require('scripts/globals/quests')
-require('scripts/globals/npc_util')
-require('scripts/globals/zone')
-require('scripts/globals/interaction/quest')
------------------------------------
 
 local quest = Quest:new(xi.quest.log_id.AHT_URHGAN, xi.quest.id.ahtUrhgan.VANISHING_ACT)
 
 quest.reward =
 {
-    item = xi.items.IMPERIAL_SILVER_PIECE
+    item = xi.item.IMPERIAL_SILVER_PIECE
 }
 
 quest.sections =
@@ -39,6 +33,7 @@ quest.sections =
                     end
                 end,
             },
+
             ['Ulamaal'] =
             {
                 onTrigger = function(player, npc)
@@ -49,6 +44,7 @@ quest.sections =
                     end
                 end,
             },
+
             ['Fochacha'] =
             {
                 onTrigger = function(player, npc)
@@ -86,6 +82,7 @@ quest.sections =
                     end
                 end,
             },
+
             ['Ulamaal'] =
             {
                 onTrigger = function(player, npc)
@@ -96,6 +93,7 @@ quest.sections =
                     end
                 end,
             },
+
             ['Qutiba'] =
             {
                 onTrigger = function(player, npc)
@@ -107,9 +105,9 @@ quest.sections =
                 end,
             },
 
-            onRegionEnter =
+            onTriggerAreaEnter =
             {
-                [2] = function(player, region)
+                [2] = function(player, triggerArea)
                     if quest:getVar(player, 'Prog') == 1 then
                         return quest:progressEvent(44)
                     end
@@ -121,16 +119,18 @@ quest.sections =
                 [43] = function(player, csid, option, npc)
                     quest:setVar(player, 'Prog', 1)
                 end,
+
                 [44] = function(player, csid, option, npc)
                     player:setPos(-80, -6, 122, 5)
                     quest:setVar(player, 'Prog', 2)
                 end,
+
                 [45] = function(player, csid, option, npc)
                     if quest:complete(player) then
                         player:needToZone(true)
                         player:delKeyItem(xi.ki.RAINBOW_BERRY)
                         -- Set variable for 'A taste of Honey' ToAU quest.
-                        player:setVar("Quest[6][12]Stage", getMidnight())
+                        player:setVar('Quest[6][12]Stage', getMidnight())
                     end
                 end,
             },
@@ -142,11 +142,11 @@ quest.sections =
             {
                 onTrade = function(player, npc, trade)
                     if
-                        npcUtil.tradeHasExactly(trade, xi.items.SICKLE) and
+                        npcUtil.tradeHasExactly(trade, xi.item.SICKLE) and
                         quest:getVar(player, 'Prog') == 2 and
                         not player:hasKeyItem(xi.ki.RAINBOW_BERRY)
                     then
-                        player:setLocalVar("questItem", 1)
+                        player:setLocalVar('questItem', 1)
                         return quest:progressEvent(507, { [0] = 4294966520 })
                     end
                 end,
@@ -155,9 +155,9 @@ quest.sections =
             onEventFinish =
             {
                 [507] = function(player, csid, option, npc)
-                    if player:getLocalVar("questItem") == 1 then
+                    if player:getLocalVar('questItem') == 1 then
                         npcUtil.giveKeyItem(player, xi.ki.RAINBOW_BERRY)
-                        player:setLocalVar("questItem", 0)
+                        player:setLocalVar('questItem', 0)
                     end
                 end,
             },
@@ -175,10 +175,11 @@ quest.sections =
             ['Ulamaal'] =
             {
                 onTrigger = function(player, npc)
-                    player:setLocalVar("recipe", 58)
+                    player:setLocalVar('recipe', 58)
                     return quest:event(58)
                 end,
             },
+
             ['Fochacha'] =
             {
                 onTrigger = function(player, npc)
@@ -189,22 +190,18 @@ quest.sections =
             onEventUpdate =
             {
                 [58] = function(player, csid, option, npc)
-                    if player:getLocalVar("recipe") == 58 then
-                        player:setLocalVar("recipe", 1)
+                    if player:getLocalVar('recipe') == 58 then
+                        player:setLocalVar('recipe', 1)
                         player:updateEvent(5579, 1, 255, 0, 67108863, 5976652, 4095, 0)
-                        return
-                    elseif player:getLocalVar("recipe") == 1 then
-                        player:setLocalVar("recipe", 2)
+                    elseif player:getLocalVar('recipe') == 1 then
+                        player:setLocalVar('recipe', 2)
                         player:updateEvent(4096, 615, 936, 1523, 67108863, 5976652, 4, 0)
-                        return
-                    elseif player:getLocalVar("recipe") == 2 then
-                        player:setLocalVar("recipe", 3)
+                    elseif player:getLocalVar('recipe') == 2 then
+                        player:setLocalVar('recipe', 3)
                         player:updateEvent(2214, 2237, 4509, 5568)
-                       return
-                    elseif player:getLocalVar("recipe") == 3 then
-                        player:setLocalVar("recipe", 0)
+                    elseif player:getLocalVar('recipe') == 3 then
+                        player:setLocalVar('recipe', 0)
                         player:updateEvent(5575)
-                       return
                     end
                 end,
             },

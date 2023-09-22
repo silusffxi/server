@@ -5,9 +5,6 @@
 -- !addmission 12 9
 -- Levil : !pos -87.204 3.350 12.655 256
 -----------------------------------
-require('scripts/globals/missions')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
 require('scripts/missions/soa/helpers')
 -----------------------------------
 
@@ -23,7 +20,7 @@ mission.sections =
     {
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId and
-                   xi.soa.helpers.imprimaturGate(player, 20)
+                xi.soa.helpers.imprimaturGate(player, 20)
         end,
 
         [xi.zone.WESTERN_ADOULIN] =

@@ -2,19 +2,11 @@
 -- Area: Dynamis - Xarcabard
 --  Mob: Animated Gun
 -----------------------------------
-require("scripts/globals/status")
-local ID = require("scripts/zones/Dynamis-Xarcabard/IDs")
+local ID = zones[xi.zone.DYNAMIS_XARCABARD]
 -----------------------------------
 local entity = {}
 
 entity.onMobEngaged = function(mob, target)
-
-    if (mob:getAnimationSub() == 3) then
-        SetDropRate(105, 1585, 1000)
-    else
-        SetDropRate(105, 1585, 0)
-    end
-
     target:showText(mob, ID.text.ANIMATED_GUN_DIALOG)
 end
 
@@ -28,6 +20,7 @@ end
 
 entity.onMobDeath = function(mob, player, optParams)
     player:showText(mob, ID.text.ANIMATED_GUN_DIALOG + 1)
+    xi.magian.onMobDeath(mob, player, optParams, set{ 3124 })
 end
 
 return entity

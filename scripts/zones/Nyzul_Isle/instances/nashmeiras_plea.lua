@@ -2,9 +2,7 @@
 -- TOAU-44: Nashmeira's Plea
 -- !instance 7701
 -----------------------------------
-local ID = require("scripts/zones/Nyzul_Isle/IDs")
-require("scripts/globals/instance")
-require("scripts/globals/keyitems")
+local ID = zones[xi.zone.NYZUL_ISLE]
 -----------------------------------
 local instanceObject = {}
 
@@ -65,6 +63,7 @@ instanceObject.onInstanceProgressUpdate = function(instance, progress)
             v:startEvent(203)
             v:setPos(entryPos.x, entryPos.y, entryPos.z, entryPos.rot)
         end
+
         SpawnMob(ID.mob[59].ALEXANDER, instance)
 
     elseif progress == 5 then
@@ -73,7 +72,6 @@ instanceObject.onInstanceProgressUpdate = function(instance, progress)
 end
 
 instanceObject.onInstanceComplete = function(instance)
-
     local chars = instance:getChars()
 
     for i, v in pairs(chars) do
@@ -88,7 +86,7 @@ instanceObject.onInstanceComplete = function(instance)
     end
 end
 
-instanceObject.onEventFinish = function(player, csid, option)
+instanceObject.onEventFinish = function(player, csid, option, npc)
 end
 
 return instanceObject

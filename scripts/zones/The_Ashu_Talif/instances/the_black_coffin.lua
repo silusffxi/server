@@ -2,20 +2,18 @@
 -- TOAU-15: The Black Coffin
 -- !instance 6000
 -----------------------------------
-require("scripts/globals/instance")
-require("scripts/globals/keyitems")
-local ID = require("scripts/zones/The_Ashu_Talif/IDs")
+local ID = zones[xi.zone.THE_ASHU_TALIF]
 -----------------------------------
 local instanceObject = {}
 
 instanceObject.registryRequirements = function(player)
     return player:getCurrentMission(xi.mission.log_id.TOAU) == xi.mission.id.toau.THE_BLACK_COFFIN and
-           player:hasKeyItem(xi.ki.EPHRAMADIAN_GOLD_COIN)
+        player:hasKeyItem(xi.ki.EPHRAMADIAN_GOLD_COIN)
 end
 
 instanceObject.entryRequirements = function(player)
     return player:getCurrentMission(xi.mission.log_id.TOAU) >= xi.mission.id.toau.THE_BLACK_COFFIN and
-           player:hasKeyItem(xi.ki.EPHRAMADIAN_GOLD_COIN)
+        player:hasKeyItem(xi.ki.EPHRAMADIAN_GOLD_COIN)
 end
 
 instanceObject.onInstanceCreated = function(instance)
@@ -54,14 +52,14 @@ instanceObject.onInstanceProgressUpdate = function(instance, progress)
         for i, mob in pairs(ID.mob[2]) do
             SpawnMob(mob, instance)
         end
-    elseif progress >= 10 and instance:completed() == false then
+    elseif progress >= 10 and not instance:completed() then
         local ally = GetMobByID(ID.mob.GESSHO, instance)
         if ally:isAlive() then
-            ally:setLocalVar("ready", 2)
+            ally:setLocalVar('ready', 2)
         end
+
         instance:complete()
     end
-
 end
 
 instanceObject.onInstanceComplete = function(instance)

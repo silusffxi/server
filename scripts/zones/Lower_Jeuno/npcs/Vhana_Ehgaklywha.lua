@@ -4,10 +4,8 @@
 -- Lights lamps in Lower Jeuno if nobody accepts Community Service by 1AM.
 -- !pos -122.853 0.000 -195.605 245
 -----------------------------------
-local lowerJeunoGlobal = require("scripts/zones/Lower_Jeuno/globals")
-local ID = require("scripts/zones/Lower_Jeuno/IDs")
-require("scripts/globals/pathfind")
-require("scripts/globals/status")
+local lowerJeunoGlobal = require('scripts/zones/Lower_Jeuno/globals')
+local ID = zones[xi.zone.LOWER_JEUNO]
 -----------------------------------
 local entity = {}
 
@@ -23,7 +21,6 @@ end
 
 entity.onPath = function(npc)
     if npc:isFollowingPath() then
-
         -- if vasha reaches the end node, halt and disappear her.
         -- do this at node 48 instead of 49 because isFollowingPath will be false by 49.
         -- if we remove the isFollowingPath check, this code runs every second forever.
@@ -47,15 +44,14 @@ entity.onPath = function(npc)
                     break
                 end
             end
-
         end
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

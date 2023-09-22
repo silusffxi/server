@@ -6,12 +6,6 @@
 -- !addmission 12 0
 -- Darcia : !pos -36 -1 -15 245
 -----------------------------------
-require('scripts/globals/missions')
-require('scripts/globals/settings')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/utils')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.SOA, xi.mission.id.soa.RUMORS_FROM_THE_WEST)
 
@@ -24,6 +18,16 @@ mission.sections =
 {
     {
         check = function(player, currentMission, missionStatus, vars)
+            -- Hack: don't display until first character intro CS is shown.
+            -- This is needed because this mission sorts before hidden quests and gets checked first
+
+            if
+                xi.settings.main.NEW_CHARACTER_CUTSCENE == 1 and
+                player:getCharVar('HQuest[newCharacterCS]notSeen') == 1
+            then
+                return false
+            end
+
             return currentMission == mission.missionId and xi.settings.main.ENABLE_SOA == 1
         end,
 

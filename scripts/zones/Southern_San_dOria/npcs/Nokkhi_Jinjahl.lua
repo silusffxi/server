@@ -4,7 +4,7 @@
 -- Type: Travelling Merchant NPC / NPC Quiver Maker / San d'Oria 1st Place
 -- !pos 23 2 -13 230
 -----------------------------------
-local ID = require("scripts/zones/Southern_San_dOria/IDs")
+local ID = zones[xi.zone.SOUTHERN_SAN_DORIA]
 -----------------------------------
 local entity = {}
 
@@ -94,15 +94,16 @@ entity.onTrade = function(player, npc, trade)
     -- check for invalid items
     for i = 0, 8, 1 do
         local itemId = trade:getItemId(i)
-        if (itemId > 0 and itemId ~= 948) then
+        if itemId > 0 and itemId ~= 948 then
             local validSlot = false
             for k, v in pairs(ammoList) do
-                if (v[1] == itemId) then
+                if v[1] == itemId then
                     local itemQty = trade:getSlotQty(i)
-                    if (itemQty % 99 ~= 0) then
+                    if itemQty % 99 ~= 0 then
                         player:messageSpecial(ID.text.NOKKHI_BAD_COUNT)
                         return
                     end
+
                     local stacks = itemQty / 99
                     carnationsNeeded = carnationsNeeded + stacks
                     giveToPlayer[#giveToPlayer + 1] = { v[2], stacks }
@@ -110,7 +111,8 @@ entity.onTrade = function(player, npc, trade)
                     break
                 end
             end
-            if (not validSlot) then
+
+            if not validSlot then
                 player:messageSpecial(ID.text.NOKKHI_BAD_ITEM)
                 return
             end
@@ -118,13 +120,16 @@ entity.onTrade = function(player, npc, trade)
     end
 
     -- check for correct number of carnations
-    if (carnationsNeeded == 0 or trade:getItemQty(948) ~= carnationsNeeded) then
+    if
+        carnationsNeeded == 0 or
+        trade:getItemQty(xi.item.CARNATION) ~= carnationsNeeded
+    then
         player:messageSpecial(ID.text.NOKKHI_BAD_COUNT)
         return
     end
 
     -- check for enough inventory space
-    if (player:getFreeSlotsCount() < carnationsNeeded) then
+    if player:getFreeSlotsCount() < carnationsNeeded then
         player:messageSpecial(ID.text.ITEM_CANNOT_BE_OBTAINED, giveToPlayer[1][1])
         return
     end
@@ -135,6 +140,7 @@ entity.onTrade = function(player, npc, trade)
         player:addItem(v[1], v[2])
         player:messageSpecial(ID.text.ITEM_OBTAINED, v[1])
     end
+
     player:tradeComplete()
 end
 
@@ -142,10 +148,10 @@ entity.onTrigger = function(player, npc)
     player:startEvent(683, npc:getID())
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

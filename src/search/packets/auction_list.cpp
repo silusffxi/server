@@ -23,7 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 #include "common/logging.h"
 #include "common/socket.h"
 
-#include "../data_loader.h"
+#include "data_loader.h"
 
 #include "auction_list.h"
 
@@ -37,11 +37,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/
  ************************************************************************/
 
 CAHItemsListPacket::CAHItemsListPacket(uint16 offset)
-: m_count(0)
-, m_offset(offset)
+: m_offset(offset)
 {
-    memset(m_PData, 0, sizeof(m_PData));
-
     ref<uint8>(m_PData, (0x0B)) = 0x95; // packet type
 }
 
@@ -58,7 +55,8 @@ void CAHItemsListPacket::AddItem(ahItem* item)
     ref<uint32>(m_PData, (0x18 + 0x0A * m_count) + 6) = item->StackAmount;
 
     m_count++;
-    delete item;
+
+    destroy(item);
 }
 
 /************************************************************************

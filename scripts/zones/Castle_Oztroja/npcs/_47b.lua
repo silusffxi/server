@@ -4,9 +4,7 @@
 -- Notes: Opens Trap Door (_47a) or Brass Door (_470)
 -- !pos 22.310 -1.087 -14.320 151
 -----------------------------------
-local ID = require("scripts/zones/Castle_Oztroja/IDs")
-require("scripts/globals/missions")
-require("scripts/globals/status")
+local ID = zones[xi.zone.CASTLE_OZTROJA]
 -----------------------------------
 local entity = {}
 
@@ -18,19 +16,28 @@ entity.onTrigger = function(player, npc)
 
     if xPos < 21.6 and xPos > 18 and zPos > -15.6 and zPos < -12.4 then
         if VanadielDayOfTheYear() % 2 == 1 then
-            if brassDoor:getAnimation() == xi.anim.CLOSE_DOOR and npc:getAnimation() == xi.anim.CLOSE_DOOR then
+            if
+                brassDoor:getAnimation() == xi.anim.CLOSE_DOOR and
+                npc:getAnimation() == xi.anim.CLOSE_DOOR
+            then
                 npc:openDoor(8)
                 -- wait 1 second delay goes here
                 brassDoor:openDoor(6)
             end
         else
-            if trapDoor:getAnimation() == xi.anim.CLOSE_DOOR and npc:getAnimation() == xi.anim.CLOSE_DOOR then
+            if
+                trapDoor:getAnimation() == xi.anim.CLOSE_DOOR and
+                npc:getAnimation() == xi.anim.CLOSE_DOOR
+            then
                 npc:openDoor(8)
                 -- wait 1 second delay goes here
                 trapDoor:openDoor(6)
             end
 
-            if player:getCurrentMission(xi.mission.log_id.WINDURST) == xi.mission.id.windurst.TO_EACH_HIS_OWN_RIGHT and player:getMissionStatus(player:getNation()) == 3 then
+            if
+                player:getCurrentMission(xi.mission.log_id.WINDURST) == xi.mission.id.windurst.TO_EACH_HIS_OWN_RIGHT and
+                player:getMissionStatus(player:getNation()) == 3
+            then
                 player:startEvent(43)
             end
         end
@@ -39,10 +46,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

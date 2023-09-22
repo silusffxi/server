@@ -1,8 +1,6 @@
 -----------------------------------
 -- Zone: Cirdas Caverns
 -----------------------------------
-local ID = require('scripts/zones/Cirdas_Caverns/IDs')
------------------------------------
 local zoneObject = {}
 
 zoneObject.onInitialize = function(zone)
@@ -12,7 +10,7 @@ zoneObject.onInitialize = function(zone)
     local locusZ = 60.000
     local distance = 15
 
-    zone:registerRegion(1,
+    zone:registerTriggerArea(1,
         locusX - distance, locusY - distance, locusZ - distance,
         locusX + distance, locusY + distance, locusZ + distance)
 end
@@ -20,20 +18,24 @@ end
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
         player:setPos(-180, 30, -314, 203)
     end
 
     return cs
 end
 
-zoneObject.onRegionEnter = function(player, region)
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
 end
 
 return zoneObject

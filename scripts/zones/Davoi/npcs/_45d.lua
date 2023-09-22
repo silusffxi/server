@@ -4,8 +4,7 @@
 -- Used In Quest: Whence Blows the Wind
 -- !pos 181 0.1 -218 149
 -----------------------------------
-require("scripts/globals/keyitems")
-local ID = require("scripts/zones/Davoi/IDs")
+local ID = zones[xi.zone.DAVOI]
 -----------------------------------
 local entity = {}
 
@@ -20,7 +19,7 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
 entity.onEventFinish = function(player, csid, option, npc)

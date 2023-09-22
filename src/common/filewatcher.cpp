@@ -1,5 +1,6 @@
 ﻿#include "filewatcher.h"
 
+#include "logging.h"
 #include "tracy.h"
 
 #include <filesystem>
@@ -7,7 +8,7 @@
 #include <memory>
 #include <string>
 
-Filewatcher::Filewatcher(std::vector<std::string> paths)
+Filewatcher::Filewatcher(std::vector<std::string> const& paths)
 #ifdef USE_GENERIC_FILEWATCHER
 : fileWatcher(std::make_unique<efsw::FileWatcher>(true))
 #else

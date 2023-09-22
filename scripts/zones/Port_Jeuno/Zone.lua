@@ -1,13 +1,6 @@
 -----------------------------------
 -- Zone: Port_Jeuno (246)
 -----------------------------------
-local ID = require('scripts/zones/Port_Jeuno/IDs')
-require('scripts/globals/conquest')
-require('scripts/globals/settings')
-require('scripts/globals/chocobo')
-require('scripts/globals/quests')
-require('scripts/globals/zone')
------------------------------------
 local zoneObject = {}
 
 zoneObject.onInitialize = function(zone)
@@ -16,19 +9,23 @@ end
 
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
-    local month = tonumber(os.date("%m"))
-    local day = tonumber(os.date("%d"))
+    local month = tonumber(os.date('%m'))
+    local day = tonumber(os.date('%d'))
 
     -- Retail start/end dates vary, set to Dec 5th through Jan 5th.
     if
         (month == 12 and day >= 5) or
         (month == 1 and day <= 5)
     then
-        player:ChangeMusic(0, 239)
-        player:ChangeMusic(1, 239)
+        player:changeMusic(0, 239)
+        player:changeMusic(1, 239)
     end
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
         if prevZone == xi.zone.SAN_DORIA_JEUNO_AIRSHIP then
             cs = 10018
             player:setPos(-87.000, 12.000, 116.000, 128)
@@ -50,8 +47,8 @@ zoneObject.onZoneIn = function(player, prevZone)
     return cs
 end
 
-zoneObject.onConquestUpdate = function(zone, updatetype)
-    xi.conq.onConquestUpdate(zone, updatetype)
+zoneObject.onConquestUpdate = function(zone, updatetype, influence, owner, ranking, isConquestAlliance)
+    xi.conq.onConquestUpdate(zone, updatetype, influence, owner, ranking, isConquestAlliance)
 end
 
 zoneObject.onTransportEvent = function(player, transport)
@@ -66,10 +63,10 @@ zoneObject.onTransportEvent = function(player, transport)
     end
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
     if csid == 10010 then
         player:setPos(0, 0, 0, 0, 223)
     elseif csid == 10011 then

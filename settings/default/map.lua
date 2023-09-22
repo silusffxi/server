@@ -74,6 +74,10 @@ xi.settings.map =
     -- Minimum level at which experience points can be lost
     EXP_LOSS_LEVEL = 31,
 
+    -- Minimum level at which regional influence is lost in conquest when a player dies
+    -- Level 5 and below don't lose influence: http://wiki.ffo.jp/html/498.html
+    MINIMUM_LEVEL_CONQUEST_INFUENCE_LOSS = 6,
+
     -- Enable/disable Level Sync
     LEVEL_SYNC_ENABLE = true,
 
@@ -117,16 +121,16 @@ xi.settings.map =
     -- Use current retail skill up rates and margins (Retail = High Skill-Up rate; Skill-Up when at or under 10 levels above synth recipe level.)
     CRAFT_MODERN_SYSTEM = true,
 
-    -- Craft level limit from witch specialization points beging to count. (Retail = 700; Level 75 era:600)
+    -- Craft level limit from witch specialization points beginning to count. (Retail = 700; Level 75 era:600)
     CRAFT_COMMON_CAP = 700,
 
     -- Amount of points allowed in crafts over the level defined above. Points are shared across all crafting skills. (Retail = 400; All skills can go to max = 3200)
     CRAFT_SPECIALIZATION_POINTS = 400,
 
-    -- Enables fishing. 0 = Disbaled. 1 = Enable. ENABLE AT YOUR OWN RISK.
+    -- Enables fishing. 0 = Disabled. 1 = Enable. ENABLE AT YOUR OWN RISK.
     FISHING_ENABLE = false,
 
-    -- Multipler for fishing skill-up chance. Default = 1.0, very hard.
+    -- Multiplier for fishing skill-up chance. Default = 1.0, very hard.
     FISHING_SKILL_MULTIPLIER = 1.0,
 
     -- Enable/disable skill-ups from bloodpacts
@@ -208,7 +212,7 @@ xi.settings.map =
     BATTLE_CAP_TWEAK = 0,
 
     -- Enable/disable level cap of mission battlefields stored in database.
-    LV_CAP_MISSION_BCNM = 0,
+    LV_CAP_MISSION_BCNM = false,
 
     -- Max allowed merits points players can hold
     -- 10 classic
@@ -220,6 +224,9 @@ xi.settings.map =
 
     -- Prevent players from sending tells to hidden GMs. You will still receive them from other GMs.
     BLOCK_TELL_TO_HIDDEN_GM = false,
+
+    -- Prevent players from performing WS while unengaged using packet injection.
+    PREVENT_UNENGAGED_WS = false,
 
     -- Command Audit [logging] commands with lower permission than this will not be logged.
     -- Zero for no logging at all. Commands given to non GMs are not logged.
@@ -246,10 +253,17 @@ xi.settings.map =
     -- Set to 1 to completely disable auto-jailing offenders
     ANTICHEAT_JAIL_DISABLE = false,
 
-    -- Gobbie Mystery Box settings
-    DAILY_TALLY_AMOUNT = 10,
-    DAILY_TALLY_LIMIT  = 50000,
-
     -- Enable/disable keeping jug pets through zoning
     KEEP_JUGPET_THROUGH_ZONING = false,
+
+    -- Despawn jug pets that have a minimum level below level sync or zone level restriction.
+    -- Such as despawning Courier Carrie in a level 20 cap when their minimum level to summon is 23.
+    -- While the default value of false is retail accurate, there are some balance concerns such as using 1000 needles at low levels from the cactuar pet.
+    DESPAWN_JUGPETS_BELOW_MINIMUM_LEVEL = false,
+
+    -- Send stack traces to the client after caught Lua errors if
+    -- their GM level is the same or higher than this number.
+    -- The max GM level is 5, so setting this to 6 disables it
+    -- for everone. Setting it to 0 enables for everyone.
+    REPORT_LUA_ERRORS_TO_PLAYER_LEVEL = 6,
 }

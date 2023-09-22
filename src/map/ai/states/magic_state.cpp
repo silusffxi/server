@@ -21,19 +21,19 @@
 
 #include "magic_state.h"
 
-#include "../../../common/utils.h"
-#include "../../enmity_container.h"
-#include "../../entities/battleentity.h"
-#include "../../entities/mobentity.h"
-#include "../../job_points.h"
-#include "../../lua/luautils.h"
-#include "../../packets/action.h"
-#include "../../packets/message_basic.h"
-#include "../../spell.h"
-#include "../../status_effect_container.h"
-#include "../../utils/battleutils.h"
-#include "../ai_container.h"
-#include "../states/inactive_state.h"
+#include "ai/ai_container.h"
+#include "ai/states/inactive_state.h"
+#include "common/utils.h"
+#include "enmity_container.h"
+#include "entities/battleentity.h"
+#include "entities/mobentity.h"
+#include "job_points.h"
+#include "lua/luautils.h"
+#include "packets/action.h"
+#include "packets/message_basic.h"
+#include "spell.h"
+#include "status_effect_container.h"
+#include "utils/battleutils.h"
 
 CMagicState::CMagicState(CBattleEntity* PEntity, uint16 targid, SpellID spellid, uint8 flags)
 : CState(PEntity, targid)
@@ -55,7 +55,7 @@ CMagicState::CMagicState(CBattleEntity* PEntity, uint16 targid, SpellID spellid,
         throw CStateInitException(std::move(m_errorMsg));
     }
 
-    if (!CanCastSpell(PTarget))
+    if (!CanCastSpell(PTarget, false))
     {
         throw CStateInitException(std::move(m_errorMsg));
     }
@@ -84,8 +84,10 @@ CMagicState::CMagicState(CBattleEntity* PEntity, uint16 targid, SpellID spellid,
     actionTarget.speceffect = SPECEFFECT::NONE;
     actionTarget.animation  = 0;
     actionTarget.param      = static_cast<uint16>(m_PSpell->getID());
-    actionTarget.messageID  = 327;                                                                                              // starts casting
-    m_PEntity->PAI->EventHandler.triggerListener("MAGIC_START", CLuaBaseEntity(m_PEntity), CLuaSpell(m_PSpell.get()), &action); // TODO: weaponskill lua object
+    actionTarget.messageID  = 327; // starts casting
+
+    // TODO: weaponskill lua object
+    m_PEntity->PAI->EventHandler.triggerListener("MAGIC_START", CLuaBaseEntity(m_PEntity), CLuaSpell(m_PSpell.get()), CLuaAction(&action));
 
     m_PEntity->loc.zone->PushPacket(m_PEntity, CHAR_INRANGE_SELF, new CActionPacket(action));
 }
@@ -99,7 +101,7 @@ bool CMagicState::Update(time_point tick)
 
         action_t action;
 
-        if (!PTarget || m_errorMsg || !CanCastSpell(PTarget) ||
+        if (!PTarget || m_errorMsg || !CanCastSpell(PTarget, true) ||
             (HasMoved() && (m_PEntity->objtype != TYPE_PET || static_cast<CPetEntity*>(m_PEntity)->getPetType() != PET_TYPE::AUTOMATON)))
         {
             m_PEntity->OnCastInterrupted(*this, action, msg, false);
@@ -226,8 +228,8 @@ bool CMagicState::Update(time_point tick)
         else
         {
             m_PEntity->OnCastFinished(*this, action);
-            m_PEntity->PAI->EventHandler.triggerListener("MAGIC_USE", CLuaBaseEntity(m_PEntity), CLuaBaseEntity(PTarget), CLuaSpell(m_PSpell.get()), &action);
-            PTarget->PAI->EventHandler.triggerListener("MAGIC_TAKE", CLuaBaseEntity(PTarget), CLuaBaseEntity(m_PEntity), CLuaSpell(m_PSpell.get()), &action);
+            m_PEntity->PAI->EventHandler.triggerListener("MAGIC_USE", CLuaBaseEntity(m_PEntity), CLuaBaseEntity(PTarget), CLuaSpell(m_PSpell.get()), CLuaAction(&action));
+            PTarget->PAI->EventHandler.triggerListener("MAGIC_TAKE", CLuaBaseEntity(PTarget), CLuaBaseEntity(m_PEntity), CLuaSpell(m_PSpell.get()), CLuaAction(&action));
         }
 
         m_PEntity->loc.zone->PushPacket(m_PEntity, CHAR_INRANGE_SELF, new CActionPacket(action));
@@ -267,7 +269,7 @@ CSpell* CMagicState::GetSpell()
     return m_PSpell.get();
 }
 
-bool CMagicState::CanCastSpell(CBattleEntity* PTarget)
+bool CMagicState::CanCastSpell(CBattleEntity* PTarget, bool isEndOfCast)
 {
     auto ret = m_PEntity->CanUseSpell(GetSpell());
 
@@ -276,16 +278,19 @@ bool CMagicState::CanCastSpell(CBattleEntity* PTarget)
         m_errorMsg = std::make_unique<CMessageBasicPacket>(m_PEntity, m_PEntity, static_cast<uint16>(m_PSpell->getID()), 0, MSGBASIC_CANNOT_CAST_SPELL);
         return ret;
     }
+
     if (!m_PEntity->loc.zone->CanUseMisc(m_PSpell->getZoneMisc()))
     {
         m_errorMsg = std::make_unique<CMessageBasicPacket>(m_PEntity, m_PEntity, static_cast<uint16>(m_PSpell->getID()), 0, MSGBASIC_CANNOT_USE_IN_AREA);
         return false;
     }
+
     if (m_PEntity->StatusEffectContainer->HasStatusEffect({ EFFECT_SILENCE, EFFECT_MUTE }))
     {
         m_errorMsg = std::make_unique<CMessageBasicPacket>(m_PEntity, m_PEntity, static_cast<uint16>(m_PSpell->getID()), 0, MSGBASIC_UNABLE_TO_CAST_SPELLS);
         return false;
     }
+
     if (m_PEntity->StatusEffectContainer->HasStatusEffect(EFFECT_OMERTA))
     {
         int16 power = m_PEntity->StatusEffectContainer->GetStatusEffect(EFFECT_OMERTA)->GetPower();
@@ -295,29 +300,41 @@ bool CMagicState::CanCastSpell(CBattleEntity* PTarget)
             return false;
         }
     }
+
     if (!HasCost())
     {
         return false;
     }
+
     if (!PTarget)
     {
         m_errorMsg = std::make_unique<CMessageBasicPacket>(m_PEntity, m_PEntity, static_cast<uint16>(m_PSpell->getID()), 0, MSGBASIC_CANNOT_ON_THAT_TARG);
         return false;
     }
+
     if (PTarget->IsNameHidden())
     {
         return false;
     }
+
+    if (m_PEntity == PTarget)
+    {
+        // Remaining checks are distance/visibility checks, which aren't needed if target is self.
+        return true;
+    }
+
     if (distance(m_PEntity->loc.p, PTarget->loc.p) > 40)
     {
         m_errorMsg = std::make_unique<CMessageBasicPacket>(m_PEntity, PTarget, static_cast<uint16>(m_PSpell->getID()), 0, MSGBASIC_TOO_FAR_AWAY);
         return false;
     }
+
     if (m_PEntity->objtype == TYPE_PC && distance(m_PEntity->loc.p, PTarget->loc.p) > m_PSpell->getRange())
     {
         m_errorMsg = std::make_unique<CMessageBasicPacket>(m_PEntity, PTarget, static_cast<uint16>(m_PSpell->getID()), 0, MSGBASIC_OUT_OF_RANGE_UNABLE_CAST);
         return false;
     }
+
     if (dynamic_cast<CMobEntity*>(m_PEntity))
     {
         if (distanceSquared(m_PEntity->loc.p, PTarget->loc.p) > square(28.5f))
@@ -325,11 +342,13 @@ bool CMagicState::CanCastSpell(CBattleEntity* PTarget)
             return false;
         }
     }
-    if (!m_PEntity->PAI->TargetFind->canSee(&PTarget->loc.p))
+
+    if (!isEndOfCast && m_PEntity->objtype == TYPE_PC && m_PEntity->loc.zone->CanUseMisc(MISC_LOS_PLAYER_BLOCK) && !m_PEntity->CanSeeTarget(PTarget, false))
     {
         m_errorMsg = std::make_unique<CMessageBasicPacket>(m_PEntity, PTarget, static_cast<uint16>(m_PSpell->getID()), 0, MSGBASIC_CANNOT_PERFORM_ACTION);
         return false;
     }
+
     return true;
 }
 

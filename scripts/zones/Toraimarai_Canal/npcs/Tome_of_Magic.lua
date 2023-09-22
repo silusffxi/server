@@ -1,10 +1,10 @@
 -----------------------------------
 -- Area: Toraimarai Canal
---  NPC: Tome of Magic ( Needed for Mission )
+--  NPC: Tome of Magic (Needed for Mission)
 -- Involved In Windurst Mission 7-1
 -- !zone 169
 -----------------------------------
-local ID = require("scripts/zones/Toraimarai_Canal/IDs")
+local ID = zones[xi.zone.TORAIMARAI_CANAL]
 -----------------------------------
 local entity = {}
 
@@ -19,10 +19,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

@@ -1,8 +1,7 @@
 -----------------------------------
 -- Area: Mount Zhayolm
 --   NM: Fahrafahr the Bloodied
------------------------------------
-require("scripts/globals/hunts")
+-- !pos 38.967 -14.478 115.574 61
 -----------------------------------
 local entity = {}
 

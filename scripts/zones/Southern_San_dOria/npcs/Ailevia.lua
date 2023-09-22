@@ -6,14 +6,14 @@
 -- This NPC participates in Quests and Missions
 -- !pos -8 1 1 230
 -----------------------------------
-local ID = require("scripts/zones/Southern_San_dOria/IDs")
-require("scripts/globals/settings")
------------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
     -- Adventurer coupon
-    if trade:getItemCount() == 1 and trade:hasItemQty(536, 1) then
+    if
+        trade:getItemCount() == 1 and
+        trade:hasItemQty(xi.item.ADVENTURER_COUPON, 1)
+    then
         player:startEvent(655)
     end
 end
@@ -22,14 +22,13 @@ entity.onTrigger = function(player, npc)
     player:startEvent(615) -- i know a thing or 2 about these streets
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 655 then
-        player:addGil(xi.settings.main.GIL_RATE * 50)
         player:tradeComplete()
-        player:messageSpecial(ID.text.GIL_OBTAINED, xi.settings.main.GIL_RATE * 50)
+        npcUtil.giveCurrency(player, 'gil', 50)
     end
 end
 

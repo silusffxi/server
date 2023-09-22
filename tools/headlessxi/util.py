@@ -16,12 +16,12 @@ class util:
     def memcpy(src, src_offset, dst, dst_offset, count):
         try:
             src_bytes = util.to_bytes(src[src_offset:])
-        except:  # lgtm [py/catch-base-exception]
+        except:
             src_bytes = src
 
         try:
             dst_bytes = util.to_bytes(dst[dst_offset:])
-        except:  # lgtm [py/catch-base-exception]
+        except:
             dst_bytes = dst
 
         for idx in range(count):
@@ -34,6 +34,18 @@ class util:
     @staticmethod
     def unpack_uint32(data, offset):
         return struct.unpack_from("<I", data, offset)[0]
+
+    @staticmethod
+    def unpack_string(data, offset, length):
+        string = ""
+        for idx in range(length):
+            string = string + chr(data[offset + idx])
+        return string
+
+    @staticmethod
+    def pack_string(data, offset, input, length):
+        for idx in range(length):
+            data[idx + offset] = ord(input[idx])
 
     @staticmethod
     def pack_16(data):

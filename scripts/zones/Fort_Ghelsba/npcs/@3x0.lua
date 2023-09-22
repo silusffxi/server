@@ -14,8 +14,6 @@
 -- _3x6  winch2 (lever's gear)
 -- ALL THAT FOR ONE PLATFORM.
 -----------------------------------
-require("scripts/globals/status")
------------------------------------
 local entity = {}
 
 entity.onSpawn = function(npc)
@@ -29,7 +27,6 @@ entity.onSpawn = function(npc)
     }
 
     npc:setElevator(elevator.id, elevator.lowerDoor, elevator.upperDoor, elevator.elevator, elevator.reversedAnimations)
-
 end
 
 return entity

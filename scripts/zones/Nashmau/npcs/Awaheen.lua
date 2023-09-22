@@ -2,7 +2,7 @@
 -- Area: Nashmau
 --  NPC: Awaheen
 -----------------------------------
-local ID = require("scripts/zones/Nashmau/IDs")
+local ID = zones[xi.zone.NASHMAU]
 -----------------------------------
 local entity = {}
 
@@ -14,11 +14,18 @@ entity.onTrade = function(player, npc, trade)
     local nbr = 0
     local reward = 0
     if trade:getItemCount() == 1 then
-        if (trade:hasItemQty(2187, 1)) then nbr = 5 ; reward = 2186
-        elseif (trade:hasItemQty(2186, 1)) then nbr = 2 ; reward = 2185
-        elseif (trade:hasItemQty(2185, 1)) then nbr = 5 ; reward = 2184
+        if trade:hasItemQty(xi.item.IMPERIAL_GOLD_PIECE, 1) then
+            nbr = 5
+            reward = xi.item.IMPERIAL_MYTHRIL_PIECE
+        elseif trade:hasItemQty(xi.item.IMPERIAL_MYTHRIL_PIECE, 1) then
+            nbr = 2
+            reward = xi.item.IMPERIAL_SILVER_PIECE
+        elseif trade:hasItemQty(xi.item.IMPERIAL_SILVER_PIECE, 1) then
+            nbr = 5
+            reward = xi.item.IMPERIAL_BRONZE_PIECE
         end
     end
+
     if reward > 0 then
         if player:getFreeSlotsCount() >= 1 then
             player:tradeComplete()
@@ -36,10 +43,10 @@ entity.onTrigger = function(player, npc)
     player:startEvent(240)
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

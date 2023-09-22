@@ -1,12 +1,8 @@
 -----------------------------------
 -- Chains of Promathia Helpers
 -----------------------------------
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
+local hallID = zones[xi.zone.HALL_OF_TRANSFERENCE]
 -----------------------------------
-local hallID = require('scripts/zones/Hall_of_Transference/IDs')
------------------------------------
-
 xi = xi or {}
 xi.cop = xi.cop or {}
 xi.cop.helpers = xi.cop.helpers or {}
@@ -106,7 +102,6 @@ xi.cop.helpers.shatteredTelepointEntry = function(player, csid, option, npc)
 end
 
 xi.cop.helpers.shatteredTelepointSealMemory = function(mission, player, csid, option, npc)
-    print(option)
     if option == 0 then
         local zoneId = player:getZoneID()
 

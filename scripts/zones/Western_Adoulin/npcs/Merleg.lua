@@ -1,14 +1,10 @@
 -----------------------------------
 -- Area: Western Adoulin
 --  NPC: Merleg
--- Type: Standard NPC and Quest Giver
 -- Starts, Involved with, and Finishes Quest: 'A Pioneers Best (Imaginary) Friend'
 -- !pos 34 0 -131 256
 -----------------------------------
-require("scripts/globals/quests")
-require("scripts/globals/keyitems")
-require("scripts/globals/status")
-local ID = require("scripts/zones/Western_Adoulin/IDs")
+local ID = zones[xi.zone.WESTERN_ADOULIN]
 -----------------------------------
 local entity = {}
 
@@ -17,34 +13,31 @@ end
 
 entity.onTrigger = function(player, npc)
     local apbif = player:getQuestStatus(xi.quest.log_id.ADOULIN, xi.quest.id.adoulin.A_PIONEERS_BEST_IMAGINARY_FRIEND)
-    if (apbif == QUEST_ACCEPTED) then
-        if (player:hasStatusEffect(xi.effect.IONIS)) then
+    if apbif == QUEST_ACCEPTED then
+        if player:hasStatusEffect(xi.effect.IONIS) then
             -- Finishing Quest: 'A Pioneers Best (Imaginary) Friend'
             player:startEvent(2522)
         else
             -- Dialgoue during Quest: 'A Pioneers Best (Imaginary) Friend'
             player:startEvent(2521)
         end
-    elseif (apbif == QUEST_AVAILABLE) then
+    elseif apbif == QUEST_AVAILABLE then
         player:startEvent(2520)
-    else
-        -- Standard dialogue
-        player:startEvent(543)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
-    if (csid == 2520) then
+entity.onEventFinish = function(player, csid, option, npc)
+    if csid == 2520 then
         -- Starting Quest: 'A Pioneers Best (Imaginary) Friend'
         player:addQuest(xi.quest.log_id.ADOULIN, xi.quest.id.adoulin.A_PIONEERS_BEST_IMAGINARY_FRIEND)
-        if (player:hasStatusEffect(xi.effect.IONIS)) then
+        if player:hasStatusEffect(xi.effect.IONIS) then
             -- Finishes quest if Ionis is already active
             player:startEvent(2522)
         end
-    elseif (csid == 2522) then
+    elseif csid == 2522 then
         -- Finishing Quest: 'A Pioneers Best (Imaginary) Friend'
         player:completeQuest(xi.quest.log_id.ADOULIN, xi.quest.id.adoulin.A_PIONEERS_BEST_IMAGINARY_FRIEND)
         player:addExp(500 * xi.settings.main.EXP_RATE)

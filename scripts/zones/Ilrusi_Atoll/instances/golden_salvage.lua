@@ -2,8 +2,7 @@
 -- Assault: Golden Salvage
 -- TODO: random the chest locations
 -----------------------------------
-require("scripts/globals/instance")
-local ID = require("scripts/zones/Ilrusi_Atoll/IDs")
+local ID = zones[xi.zone.ILRUSI_ATOLL]
 -----------------------------------
 local instanceObject = {}
 
@@ -28,7 +27,6 @@ instanceObject.onInstanceCreated = function(instance)
     GetNPCByID(ID.npc._jjb, instance):setAnimation(8)
 
     instance:setProgress(instance:getProgress() + (figureheadChest))
-
 end
 
 instanceObject.onInstanceCreatedCallback = function(player, instance)
@@ -43,7 +41,6 @@ instanceObject.onInstanceTimeUpdate = function(instance, elapsed)
 end
 
 instanceObject.onInstanceFailure = function(instance)
-
     local chars = instance:getChars()
 
     for i, v in pairs(chars) do
@@ -56,7 +53,6 @@ instanceObject.onInstanceProgressUpdate = function(instance, progress)
 end
 
 instanceObject.onInstanceComplete = function(instance)
-
     local chars = instance:getChars()
 
     for i, v in pairs(chars) do
@@ -65,13 +61,12 @@ instanceObject.onInstanceComplete = function(instance)
 
     GetNPCByID(ID.npc.RUNE_OF_RELEASE, instance):setStatus(xi.status.NORMAL)
     GetNPCByID(ID.npc.ANCIENT_LOCKBOX, instance):setStatus(xi.status.NORMAL)
-
 end
 
-instanceObject.onEventUpdate = function(player, csid, option)
+instanceObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-instanceObject.onEventFinish = function(player, csid, option)
+instanceObject.onEventFinish = function(player, csid, option, npc)
 end
 
 return instanceObject

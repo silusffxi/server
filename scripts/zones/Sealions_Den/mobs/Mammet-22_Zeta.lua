@@ -2,7 +2,7 @@
 -- Area: Sealions Den
 --  Mob: Mammet-22 Zeta
 -----------------------------------
-local oneToBeFeared = require("scripts/zones/Sealions_Den/bcnms/one_to_be_feared_helper")
+local oneToBeFeared = require('scripts/zones/Sealions_Den/bcnms/one_to_be_feared_helper')
 -----------------------------------
 local entity = {}
 
@@ -47,12 +47,12 @@ local tpMoves =
 }
 
 entity.onMobSpawn = function(mob)
-    mob:SetMagicCastingEnabled(false)
+    mob:setMagicCastingEnabled(false)
 end
 
 entity.onMobFight = function(mob, target)
     -- Chages forms after 30-60 seconds randomly
-    local timeTracker = mob:getLocalVar("formTimeTracker")
+    local timeTracker = mob:getLocalVar('formTimeTracker')
     local currentTime = mob:getBattleTime()
     -- NOTE: Yellow Liquid applies xi.effect.FOOD to the Mammets
     local cannotChangeForm = mob:hasStatusEffect(xi.effect.FOOD)
@@ -64,28 +64,31 @@ entity.onMobFight = function(mob, target)
         switch (rand): caseof
         {
             [forms.UNARMED] = function()
-                mob:SetMagicCastingEnabled(false)
+                mob:setMagicCastingEnabled(false)
                 mob:setDelay(2400)
                 mob:setDamage(40)
             end,
+
             [forms.SWORD] = function()
-                mob:SetMagicCastingEnabled(false)
+                mob:setMagicCastingEnabled(false)
                 mob:setDelay(1500)
                 mob:setDamage(40)
             end,
+
             [forms.POLEARM] = function()
-                mob:SetMagicCastingEnabled(false)
+                mob:setMagicCastingEnabled(false)
                 mob:setDelay(3250)
                 mob:setDamage(75)
             end,
+
             [forms.STAFF] = function()
                 mob:setMobMod(xi.mobMod.MAGIC_COOL, 10)
-                mob:SetMagicCastingEnabled(true)
+                mob:setMagicCastingEnabled(true)
                 mob:setDelay(3700)
                 mob:setDamage(40)
             end,
         }
-        mob:setLocalVar("formTimeTracker", mob:getBattleTime() + math.random(30, 60))
+        mob:setLocalVar('formTimeTracker', mob:getBattleTime() + math.random(30, 60))
     end
 end
 
@@ -96,14 +99,17 @@ entity.onMobWeaponSkillPrepare = function(mob, target)
             local wsChoice = math.random(1, 2)
             return tpMoves[forms.UNARMED][wsChoice]
         end,
+
         [forms.SWORD] = function()
             local wsChoice = math.random(1, 3)
             return tpMoves[forms.SWORD][wsChoice]
         end,
+
         [forms.POLEARM] = function()
             local wsChoice = math.random(1, 3)
             return tpMoves[forms.POLEARM][wsChoice]
         end,
+
         [forms.STAFF] = function()
             local wsChoice = math.random(1, 2)
             return tpMoves[forms.STAFF][wsChoice]
@@ -115,8 +121,8 @@ entity.onMobDeath = function(mob, player, optParams)
     oneToBeFeared.handleMammetDeath(mob, player, optParams)
 end
 
-entity.onEventFinish = function(player, csid, option)
-    oneToBeFeared.handleMammetBattleEnding(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
+    oneToBeFeared.handleMammetBattleEnding(player, csid, option, npc)
 end
 
 return entity

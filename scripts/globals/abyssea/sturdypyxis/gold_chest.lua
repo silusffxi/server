@@ -1,7 +1,6 @@
 -----------------------------------
 -- Abyssea Sturdy Pyxis Red Chest
 -----------------------------------
-
 xi = xi or {}
 xi.pyxis = xi.pyxis or {}
 
@@ -16,9 +15,9 @@ local function isEven(number)
 end
 
 xi.pyxis.goldChest.startEvent = function(player, npc, event, contentMessage, timeleft)
-    local targetnumber    = npc:getLocalVar("RAND_NUM")
-    local maxUnlockNumber = npc:getLocalVar("MAX_UNLOCK_NUMBER")
-    local currentAttempts = npc:getLocalVar("CURRENT_ATTEMPTS")
+    local targetnumber    = npc:getLocalVar('RAND_NUM')
+    local maxUnlockNumber = npc:getLocalVar('MAX_UNLOCK_NUMBER')
+    local currentAttempts = npc:getLocalVar('CURRENT_ATTEMPTS')
     local minNumber = 11
     local attemptsallowed = 5
 
@@ -27,19 +26,20 @@ end
 
 xi.pyxis.goldChest.unlock = function(player, csid, option, npc)
     local ID              = zones[player:getZoneID()]
-    local currentAttempts = npc:getLocalVar("CURRENT_ATTEMPTS")
+    local currentAttempts = npc:getLocalVar('CURRENT_ATTEMPTS')
     local attemptsallowed = 5
     local inputnumber     = bit.band(option, 0xFF)
-    local targetnumber    = npc:getLocalVar("RAND_NUM")
+    local targetnumber    = npc:getLocalVar('RAND_NUM')
 
     if inputnumber > 10 and inputnumber < 100 then
         local splitnumbers = {}
 
-        for digit in string.gmatch(tostring(targetnumber), "%d") do
+        for digit in string.gmatch(tostring(targetnumber), '%d') do
             table.insert(splitnumbers, digit)
         end
+
         currentAttempts = currentAttempts + 1
-        npc:setLocalVar("CURRENT_ATTEMPTS", currentAttempts)
+        npc:setLocalVar('CURRENT_ATTEMPTS', currentAttempts)
 
         if inputnumber == targetnumber then
             xi.pyxis.messageChest(player, ID.text.INPUT_SUCCESS_FAIL_GUESS, inputnumber, 1, 0, 0, npc) -- unlocking chest
@@ -68,11 +68,12 @@ xi.pyxis.goldChest.unlock = function(player, csid, option, npc)
                 [1] = function()
                     player:messageSpecial(ID.text.HUNCH_SECOND_FIRST_EVEN_ODD, randDigit - 1, isEven(digit), 0, 0)
                 end,
+
                 [2] = function()
                     player:messageSpecial(ID.text.HUNCH_SECOND_FIRST_IS, randDigit - 1, digit, 0, 0)
                 end,
-                [3] = function()
 
+                [3] = function()
                     local hints = {}
                     if digit == 0 then
                         hints =
@@ -111,9 +112,11 @@ xi.pyxis.goldChest.unlock = function(player, csid, option, npc)
 
                     player:messageSpecial(ID.text.HUNCH_SECOND_FIRST_IS_OR, randDigit - 1, hintsRand.min, hintsRand.mid, hintsRand.max)
                 end,
+
                 [4] = function()
                     player:messageSpecial(ID.text.HUNCH_ONE_DIGIT_IS, digit, 0, 0, 0)
                 end,
+
                 [5] = function()
                     local sum = tonumber(splitnumbers[1]) + tonumber(splitnumbers[2])
                     player:messageSpecial(ID.text.HUNCH_SUM_EQUALS, sum)

@@ -2,10 +2,8 @@
 -- Area: Ru'Aun Gardens
 --   NM: Seiryu
 -----------------------------------
-local ID = require("scripts/zones/RuAun_Gardens/IDs")
-mixins = { require("scripts/mixins/job_special") }
-require("scripts/globals/mobs")
-require("scripts/globals/status")
+local ID = zones[xi.zone.RUAUN_GARDENS]
+mixins = { require('scripts/mixins/job_special') }
 -----------------------------------
 local entity = {}
 
@@ -30,6 +28,7 @@ entity.onMobMagicPrepare = function(mob, target, spellId)
             return 237 -- choke
         end
     end
+
     return 0 -- Still need a return, so use 0 when not casting
 end
 

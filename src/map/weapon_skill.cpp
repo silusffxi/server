@@ -23,9 +23,9 @@
 #include <cstring>
 
 CWeaponSkill::CWeaponSkill(uint16 id)
+: m_ID(id)
+, m_TypeID(0)
 {
-    m_ID     = id;
-    m_TypeID = 0;
     memset(m_Job, 0, sizeof(m_Job));
     m_Skilllevel          = 0;
     m_AnimationId         = 0;
@@ -79,9 +79,9 @@ void CWeaponSkill::setSkillLevel(uint16 level)
     m_Skilllevel = level;
 }
 
-const int8* CWeaponSkill::getName()
+const std::string& CWeaponSkill::getName()
 {
-    return (const int8*)m_name.c_str();
+    return m_name;
 }
 
 void CWeaponSkill::setElement(uint8 element)
@@ -104,10 +104,9 @@ void CWeaponSkill::setTertiarySkillchain(uint8 skillchain)
     m_TertiarySkillchain = skillchain;
 }
 
-void CWeaponSkill::setName(int8* name)
+void CWeaponSkill::setName(const std::string& name)
 {
-    m_name.clear();
-    m_name.insert(0, (const char*)name);
+    m_name = name;
 }
 
 void CWeaponSkill::setAnimationId(int8 id)

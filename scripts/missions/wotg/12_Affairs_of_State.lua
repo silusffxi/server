@@ -6,11 +6,6 @@
 -- Velda-Galda : !pos 138.631 -2.112 61.658 94
 -- Radford     : !pos -205.303 -8.000 26.874 87
 -----------------------------------
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.WOTG, xi.mission.id.wotg.AFFAIRS_OF_STATE)
 
@@ -60,7 +55,7 @@ mission.sections =
                 onTrigger = function(player, npc)
                     -- TODO: What are these args from caps?
                     -- Observed : 175, 1, 7, 0, 324953651, 58062326, 21829264, 4095, 196677
-                   return mission:progressEvent(175, 2, 27, 0, 0, 0, 0, 1, 4095)
+                    return mission:progressEvent(175, 2, 27, 0, 0, 0, 0, 1, 4095)
                 end,
             },
 

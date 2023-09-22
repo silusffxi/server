@@ -3,7 +3,7 @@
 --  NPC: Oil Lamp - Fire (West)
 -- !pos -63 -26 43
 -----------------------------------
-local ID = require("scripts/zones/Phomiuna_Aqueducts/IDs")
+local ID = zones[xi.zone.PHOMIUNA_AQUEDUCTS]
 -----------------------------------
 local entity = {}
 
@@ -11,7 +11,6 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-
     local doorOffset = npc:getID()
 
     player:messageSpecial(ID.text.LAMP_OFFSET) -- Fire lamp
@@ -28,13 +27,12 @@ entity.onTrigger = function(player, npc)
             GetNPCByID(doorOffset-9):openDoor(15) -- Door _0rk
         end
     end
-
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

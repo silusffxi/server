@@ -4,10 +4,7 @@
 -- Type: Bonecraft Adv. Image Support
 -- !pos -5.471 -6.25 -141.211 241
 -----------------------------------
-local ID = require("scripts/zones/Windurst_Woods/IDs")
-require("scripts/globals/crafting")
-require("scripts/globals/pathfind")
-require("scripts/globals/status")
+local ID = zones[xi.zone.WINDURST_WOODS]
 -----------------------------------
 local entity = {}
 
@@ -28,11 +25,10 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-    local guildMember = xi.crafting.isGuildMember(player, 2)
     local skillLevel = player:getSkillLevel(xi.skill.BONECRAFT)
     local cost = xi.crafting.getAdvImageSupportCost(player, xi.skill.BONECRAFT)
 
-    if guildMember == 1 then
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.BONECRAFT) then
         if not player:hasStatusEffect(xi.effect.BONECRAFT_IMAGERY) then
             player:startEvent(10018, cost, skillLevel, 0, 511, player:getGil(), 0, 7028, 0)
         else
@@ -43,10 +39,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     local cost = xi.crafting.getAdvImageSupportCost(player, xi.skill.BONECRAFT)
 
     if csid == 10018 and option == 1 then

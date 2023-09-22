@@ -4,18 +4,17 @@
 -- Type: Clothcraft Normal/Adv. Image Support
 -- !pos 70.228 -7 -54.089 48
 -----------------------------------
-require("scripts/globals/status")
-require("scripts/globals/crafting")
-local ID = require("scripts/zones/Al_Zahbi/IDs")
+local ID = zones[xi.zone.AL_ZAHBI]
 -----------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
-    local guildMember = xi.crafting.isGuildMember(player, 3)
-
-    if guildMember == 1 then
-        if trade:hasItemQty(2184, 1) and trade:getItemCount() == 1 then
-            if player:hasStatusEffect(xi.effect.CLOTHCRAFT_IMAGERY) == false then
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.CLOTHCRAFT) then
+        if
+            trade:hasItemQty(xi.item.IMPERIAL_BRONZE_PIECE, 1) and
+            trade:getItemCount() == 1
+        then
+            if not player:hasStatusEffect(xi.effect.CLOTHCRAFT_IMAGERY) then
                 player:tradeComplete()
                 player:startEvent(229, 8, 0, 0, 0, 188, 0, 4, 0)
             else
@@ -23,29 +22,26 @@ entity.onTrade = function(player, npc, trade)
             end
         end
     end
-
 end
 
 entity.onTrigger = function(player, npc)
-    local guildMember = xi.crafting.isGuildMember(player, 3)
     local skillLevel = player:getSkillLevel(xi.skill.CLOTHCRAFT)
 
-    if guildMember == 1 then
-        if player:hasStatusEffect(xi.effect.CLOTHCRAFT_IMAGERY) == false then
-            player:startEvent(228, 8, skillLevel, 0, 511, 188, 0, 4, 2184)
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.CLOTHCRAFT) then
+        if not player:hasStatusEffect(xi.effect.CLOTHCRAFT_IMAGERY) then
+            player:startEvent(228, 8, skillLevel, 0, 511, 188, 0, 4, xi.item.IMPERIAL_BRONZE_PIECE)
         else
-            player:startEvent(228, 8, skillLevel, 0, 511, 188, 7127, 4, 2184)
+            player:startEvent(228, 8, skillLevel, 0, 511, 188, 7127, 4, xi.item.IMPERIAL_BRONZE_PIECE)
         end
     else
         player:startEvent(228, 0, 0, 0, 0, 0, 0, 4, 0) -- Standard Dialogue
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
-
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 228 and option == 1 then
         player:messageSpecial(ID.text.IMAGE_SUPPORT, 0, 4, 1)
         player:addStatusEffect(xi.effect.CLOTHCRAFT_IMAGERY, 1, 0, 120)

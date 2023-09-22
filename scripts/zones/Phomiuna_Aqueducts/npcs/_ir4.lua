@@ -3,7 +3,7 @@
 --  NPC: Oil Lamp - Fire (East)
 -- !pos 104 -26 43
 -----------------------------------
-local ID = require("scripts/zones/Phomiuna_Aqueducts/IDs")
+local ID = zones[xi.zone.PHOMIUNA_AQUEDUCTS]
 -----------------------------------
 local entity = {}
 
@@ -11,7 +11,6 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-
     local DoorOffset = npc:getID()
 
     player:messageSpecial(ID.text.LAMP_OFFSET) -- fire lamp
@@ -19,22 +18,21 @@ entity.onTrigger = function(player, npc)
 
     local day = VanadielDayOfTheWeek()
 
-    if (day == xi.day.FIRESDAY) then
-        if (GetNPCByID(DoorOffset-6):getAnimation() == 8) then -- ice lamp open?
+    if day == xi.day.FIRESDAY then
+        if GetNPCByID(DoorOffset-6):getAnimation() == 8 then -- ice lamp open?
             GetNPCByID(DoorOffset-9):openDoor(15) -- Door _0rl
         end
-    elseif (day == xi.day.WATERSDAY) then
-        if (GetNPCByID(DoorOffset-5):getAnimation() == 8) then -- water lamp open?
+    elseif day == xi.day.WATERSDAY then
+        if GetNPCByID(DoorOffset-5):getAnimation() == 8 then -- water lamp open?
             GetNPCByID(DoorOffset-9):openDoor(15) -- Door _0rl
         end
     end
-
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

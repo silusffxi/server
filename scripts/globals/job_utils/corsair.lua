@@ -1,11 +1,9 @@
 -----------------------------------
 -- Corsair Job Utilities
 -----------------------------------
-require("scripts/globals/settings")
-require("scripts/globals/ability")
-require("scripts/globals/jobpoints")
-require("scripts/globals/status")
-require("scripts/globals/msg")
+require('scripts/globals/ability')
+require('scripts/globals/jobpoints')
+require('scripts/globals/utils')
 -----------------------------------
 xi = xi or {}
 xi.job_utils = xi.job_utils or {}
@@ -14,7 +12,7 @@ xi.job_utils.corsair = xi.job_utils.corsair or {}
 
 -- rollModifiers format: Effect Powers table, phantomBase, roll bonus increase, Effect, Mod, Optimal Job
 -- NOTE: nil items below are nil values on purpose.  This might break if parameters are added to various bindings
--- TODO: replace "nil" pet values with tables, handle multiple effects in case of pet roll. Will need core changes.
+-- TODO: replace 'nil' pet values with tables, handle multiple effects in case of pet roll. Will need core changes.
 -- TODO: quantify Courser's Roll, no wiki seems to know what it is.
 -- TODO: verify Corsair's Roll for subjob: see http://wiki.ffo.jp/html/6052.html
 local corsairRollMods =
@@ -59,9 +57,17 @@ local function phantombuffMultiple(caster)
 
     if phantomValue == 3 then
         phantomBuffMultiplier = 3
-    elseif phantomValue == 5 or phantomValue == 8 then
+    elseif
+        phantomValue == 5 or
+        phantomValue == 8
+    then
         phantomBuffMultiplier = 5
-    elseif phantomValue == 7 or phantomValue == 10 or phantomValue == 12 or phantomValue == 15 then
+    elseif
+        phantomValue == 7 or
+        phantomValue == 10 or
+        phantomValue == 12 or
+        phantomValue == 15
+    then
         phantomBuffMultiplier = 7
     end
 
@@ -72,11 +78,17 @@ end
 local function checkForJobBonus(caster, job)
     local jobBonus = 0
 
-    if job ~= xi.job.NONE and (caster:hasPartyJob(job) or math.random(0, 99) < caster:getMod(xi.mod.JOB_BONUS_CHANCE)) then
+    if
+        job ~= xi.job.NONE and
+        (
+            caster:hasPartyJob(job) or
+            math.random(0, 99) < caster:getMod(xi.mod.JOB_BONUS_CHANCE)
+        )
+    then
         jobBonus = 1
     end
 
-    caster:setLocalVar("corsairRollBonus", jobBonus)
+    caster:setLocalVar('corsairRollBonus', jobBonus)
 end
 
 -- The following functions determine enhancement based on random vs effects
@@ -102,15 +114,15 @@ local function checkForElevenRoll(caster)
 
     for _, effect in pairs(effects) do
         if
-            effect:getType() >= xi.effect.FIGHTERS_ROLL and
-            effect:getType() <= xi.effect.NATURALISTS_ROLL and
+            effect:getEffectType() >= xi.effect.FIGHTERS_ROLL and
+            effect:getEffectType() <= xi.effect.NATURALISTS_ROLL and
             effect:getSubPower() == 11
         then
             return true
         end
 
         if
-            effect:getType() == xi.effect.RUNEISTS_ROLL and
+            effect:getEffectType() == xi.effect.RUNEISTS_ROLL and
             effect:getSubPower() == 11
         then
             return true
@@ -122,28 +134,32 @@ end
 
 local function atMaxCorsairBusts(caster)
     local numBusts = caster:numBustEffects()
-    return (numBusts >= 2 and caster:getMainJob() == xi.job.COR) or (numBusts >= 1 and caster:getMainJob() ~= xi.job.COR)
+    return (numBusts >= 2 and caster:getMainJob() == xi.job.COR) or
+        (numBusts >= 1 and caster:getMainJob() ~= xi.job.COR)
 end
 
 local function corsairSetup(caster, ability, action, effect, job)
     local roll = math.random(1, 6)
     caster:delStatusEffectSilent(xi.effect.DOUBLE_UP_CHANCE)
     caster:addStatusEffectEx(xi.effect.DOUBLE_UP_CHANCE,
-                             xi.effect.DOUBLE_UP_CHANCE,
-                             roll,
-                             0,
-                             45,
-                             ability:getID(),
-                             effect,
-                             job,
-                             true)
-    caster:setLocalVar("corsairRollTotal", roll)
+        xi.effect.DOUBLE_UP_CHANCE,
+        roll,
+        0,
+        45,
+        ability:getID(),
+        effect,
+        job,
+        true
+    )
+    caster:setLocalVar('corsairRollTotal', roll)
     action:speceffect(caster:getID(), roll)
 
-    if checkForElevenRoll(caster) then
-        action:setRecast(ability:getRecast() / 2) -- halves phantom roll recast timer for all rolls while under the effects of an 11 (upon first hitting 11, phantom roll cooldown is reset in double-up.lua)
+    local numBustEffects = caster:numBustEffects()
+    local recastReduction = caster:getMerit(xi.merit.PHANTOM_ROLL_RECAST) + caster:getMod(xi.mod.PHANTOM_RECAST)
+    if checkForElevenRoll(caster) and numBustEffects == 0 then
+        action:setRecast((ability:getRecast() / 2) - recastReduction) -- halves phantom roll recast timer for all rolls while under the effects of an 11 without bust (upon first hitting 11, phantom roll cooldown is reset in double-up.lua)
     else
-        action:setRecast(ability:getRecast() - caster:getMerit(xi.merit.PHANTOM_ROLL_RECAST)) -- Recast merits have value of 2 from DB
+        action:setRecast(ability:getRecast() - recastReduction) -- Corsair Recast merits + Phantom Roll Recast Reduction
     end
 
     checkForJobBonus(caster, job)
@@ -162,7 +178,7 @@ local function applyRoll(caster, target, inAbility, action, total, isDoubleup, c
         effectpower = effectpower + corsairRollMods[abilityId][3]
     end
 
-    if caster:getLocalVar("corsairRollBonus") == 1 and total < 12 then
+    if caster:getLocalVar('corsairRollBonus') == 1 and total < 12 then
         effectpower = effectpower + corsairRollMods[abilityId][3]
     end
 
@@ -170,14 +186,15 @@ local function applyRoll(caster, target, inAbility, action, total, isDoubleup, c
     local phantomBase = corsairRollMods[abilityId][2] -- Base increment buff
     effectpower = effectpower + (phantomBase * phantombuffMultiple(caster))
 
-    -- Check if COR Main or Sub
-    if caster:getMainJob() == xi.job.COR and caster:getMainLvl() < target:getMainLvl() then
-        effectpower = effectpower * (caster:getMainLvl() / target:getMainLvl())
-    elseif caster:getSubJob() == xi.job.COR and caster:getSubLvl() < target:getMainLvl() then
-        effectpower = effectpower * (caster:getSubLvl() / target:getMainLvl())
+    -- Effect Power varies depending on COR level (Main vs Sub)
+    local actorLevel  = utils.getActiveJobLevel(caster, xi.job.COR)
+    local targetLevel = target:getMainLvl()
+
+    if actorLevel < targetLevel then
+        effectpower = effectpower * actorLevel / targetLevel
     end
 
-    if target:addCorsairRoll(caster:getMainJob(), caster:getMerit(xi.merit.BUST_DURATION), corsairRollMods[abilityId][4], effectpower, 0, duration, caster:getID(), total, corsairRollMods[abilityId][5]) == false then
+    if not target:addCorsairRoll(caster:getMainJob(), caster:getMerit(xi.merit.BUST_DURATION), corsairRollMods[abilityId][4], effectpower, 0, duration, caster:getID(), total, corsairRollMods[abilityId][5]) then
         -- no effect or otherwise prevented
         if caster:getID() == target:getID() then                  -- dead code? you can't roll if the same roll is already active. There is no known buff that would prevent a corsair roll.
             currentAbility:setMsg(xi.msg.basic.ROLL_MAIN_FAIL)    -- no effect for the COR rolling if they had the buff already
@@ -211,15 +228,15 @@ end
 xi.job_utils.corsair.useCuttingCards = function(caster, target, ability, action)
     if caster:getID() == target:getID() then
         local roll = math.random(1, 6)
-        caster:setLocalVar("corsairRollTotal", roll)
+        caster:setLocalVar('corsairRollTotal', roll)
         action:speceffect(caster:getID(), roll)
     end
 
-    local total = caster:getLocalVar("corsairRollTotal")
+    local total = caster:getLocalVar('corsairRollTotal')
 
     -- TODO: Implement
     -- caster:doCuttingCards(target, total)
-    print("WARNING: doCuttingCards is not implemented")
+    print('WARNING: doCuttingCards is not implemented')
 
     ability:setMsg(435 + math.floor((total - 1) / 2) * 2)
     action:setAnimation(target:getID(), 132 + (total) - 1)
@@ -229,25 +246,26 @@ end
 
 xi.job_utils.corsair.useDoubleUp = function(caster, target, ability, action)
     if caster:getID() == target:getID() then -- the COR handles all the calculations
-        local du_effect = caster:getStatusEffect(xi.effect.DOUBLE_UP_CHANCE)
-        local prev_roll = caster:getStatusEffect(du_effect:getSubPower())
-        local roll = prev_roll:getSubPower()
-        local job = du_effect:getTier()
+        local duEffect = caster:getStatusEffect(xi.effect.DOUBLE_UP_CHANCE)
+        local prevRoll = caster:getStatusEffect(duEffect:getSubPower())
+        local roll     = prevRoll:getSubPower()
+        local job      = duEffect:getTier()
 
-        caster:setLocalVar("corsairActiveRoll", du_effect:getSubType())
-        local snake_eye = caster:getStatusEffect(xi.effect.SNAKE_EYE)
-        if snake_eye then
-            if prev_roll:getPower() >= 5 and math.random(100) < snake_eye:getPower() then
+        caster:setLocalVar('corsairActiveRoll', duEffect:getSubType())
+        local snakeEye = caster:getStatusEffect(xi.effect.SNAKE_EYE)
+        if snakeEye then
+            if prevRoll:getPower() >= 5 and math.random(100) < snakeEye:getPower() then
                 roll = 11
             else
                 roll = roll + 1
             end
+
             caster:delStatusEffect(xi.effect.SNAKE_EYE)
         else
             roll = roll + math.random(1, 6)
         end
 
-        if roll > 12 then -- bust
+        if roll >= 12 then -- bust
             roll = 12
             caster:delStatusEffectSilent(xi.effect.DOUBLE_UP_CHANCE)
         end
@@ -256,24 +274,24 @@ xi.job_utils.corsair.useDoubleUp = function(caster, target, ability, action)
             caster:resetRecast(xi.recast.ABILITY, 193)
         end
 
-        caster:setLocalVar("corsairRollTotal", roll)
-        action:speceffect(caster:getID(), roll - prev_roll:getSubPower())
+        caster:setLocalVar('corsairRollTotal', roll)
+        action:speceffect(caster:getID(), roll - prevRoll:getSubPower())
         checkForJobBonus(caster, job)
     end
 
-    local total = caster:getLocalVar("corsairRollTotal")
-    local activeRoll = caster:getLocalVar("corsairActiveRoll")
-    local prev_ability = GetAbility(activeRoll)
+    local total       = caster:getLocalVar('corsairRollTotal')
+    local activeRoll  = caster:getLocalVar('corsairActiveRoll')
+    local prevAbility = GetAbility(activeRoll)
 
-    if prev_ability then -- Apply rolls to target(s), including the COR
-        action:actionID(prev_ability:getID())
+    if prevAbility then -- Apply rolls to target(s), including the COR
+        action:actionID(prevAbility:getID())
 
-        total = applyRoll(caster, target, prev_ability, action, total, true, ability)
+        total = applyRoll(caster, target, prevAbility, action, total, true, ability)
 
         if total > 11 then
             action:setAnimation(target:getID(), 98) -- 98 is bust anim for all rolls
         else
-            action:setAnimation(target:getID(), prev_ability:getAnimation())
+            action:setAnimation(target:getID(), prevAbility:getAnimation())
         end
 
         return total
@@ -283,11 +301,11 @@ end
 xi.job_utils.corsair.useWildCard = function(caster, target, ability, action)
     if caster:getID() == target:getID() then
         local roll = math.random(1, 6)
-        caster:setLocalVar("corsairRollTotal", roll)
+        caster:setLocalVar('corsairRollTotal', roll)
         action:speceffect(caster:getID(), roll)
     end
 
-    local total = caster:getLocalVar("corsairRollTotal")
+    local total = caster:getLocalVar('corsairRollTotal')
     caster:doWildCard(target, total)
     ability:setMsg(435 + math.floor((total - 1) / 2) * 2)
     action:setAnimation(target:getID(), 132 + (total) - 1)
@@ -319,7 +337,7 @@ xi.job_utils.corsair.onRollUseAbility = function(caster, target, ability, action
         corsairSetup(caster, ability, action, effectId, bonusJob)
     end
 
-    local total = caster:getLocalVar("corsairRollTotal")
+    local total = caster:getLocalVar('corsairRollTotal')
     return applyRoll(caster, target, ability, action, total, false, ability)
 end
 

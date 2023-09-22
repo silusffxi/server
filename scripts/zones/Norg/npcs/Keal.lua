@@ -3,10 +3,7 @@
 --  NPC: Keal
 -- Starts and Ends Quest: It's Not Your Vault
 -----------------------------------
-local ID = require("scripts/zones/Norg/IDs")
-require("scripts/globals/settings")
-require("scripts/globals/keyitems")
-require("scripts/globals/quests")
+local ID = zones[xi.zone.NORG]
 -----------------------------------
 local entity = {}
 
@@ -76,24 +73,25 @@ end
 entity.onTrigger = function(player, npc)
     local vault = player:getQuestStatus(xi.quest.log_id.OUTLANDS, xi.quest.id.outlands.ITS_NOT_YOUR_VAULT)
     local mLvl = player:getMainLvl()
-    local ironBox = player:hasKeyItem(xi.ki.SEALED_IRON_BOX)
 
-    if vault == QUEST_AVAILABLE and player:getFameLevel(xi.quest.fame_area.NORG) >= 3 and mLvl >= 5 then
+    if
+        vault == QUEST_AVAILABLE and
+        player:getFameLevel(xi.quest.fame_area.NORG) >= 3 and
+        mLvl >= 5
+    then
         player:startEvent(36, xi.ki.SEALED_IRON_BOX) -- Start quest
     elseif vault == QUEST_ACCEPTED then
-        if (ironBox == true) then
+        if player:hasKeyItem(xi.ki.SEALED_IRON_BOX) then
             player:startEvent(38) -- Finish quest
         else
             player:startEvent(37, xi.ki.MAP_OF_SEA_SERPENT_GROTTO) -- Reminder/Directions Dialogue
         end
     elseif vault == QUEST_COMPLETED then
         player:startEvent(39) -- New Standard Dialogue for everyone who has completed the quest
-    else
-        player:startEvent(89) -- Standard Conversation
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
 entity.onEventFinish = function(player, csid, option, npc)
@@ -101,11 +99,11 @@ entity.onEventFinish = function(player, csid, option, npc)
         player:addQuest(xi.quest.log_id.OUTLANDS, xi.quest.id.outlands.ITS_NOT_YOUR_VAULT)
     elseif csid == 38 then
         if player:getFreeSlotsCount() == 0 then
-            player:messageSpecial(ID.text.ITEM_CANNOT_BE_OBTAINED, 4961)
+            player:messageSpecial(ID.text.ITEM_CANNOT_BE_OBTAINED, xi.item.SCROLL_OF_TONKO_ICHI)
         else
             player:delKeyItem(xi.ki.SEALED_IRON_BOX)
-            player:addItem(4961) -- Scroll of Tonko: Ichi
-            player:messageSpecial(ID.text.ITEM_OBTAINED, 4961)
+            player:addItem(xi.item.SCROLL_OF_TONKO_ICHI) -- Scroll of Tonko: Ichi
+            player:messageSpecial(ID.text.ITEM_OBTAINED, xi.item.SCROLL_OF_TONKO_ICHI)
             player:addFame(xi.quest.fame_area.NORG, 50)
             player:completeQuest(xi.quest.log_id.OUTLANDS, xi.quest.id.outlands.ITS_NOT_YOUR_VAULT)
         end

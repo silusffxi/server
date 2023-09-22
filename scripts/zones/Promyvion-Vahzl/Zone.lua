@@ -1,11 +1,6 @@
 -----------------------------------
 -- Zone: Promyvion-Vahzl (22)
 -----------------------------------
-local ID = require('scripts/zones/Promyvion-Vahzl/IDs')
-require('scripts/globals/promyvion')
-require('scripts/globals/settings')
-require('scripts/globals/status')
------------------------------------
 local zoneObject = {}
 
 zoneObject.onInitialize = function(zone)
@@ -15,7 +10,11 @@ end
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
         player:setPos(-14.744, 0.036, -119.736, 1) -- To Floor 1 (R)
     end
 
@@ -23,22 +22,19 @@ zoneObject.onZoneIn = function(player, prevZone)
 end
 
 zoneObject.afterZoneIn = function(player)
-    if xi.settings.main.ENABLE_COP_ZONE_CAP == 1 then
-        player:addStatusEffect(xi.effect.LEVEL_RESTRICTION, 50, 0, 0)
-    end
 end
 
-zoneObject.onRegionEnter = function(player, region)
-    xi.promyvion.onRegionEnter(player, region)
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
+    xi.promyvion.onTriggerAreaEnter(player, triggerArea)
 end
 
-zoneObject.onRegionLeave = function(player, region)
+zoneObject.onTriggerAreaLeave = function(player, triggerArea)
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
     if csid == 45 and option == 1 then
         player:setPos(-379.947, 48.045, 334.059, 192, 9) -- To Pso'Xja (R)
     end

@@ -1,9 +1,6 @@
 -----------------------------------
 -- Area: Mount_Zhayolm
 -----------------------------------
-require("scripts/globals/zone")
------------------------------------
-
 zones = zones or {}
 
 zones[xi.zone.MOUNT_ZHAYOLM] =
@@ -54,6 +51,10 @@ zones[xi.zone.MOUNT_ZHAYOLM] =
             [17027421] = 17027423, -- -567.6 -15.35 252.201
             [17027422] = 17027423, -- -544.3 -14.8 262.992
         },
+        FAHRAFAHR_THE_BLOODIED_PH =
+        {
+            [17027180] = 17027183, -- 38.967 -14.478 115.574
+        },
         CERBERUS              = 17027458,
         BRASS_BORER           = 17027471,
         CLARET                = 17027472,
@@ -63,15 +64,7 @@ zones[xi.zone.MOUNT_ZHAYOLM] =
     },
     npc =
     {
-        MINING =
-        {
-            17027561,
-            17027562,
-            17027563,
-            17027564,
-            17027565,
-            17027566,
-        },
+        MINING = GetTableOfIDs('Mining_Point'),
     },
 }
 

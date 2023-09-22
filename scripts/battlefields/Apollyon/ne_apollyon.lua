@@ -5,11 +5,7 @@
 -- !addkeyitem cosmo_cleanse
 -- !pos 600 -0.5 -600 38
 -----------------------------------
-local ID = require("scripts/zones/Apollyon/IDs")
-require("scripts/globals/battlefield")
-require("scripts/globals/limbus")
-require("scripts/globals/items")
-require("scripts/globals/keyitems")
+local ID = zones[xi.zone.APOLLYON]
 -----------------------------------
 
 local content = Limbus:new({
@@ -22,9 +18,9 @@ local content = Limbus:new({
     entryNpc         = '_12i',
     requiredKeyItems = { xi.ki.COSMO_CLEANSE, xi.ki.BLACK_CARD, message = ID.text.YOU_INSERT_THE_CARD_POLISHED },
     lossEventParams  = { [5] = 1 },
-    name             = "NE_APOLLYON",
+    name             = 'NE_APOLLYON',
     exitLocation     = 1,
-    timeExtension   = 5,
+    timeExtension    = 5,
 })
 
 function content:onBattlefieldInitialise(battlefield)
@@ -133,53 +129,53 @@ content.groups =
 {
     -- Floor 1
     {
-        mobs = { "Barometz_Boss", "Borametz_Boss", "Goobbue_Harvester" },
+        mobs       = { 'Barometz_Boss', 'Borametz_Boss', 'Goobbue_Harvester' },
         stationary = false,
-        setup = function(battlefield, mobs)
+        setup      = function(battlefield, mobs)
             local bosses = utils.shuffle(mobs)
-            bosses[1]:setLocalVar("item", 1)
-            bosses[2]:setLocalVar("vortex", 1)
+            bosses[1]:setLocalVar('item', 1)
+            bosses[2]:setLocalVar('vortex', 1)
         end,
 
         death = function(battlefield, mob, count)
-            if mob:getLocalVar("item") == 1 then
+            if mob:getLocalVar('item') == 1 then
                 xi.limbus.spawnFrom(mob, ID.NE_APOLLYON.npc.ITEM_CRATES[1])
-            elseif mob:getLocalVar("vortex") == 1 then
+            elseif mob:getLocalVar('vortex') == 1 then
                 content:openDoor(battlefield, 1)
             end
         end,
     },
 
     {
-        mobs = { "Barometz", "Borametz", "Barometz_Boss", "Borametz_Boss" },
-        mobMods = { [xi.mobMod.ALLI_HATE] = 50 },
+        mobs       = { 'Barometz', 'Borametz', 'Barometz_Boss', 'Borametz_Boss' },
+        mobMods    = { [xi.mobMod.ALLI_HATE] = 50 },
         stationary = false,
     },
 
     -- Floor 2
     {
-        mobs = { "Bialozar_Boss" },
+        mobs    = { 'Bialozar_Boss' },
         mobMods = { [xi.mobMod.DETECTION] = xi.detects.HEARING },
-        death = function(battlefield, mob, count)
+        death   = function(battlefield, mob, count)
             xi.limbus.spawnFrom(mob, ID.NE_APOLLYON.npc.ITEM_CRATES[2])
         end,
     },
 
     {
-        mobs = { "Sirin", "Cornu" },
+        mobs = { 'Sirin', 'Cornu' },
     },
 
     {
         -- Bialozar and Thiazi x2
-        mobs = { "Bialozar", "Thiazi" },
-        mobMods = { [xi.mobMod.DETECTION] = xi.detects.HEARING },
+        mobs        = { 'Bialozar', 'Thiazi' },
+        mobMods     = { [xi.mobMod.DETECTION] = xi.detects.HEARING },
         randomDeath = function(battlefield, mob)
             content:openDoor(battlefield, 2)
 
             -- Determine which mobs should be in floor three and add their group
             local sweepers =
             {
-                mobIds = {},
+                mobIds      = {},
                 randomDeath = function(battlefieldInner, sweeperMob)
                     content:openDoor(battlefieldInner, 3)
                 end,
@@ -198,7 +194,7 @@ content.groups =
             local cleanersSmall =
             {
                 -- Apollyon Cleaners (Small)
-                mobIds = {},
+                mobIds     = {},
                 stationary = false,
             }
 
@@ -209,14 +205,16 @@ content.groups =
             table.insert(cleanersSmall.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[1] + 3)
             table.insert(cleanersSmall.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[1] + 4)
 
-            local player_count = #battlefield:getPlayers()
-            if player_count > 6 then
+            local playerCount = #battlefield:getPlayers()
+
+            if playerCount > 6 then
                 table.insert(sweepers.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[2])
                 table.insert(cleanersLarge.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[2] + 1)
                 table.insert(cleanersSmall.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[2] + 2)
                 table.insert(cleanersSmall.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[2] + 3)
                 table.insert(cleanersSmall.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[2] + 4)
-                if player_count > 12 then
+
+                if playerCount > 12 then
                     table.insert(sweepers.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[3])
                     table.insert(cleanersLarge.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[3] + 1)
                     table.insert(cleanersSmall.mobIds, ID.NE_APOLLYON.mob.APOLLYON_SWEEPER[3] + 2)
@@ -234,56 +232,56 @@ content.groups =
 
     -- Floor 4
     {
-        mobs = { "Hyperion", "Okeanos", "Cronos" },
-        stationary = false,
+        mobs        = { 'Hyperion', 'Okeanos', 'Cronos' },
+        stationary  = false,
         randomDeath = function(battlefield, mob)
             content:openDoor(mob:getBattlefield(), 4)
         end,
     },
 
     {
-        mobs = { "Hyperion" },
+        mobs = { 'Hyperion' },
         mods = { [xi.mod.MAGIC_NULL] = 100 },
     },
 
     {
-        mobs = { "Okeanos" },
+        mobs = { 'Okeanos' },
         mods = { [xi.mod.NULL_RANGED_DAMAGE] = 100 },
     },
 
     {
-        mobs = { "Cronos" },
+        mobs = { 'Cronos' },
         mods = { [xi.mod.NULL_PHYSICAL_DAMAGE] = 100 },
     },
 
     {
-        mobs = { "Kerkopes_Boss" },
+        mobs       = { 'Kerkopes_Boss' },
         stationary = false,
-        death = function(battlefield, mob, count)
+        death      = function(battlefield, mob, count)
             xi.limbus.spawnFrom(mob, ID.NE_APOLLYON.npc.ITEM_CRATES[4])
         end,
     },
 
     {
-        mobs = { "Kerkopes" },
+        mobs       = { 'Kerkopes' },
         stationary = false,
     },
 
     -- Floor 5
     {
-        mobs = { "Troglodyte_Dhalmel" },
+        mobs     = { 'Troglodyte_Dhalmel' },
         allDeath = function(battlefield, mob)
             npcUtil.showCrate(GetNPCByID(ID.NE_APOLLYON.npc.LOOT_CRATE))
         end,
     },
 
     {
-        mobs = { "Criosphinx", "Hieracosphinx" },
+        mobs = { 'Criosphinx', 'Hieracosphinx' },
         mods =
         {
-            [xi.mod.GRAVITYRES] = 75,
-            [xi.mod.BINDRES] = 75,
-            [xi.mod.SLEEPRES] = 75,
+            [xi.mod.GRAVITY_MEVA] = 75,
+            [xi.mod.BIND_MEVA   ] = 75,
+            [xi.mod.SLEEP_MEVA  ] = 75,
         },
     }
 }
@@ -293,185 +291,168 @@ content.loot =
     [ID.NE_APOLLYON.npc.ITEM_CRATES[1]] =
     {
         {
-            quantity = 3,
-            { itemid = 1875, droprate = 1000 }, -- Ancient Beastcoin
+            quantity = 2,
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 1000 }, -- Nothing
-            { itemid = 1875, droprate = 1000 }, -- Ancient Beastcoin
+            { item = xi.item.NONE,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid = 1953, droprate = 304 }, -- SAM
-            { itemid = 1943, droprate =  18 }, -- PLD
-            { itemid = 1941, droprate = 200 }, -- THF
-            { itemid = 2715, droprate = 200 }, -- DNC
-            { itemid = 2661, droprate =  36 }, -- PUP
-            { itemid = 1933, droprate =  18 }, -- MNK
-            { itemid = 1939, droprate =  36 }, -- RDM
-            { itemid = 1935, droprate = 411 }, -- WHM
-            { itemid = 2717, droprate = 482 }, -- SCH
-            { itemid = 1947, droprate =  18 }, -- BST
+            { item = xi.item.SQUARE_OF_CARDINAL_CLOTH,  weight = xi.loot.weight.NORMAL },
+            { item = xi.item.SQUARE_OF_CHARCOAL_COTTON, weight = xi.loot.weight.NORMAL },
+            { item = xi.item.SQUARE_OF_ASTRAL_LEATHER,  weight = xi.loot.weight.NORMAL },
+            { item = xi.item.GOLD_STUD,                 weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 1000 }, -- SAM
-            { itemid = 1953, droprate =  304 }, -- SAM
-            { itemid = 1943, droprate =   18 }, -- PLD
-            { itemid = 1941, droprate =  200 }, -- THF
-            { itemid = 2715, droprate =  200 }, -- DNC
-            { itemid = 2661, droprate =   36 }, -- PUP
-            { itemid = 1933, droprate =   18 }, -- MNK
-            { itemid = 1939, droprate =   36 }, -- RDM
-            { itemid = 1935, droprate =  411 }, -- WHM
-            { itemid = 2717, droprate =  482 }, -- SCH
-            { itemid = 1947, droprate =   18 }, -- BST
+            { item = xi.item.NONE,               weight = xi.loot.weight.VERY_HIGH },
+            { item = xi.item.BLACK_RIVET,        weight = xi.loot.weight.LOW       },
+            { item = xi.item.FETID_LANOLIN_CUBE, weight = xi.loot.weight.LOW       },
+            { item = xi.item.SHEET_OF_KUROGANE,  weight = xi.loot.weight.LOW       },
+            { item = xi.item.ELECTRUM_STUD,      weight = xi.loot.weight.LOW       },
+        },
+
+        {
+            { item = xi.item.NONE,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
     },
 
-    -- NE_Apollyon floor 2
     [ID.NE_APOLLYON.npc.ITEM_CRATES[2]] =
     {
         {
             quantity = 3,
-            { itemid = 1875, droprate = 1000 }, -- Ancient Beastcoin
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 1000 }, -- Nothing
-            { itemid = 1875, droprate = 1000 }, -- Ancient Beastcoin
+            { item = xi.item.NONE,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid = 1947, droprate =  26 }, -- BST
-            { itemid = 1933, droprate =  53 }, -- MNK
-            { itemid = 1943, droprate =  26 }, -- PLD
-            { itemid = 2661, droprate =  26 }, -- PUP
-            { itemid = 1937, droprate = 395 }, -- BLM
-            { itemid = 1957, droprate = 289 }, -- DRG
-            { itemid = 1941, droprate =  53 }, -- THF
-            { itemid = 1939, droprate = 112 }, -- RDM
-            { itemid = 2657, droprate = 477 }, -- BLU
+            { item = xi.item.ARGYRO_RIVET,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.FETID_LANOLIN_CUBE,        weight = xi.loot.weight.NORMAL },
+            { item = xi.item.SHEET_OF_KUROGANE,         weight = xi.loot.weight.NORMAL },
+            { item = xi.item.SQUARE_OF_FLAMESHUN_CLOTH, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate =  1000 }, -- Nothing
-            { itemid = 1947, droprate =    26 }, -- BST
-            { itemid = 1933, droprate =    53 }, -- MNK
-            { itemid = 1943, droprate =    26 }, -- PLD
-            { itemid = 2661, droprate =    26 }, -- PUP
-            { itemid = 1937, droprate =   395 }, -- BLM
-            { itemid = 1957, droprate =   289 }, -- DRG
-            { itemid = 1941, droprate =    53 }, -- THF
-            { itemid = 1939, droprate =   112 }, -- RDM
-            { itemid = 2657, droprate =   477 }, -- BLU
+            { item = xi.item.NONE,                      weight = xi.loot.weight.VERY_HIGH },
+            { item = xi.item.ANCIENT_BRASS_INGOT,       weight = xi.loot.weight.LOW       },
+            { item = xi.item.SQUARE_OF_CHARCOAL_COTTON, weight = xi.loot.weight.LOW       },
+            { item = xi.item.SQUARE_OF_BROWN_DOESKIN,   weight = xi.loot.weight.LOW       },
+            { item = xi.item.SQUARE_OF_CANVAS_TOILE,    weight = xi.loot.weight.LOW       },
+        },
+
+        {
+            { item = xi.item.NONE,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
     },
 
-    -- NE_Apollyon floor 3
     [ID.NE_APOLLYON.npc.ITEM_CRATES[3]] =
     {
         {
             quantity = 4,
-            { itemid = 1875, droprate = 1000 }, -- Ancient Beastcoin
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 1000 }, -- Nothing
-            { itemid = 1931, droprate =  788 }, -- WAR
-            { itemid = 1939, droprate =   30 }, -- RDM
-            { itemid = 1953, droprate =  130 }, -- SAM
-            { itemid = 1957, droprate =  100 }, -- DRG
-            { itemid = 1947, droprate =   90 }, -- BST
-            { itemid = 1933, droprate =   30 }, -- MNK
-            { itemid = 1941, droprate =   99 }, -- THF
-            { itemid = 2661, droprate =   61 }, -- PUP
-            { itemid = 2715, droprate =   30 }, -- DNC
-            { itemid = 1943, droprate =  160 }, -- PLD
+            { item = xi.item.NONE,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 1000 }, -- Nothing
-            { itemid = 1931, droprate =  788 }, -- WAR
-            { itemid = 1939, droprate =   30 }, -- RDM
-            { itemid = 1953, droprate =  130 }, -- SAM
-            { itemid = 1957, droprate =  100 }, -- DRG
-            { itemid = 1947, droprate =   90 }, -- BST
-            { itemid = 1933, droprate =   30 }, -- MNK
-            { itemid = 1941, droprate =   99 }, -- THF
-            { itemid = 2661, droprate =   61 }, -- PUP
-            { itemid = 2715, droprate =   30 }, -- DNC
-            { itemid = 1943, droprate =  160 }, -- PLD
+            { item = xi.item.SPOOL_OF_BENEDICT_YARN,  weight = xi.loot.weight.NORMAL },
+            { item = xi.item.SPOOL_OF_LIGHT_FILAMENT, weight = xi.loot.weight.NORMAL },
+            { item = xi.item.BLUE_RIVET,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.ELECTRUM_STUD,           weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 180 }, -- Nothing
-            { itemid = 1633, droprate =  30 }, -- Clot Plasma
-            { itemid =  821, droprate =  40 }, -- Rainbow Thread
-            { itemid = 1311, droprate =  50 }, -- Oxblood
-            { itemid = 1883, droprate =  40 }, -- Shell Powder
-            { itemid = 2004, droprate =  20 }, -- Carapace Powder
+            { item = xi.item.NONE,                     weight = xi.loot.weight.VERY_HIGH },
+            { item = xi.item.SQUARE_OF_CARDINAL_CLOTH, weight = xi.loot.weight.LOW       },
+            { item = xi.item.WHITE_RIVET,              weight = xi.loot.weight.LOW       },
+            { item = xi.item.SQUARE_OF_ASTRAL_LEATHER, weight = xi.loot.weight.LOW       },
+            { item = xi.item.SQUARE_OF_CORDUROY_CLOTH, weight = xi.loot.weight.LOW       },
         },
 
         {
-            { itemid =    0, droprate = 180 }, -- Nothing
-            { itemid = 1633, droprate =  30 }, -- Clot Plasma
-            { itemid =  821, droprate =  40 }, -- Rainbow Thread
-            { itemid = 1311, droprate =  50 }, -- Oxblood
-            { itemid = 1883, droprate =  40 }, -- Shell Powder
-            { itemid = 2004, droprate =  20 }, -- Carapace Powder
+            quantity = 2,
+            { item = xi.item.NONE,                    weight = xi.loot.weight.VERY_HIGH },
+            { item = xi.item.CHUNK_OF_ADAMAN_ORE,     weight = xi.loot.weight.VERY_LOW  },
+            { item = xi.item.HANDFUL_OF_CLOT_PLASMA,  weight = xi.loot.weight.VERY_LOW  },
+            { item = xi.item.DARKSTEEL_SHEET,         weight = xi.loot.weight.VERY_LOW  },
+            { item = xi.item.CHUNK_OF_DARKSTEEL_ORE,  weight = xi.loot.weight.VERY_LOW  },
+            { item = xi.item.PIECE_OF_OXBLOOD,        weight = xi.loot.weight.VERY_LOW  },
+            { item = xi.item.LIGHT_STEEL_INGOT,       weight = xi.loot.weight.VERY_LOW  },
+            { item = xi.item.SPOOL_OF_RAINBOW_THREAD, weight = xi.loot.weight.VERY_LOW  },
+            { item = xi.item.PONZE_OF_SHELL_POWDER,   weight = xi.loot.weight.VERY_LOW  },
         },
     },
 
-    -- NE_Apollyon floor 4
     [ID.NE_APOLLYON.npc.ITEM_CRATES[4]] =
     {
         {
-            quantity = 6,
-            { itemid = 1875, droprate = 1000 }, -- Ancient Beastcoin
+            quantity = 5,
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 1000 }, -- Nothing
-            { itemid = 1875, droprate = 1000 }, -- Ancient Beastcoin
+            quantity = 2,
+            { item = xi.item.NONE,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid = 1949, droprate = 326 }, -- BRD
-            { itemid = 1945, droprate = 256 }, -- DRK
-            { itemid = 1951, droprate = 395 }, -- RNG
-            { itemid = 1959, droprate = 279 }, -- SMN
-            { itemid = 1955, droprate = 256 }, -- NIN
-            { itemid = 2659, droprate = 326 }, -- COR
+            { item = xi.item.SPOOL_OF_DIABOLIC_YARN,   weight = xi.loot.weight.NORMAL },
+            { item = xi.item.BLACK_RIVET,              weight = xi.loot.weight.NORMAL },
+            { item = xi.item.POT_OF_EBONY_LACQUER,     weight = xi.loot.weight.NORMAL },
+            { item = xi.item.SQUARE_OF_CORDUROY_CLOTH, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 1000 }, -- Nothing
-            { itemid = 1949, droprate =  326 }, -- BRD
-            { itemid = 1945, droprate =  256 }, -- DRK
-            { itemid = 1951, droprate =  395 }, -- RNG
-            { itemid = 1959, droprate =  279 }, -- SMN
-            { itemid = 1955, droprate =  256 }, -- NIN
-            { itemid = 2659, droprate =  326 }, -- COR
+            { item = xi.item.NONE,                    weight = xi.loot.weight.VERY_HIGH },
+            { item = xi.item.ARGYRO_RIVET,            weight = xi.loot.weight.LOW       },
+            { item = xi.item.SPOOL_OF_LIGHT_FILAMENT, weight = xi.loot.weight.LOW       },
+            { item = xi.item.BLUE_RIVET,              weight = xi.loot.weight.LOW       },
+            { item = xi.item.GOLD_STUD,               weight = xi.loot.weight.LOW       },
         },
     },
 
-    -- NE_Apollyon floor 5
     [ID.NE_APOLLYON.npc.LOOT_CRATE] =
     {
         {
-            quantity = 7,
-            { itemid = 1875, droprate = 1000 }, -- Ancient Beastcoin
+            quantity = 6,
+            { item = xi.item.ANCIENT_BEASTCOIN, weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid = 1910, droprate = 1000 }, -- Smoky Chip
+            { item = xi.item.ANCIENT_BRASS_INGOT,     weight = xi.loot.weight.NORMAL },
+            { item = xi.item.WHITE_RIVET,             weight = xi.loot.weight.NORMAL },
+            { item = xi.item.SQUARE_OF_BROWN_DOESKIN, weight = xi.loot.weight.NORMAL },
+            { item = xi.item.SQUARE_OF_CANVAS_TOILE,  weight = xi.loot.weight.NORMAL },
         },
 
         {
-            { itemid =    0, droprate = 100 }, -- Nothing
-            { itemid = 2127, droprate =  59 }, -- Metal Chip
+            { item = xi.item.NONE,                      weight = xi.loot.weight.VERY_HIGH },
+            { item = xi.item.SPOOL_OF_BENEDICT_YARN,    weight = xi.loot.weight.LOW       },
+            { item = xi.item.SPOOL_OF_DIABOLIC_YARN,    weight = xi.loot.weight.LOW       },
+            { item = xi.item.POT_OF_EBONY_LACQUER,      weight = xi.loot.weight.LOW       },
+            { item = xi.item.SQUARE_OF_FLAMESHUN_CLOTH, weight = xi.loot.weight.LOW       },
+        },
+
+        {
+            { item = xi.item.SMOKY_CHIP, weight = xi.loot.weight.NORMAL },
+        },
+
+        {
+            { item = xi.item.NONE,       weight = xi.loot.weight.VERY_HIGH },
+            { item = xi.item.METAL_CHIP, weight = xi.loot.weight.VERY_LOW  },
         },
     },
 }

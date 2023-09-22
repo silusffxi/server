@@ -1,12 +1,8 @@
 -----------------------------------
 -- Thief Job Utilities
 -----------------------------------
-require('scripts/globals/items')
-require("scripts/globals/msg")
-require("scripts/globals/quests")
-require("scripts/globals/settings")
-require("scripts/globals/status")
-require("scripts/globals/utils")
+require('scripts/globals/quests')
+require('scripts/globals/utils')
 -----------------------------------
 xi = xi or {}
 xi.job_utils = xi.job_utils or {}
@@ -38,7 +34,6 @@ local stealableSPEffects =
 -----------------------------------
 -- Local Functions
 -----------------------------------
-
 local function processDebuff(player, target, ability, debuff)
     local power = 10
 
@@ -111,11 +106,13 @@ end
 
 xi.job_utils.thief.checkLarceny = function(player, target, ability)
     ability:setRecast(ability:getRecast() - player:getMod(xi.mod.ONE_HOUR_RECAST))
+
     return 0, 0
 end
 
 xi.job_utils.thief.checkPerfectDodge = function(player, target, ability)
     ability:setRecast(ability:getRecast() - player:getMod(xi.mod.ONE_HOUR_RECAST))
+
     return 0, 0
 end
 
@@ -141,7 +138,8 @@ end
 
 xi.job_utils.thief.useAssassinsCharge = function(player, target, ability)
     local merits = player:getMerit(xi.merit.ASSASSINS_CHARGE)
-    local crit = 0
+    local crit   = 0
+
     if player:getMod(xi.mod.AUGMENTS_ASSASSINS_CHARGE) > 0 then
         crit = merits / 5
     end
@@ -163,9 +161,9 @@ end
 
 xi.job_utils.thief.useConspirator = function(player, target, ability)
     local subtleBlow = 0
-    local accuracy = 0
-    local scale = 1
-    local mob = player:getTarget()
+    local accuracy   = 0
+    local scale      = 1
+    local mob        = player:getTarget()
 
     if mob then
         local enmityList = mob:getEnmityList()
@@ -193,9 +191,10 @@ xi.job_utils.thief.useConspirator = function(player, target, ability)
 end
 
 xi.job_utils.thief.useDespoil = function(player, target, ability, action)
-    local level = player:getMainLvl()
-    local despoilMod = player:getMod(xi.mod.DESPOIL)
+    local level         = utils.getActiveJobLevel(player, xi.job.THF)
+    local despoilMod    = player:getMod(xi.mod.DESPOIL)
     local despoilChance = 50 + despoilMod * 2 + level - target:getMainLvl() -- Same math as Steal
+
     -- TODO: Need to verify if there's a message associated with this
     local jpValue = player:getJobPointLevel(xi.jp.DESPOIL_EFFECT)
 
@@ -250,6 +249,11 @@ end
 xi.job_utils.thief.useFlee = function(player, target, ability)
     local duration = 30 + player:getMod(xi.mod.FLEE_DURATION)
 
+    -- TODO: Flee will not override all types of weight effect. Find out which aren't overriden.
+    if player:hasStatusEffect(xi.effect.WEIGHT) then
+        player:delStatusEffect(xi.effect.WEIGHT)
+    end
+
     player:addStatusEffect(xi.effect.FLEE, 100, 0, duration)
 end
 
@@ -264,7 +268,7 @@ end
 xi.job_utils.thief.useLarceny = function(player, target, ability, action)
     local effectStolen
     local effectID = 0
-    local jpValue = player:getJobPointLevel(xi.jp.LARCENY_EFFECT)
+    local jpValue  = player:getJobPointLevel(xi.jp.LARCENY_EFFECT)
 
     -- SP Abilities have priority, check if one is present first
     for i = 1, #stealableSPEffects do
@@ -285,7 +289,7 @@ xi.job_utils.thief.useLarceny = function(player, target, ability, action)
         end
     -- Copy an SP Ability if found
     else
-        local newID       = effectStolen:getType()
+        local newID       = effectStolen:getEffectType()
         local newIcon     = effectStolen:getIcon()
         local newPower    = effectStolen:getPower()
         local newTick     = effectStolen:getTick()
@@ -308,16 +312,10 @@ xi.job_utils.thief.useLarceny = function(player, target, ability, action)
 end
 
 xi.job_utils.thief.useMug = function(player, target, ability, action)
-    local thfLevel
-    local gil = 0
+    local thfLevel = utils.getActiveJobLevel(player, xi.job.THF)
+    local gil      = 0
     -- TODO: Need to verify if there's a message associated with this
     local jpValue = player:getJobPointLevel(xi.jp.MUG_EFFECT)
-
-    if player:getMainJob() == xi.job.THF then
-        thfLevel = player:getMainLvl()
-    else
-        thfLevel = player:getSubLvl()
-    end
 
     if jpValue > 0 and player:getMainJob() == xi.job.THF then
         local hpSteal = ((player:getStat(xi.mod.AGI) + player:getStat(xi.mod.DEX)) * jpValue) * 0.05
@@ -333,9 +331,14 @@ xi.job_utils.thief.useMug = function(player, target, ability, action)
 
     local mugChance = 90 + thfLevel - target:getMainLvl()
 
-    if target:isMob() and math.random(100) < mugChance and target:getMobMod(xi.mobMod.MUG_GIL) > 0 then
-        local purse = target:getMobMod(xi.mobMod.MUG_GIL)
+    if
+        target:isMob() and
+        math.random(100) < mugChance and
+        target:getMobMod(xi.mobMod.MUG_GIL) > 0
+    then
+        local purse    = target:getMobMod(xi.mobMod.MUG_GIL)
         local fatpurse = target:getGil()
+
         gil = fatpurse / (8 + math.random(0, 8))
 
         if gil == 0 then
@@ -374,21 +377,13 @@ xi.job_utils.thief.usePerfectDodge = function(player, target, ability)
 end
 
 xi.job_utils.thief.useSneakAttack = function(player, target, ability)
-   player:addStatusEffect(xi.effect.SNEAK_ATTACK, 1, 0, 60)
+    player:addStatusEffect(xi.effect.SNEAK_ATTACK, 1, 0, 60)
 end
 
 xi.job_utils.thief.useSteal = function(player, target, ability, action)
-    local thfLevel
-    local stolen = action:getParam(target:getID())
-
-    if player:getMainJob() == xi.job.THF then
-        thfLevel = player:getMainLvl()
-    else
-        thfLevel = player:getSubLvl()
-    end
-
-    local stealMod = player:getMod(xi.mod.STEAL)
-
+    local thfLevel    = utils.getActiveJobLevel(player, xi.job.THF)
+    local stolen      = action:getParam(target:getID())
+    local stealMod    = player:getMod(xi.mod.STEAL)
     local stealChance = 50 + stealMod * 2 + thfLevel - target:getMainLvl()
 
     if stolen == 0 then
@@ -399,7 +394,7 @@ xi.job_utils.thief.useSteal = function(player, target, ability, action)
         player:addItem(stolen)
         target:itemStolen()
         ability:setMsg(xi.msg.basic.STEAL_SUCCESS) -- Item stolen successfully
-        target:triggerListener("ITEM_STOLEN", target, player, stolen)
+        target:triggerListener('ITEM_STOLEN', target, player, stolen)
         -- Aura Steal does not trigger on successful item steal
         return stolen
     else
@@ -410,7 +405,7 @@ xi.job_utils.thief.useSteal = function(player, target, ability, action)
     -- Attempt Aura steal
     -- local effect = xi.effect.NONE
     if stolen == 0 and player:hasTrait(75) then
-        local resist = applyResistanceAbility(player, target, xi.magic.ele.NONE, 0, 0)
+        local resist = applyResistanceAbility(player, target, xi.element.NONE, 0, 0)
         -- local effectStealSuccess = false
         if resist > 0.0625 then
             local auraStealChance = math.min(player:getMerit(xi.merit.AURA_STEAL), 95)
@@ -446,5 +441,5 @@ xi.job_utils.thief.useSteal = function(player, target, ability, action)
 end
 
 xi.job_utils.thief.useTrickAttack = function(player, target, ability)
-   player:addStatusEffect(xi.effect.TRICK_ATTACK, 1, 0, 60)
+    player:addStatusEffect(xi.effect.TRICK_ATTACK, 1, 0, 60)
 end

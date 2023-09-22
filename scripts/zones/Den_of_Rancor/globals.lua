@@ -1,10 +1,7 @@
 -- Zone: Den of Rancor (160)
 -- Desc: this file contains functions that are shared by multiple luas in this zone's directory
 -----------------------------------
-local ID = require("scripts/zones/Den_of_Rancor/IDs")
-require("scripts/globals/npc_util")
-require("scripts/globals/settings")
-require("scripts/globals/status")
+local ID = zones[xi.zone.DEN_OF_RANCOR]
 -----------------------------------
 
 local denOfRancorGlobal =
@@ -13,19 +10,19 @@ local denOfRancorGlobal =
         trade to lanterns next to Sacrificial Chamber (Rancor Flame)
         ..............................................................................................]]
     onTradeLanternChamber = function(player, npc, trade)
-        if npcUtil.tradeHas(trade, 1139) then -- Rancor Flame
+        if npcUtil.tradeHas(trade, xi.item.RANCOR_FLAME) then -- Rancor Flame
             if npc:getAnimation() == xi.anim.OPEN_DOOR then
                 player:messageSpecial(ID.text.LANTERN_OFFSET + 7) -- already lit
             else
                 player:confirmTrade()
-                player:addItem(1138) -- return unlit lantern
+                player:addItem(xi.item.UNLIT_LANTERN) -- return unlit lantern
 
                 npc:openDoor(xi.settings.main.LANTERNS_STAY_LIT) -- light lantern
 
                 local total = GetNPCByID(ID.npc.LANTERN_OFFSET + 0):getAnimation() +
-                              GetNPCByID(ID.npc.LANTERN_OFFSET + 1):getAnimation() +
-                              GetNPCByID(ID.npc.LANTERN_OFFSET + 2):getAnimation() +
-                              GetNPCByID(ID.npc.LANTERN_OFFSET + 3):getAnimation()
+                    GetNPCByID(ID.npc.LANTERN_OFFSET + 1):getAnimation() +
+                    GetNPCByID(ID.npc.LANTERN_OFFSET + 2):getAnimation() +
+                    GetNPCByID(ID.npc.LANTERN_OFFSET + 3):getAnimation()
 
                 player:messageSpecial(ID.text.LANTERN_OFFSET + 44 - total)
 
@@ -35,6 +32,7 @@ local denOfRancorGlobal =
                         lantern:closeDoor(1)
                         lantern:openDoor(30)
                     end
+
                     GetNPCByID(ID.npc.LANTERN_OFFSET + 4):openDoor(30)
                 end
             end
@@ -45,17 +43,17 @@ local denOfRancorGlobal =
         trade to lanterns next to Hakutaku (Rancor Flame)
         ..............................................................................................]]
     onTradeLanternHaku = function(player, npc, trade)
-        if npcUtil.tradeHas(trade, 1139) then -- Rancor Flame
+        if npcUtil.tradeHas(trade, xi.item.RANCOR_FLAME) then -- Rancor Flame
             if npc:getAnimation() == xi.anim.OPEN_DOOR then
                 player:messageSpecial(ID.text.LANTERN_OFFSET + 7) -- already lit
             else
                 player:confirmTrade()
-                player:addItem(1138) -- return unlit lantern
+                player:addItem(xi.item.UNLIT_LANTERN) -- return unlit lantern
 
                 npc:openDoor(xi.settings.main.LANTERNS_STAY_LIT) -- light lantern
 
                 local total = GetNPCByID(ID.npc.LANTERN_OFFSET + 6):getAnimation() +
-                              GetNPCByID(ID.npc.LANTERN_OFFSET + 7):getAnimation()
+                    GetNPCByID(ID.npc.LANTERN_OFFSET + 7):getAnimation()
 
                 if total == 17 then
                     player:messageSpecial(ID.text.LANTERN_OFFSET + 9)
@@ -66,6 +64,7 @@ local denOfRancorGlobal =
                         lantern:closeDoor(1)
                         lantern:openDoor(30)
                     end
+
                     GetNPCByID(ID.npc.LANTERN_OFFSET + 8):openDoor(30)
                 end
             end
@@ -83,12 +82,12 @@ local denOfRancorGlobal =
                 player:messageSpecial(ID.text.LANTERN_OFFSET + 7) -- already lit
             else
                 player:confirmTrade()
-                player:addItem(1138) -- return unlit lantern
+                player:addItem(xi.item.UNLIT_LANTERN) -- return unlit lantern
 
                 npc:openDoor(xi.settings.main.LANTERNS_STAY_LIT) -- light lantern
 
                 local total = GetNPCByID(ID.npc.LANTERN_OFFSET + 9):getAnimation() +
-                              GetNPCByID(ID.npc.LANTERN_OFFSET + 10):getAnimation()
+                    GetNPCByID(ID.npc.LANTERN_OFFSET + 10):getAnimation()
 
                 if total == 17 then
                     player:messageSpecial(ID.text.LANTERN_OFFSET + 9)
@@ -99,6 +98,7 @@ local denOfRancorGlobal =
                         lantern:closeDoor(1)
                         lantern:openDoor(30)
                     end
+
                     GetNPCByID(ID.npc.LANTERN_OFFSET + 11):openDoor(30)
                 end
             end

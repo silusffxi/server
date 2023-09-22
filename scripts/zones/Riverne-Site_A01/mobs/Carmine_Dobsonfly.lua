@@ -2,22 +2,21 @@
 -- Area: Riverne - Site A01
 --  Mob: Carmine Dobsonfly
 -----------------------------------
-local ID = require("scripts/zones/Riverne-Site_A01/IDs")
-require("scripts/globals/status")
+local ID = zones[xi.zone.RIVERNE_SITE_A01]
 -----------------------------------
 local entity = {}
 
 entity.onMobSpawn = function(mob)
     mob:setMobMod(xi.mobMod.SUPERLINK, ID.mob.CARMINE_DOBSONFLY_OFFSET)
-    mob:SetMagicCastingEnabled(false) -- does not cast spells while idle
+    mob:setMagicCastingEnabled(false) -- does not cast spells while idle
 end
 
 entity.onMobEngaged = function(mob, target)
-    mob:SetMagicCastingEnabled(true)
+    mob:setMagicCastingEnabled(true)
 end
 
 entity.onMobDisengage = function(mob)
-    mob:SetMagicCastingEnabled(false)
+    mob:setMagicCastingEnabled(false)
 end
 
 entity.onMobDeath = function(mob, player, optParams)
@@ -28,12 +27,12 @@ entity.onMobDespawn = function(mob)
 
     local allFliesDead = true
     for i = ID.mob.CARMINE_DOBSONFLY_OFFSET, ID.mob.CARMINE_DOBSONFLY_OFFSET + 9 do
-        if (GetMobByID(i):isAlive()) then
+        if GetMobByID(i):isAlive() then
             allFliesDead = false
         end
     end
 
-    if (allFliesDead) then
+    if allFliesDead then
         local respawnTime = math.random(75600, 86400)
         for i = ID.mob.CARMINE_DOBSONFLY_OFFSET, ID.mob.CARMINE_DOBSONFLY_OFFSET + 9 do
             DisallowRespawn(i, false)

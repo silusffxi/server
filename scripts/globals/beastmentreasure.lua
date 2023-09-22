@@ -2,10 +2,7 @@
 -- Beastmen Treasure side quests
 -- https://ffxiclopedia.fandom.com/wiki/Beastmen_Treasure
 -----------------------------------
-require('scripts/globals/keyitems')
 require('scripts/globals/quests')
-require('scripts/globals/status')
-require('scripts/globals/zone')
 -----------------------------------
 xi = xi or {}
 xi.beastmentreasure = xi.beastmentreasure or {}
@@ -73,7 +70,7 @@ local zoneData =
 
 local sharedLoot =
 {
-    -- All items are assigned a "weight" here
+    -- All items are assigned a 'weight' here
     rocksgems =
     {
         [769] = 1, -- Red rock
@@ -136,6 +133,7 @@ local function addLoot(t1, t2)
     for item, weight in pairs(t1) do
         newTable[item] = weight
     end
+
     -- Add in our new item
     newTable[newItem] = t2[newItem]
 
@@ -143,15 +141,15 @@ local function addLoot(t1, t2)
 end
 
 -- Generate weighted loot tables now (on server init) so it doesn't have to be done at runtime
-local w_rocksgems   = convertToWeighted(sharedLoot.rocksgems)
-local w_seedsracial =
+local wRocksGems   = convertToWeighted(sharedLoot.rocksgems)
+local wSeedsRacial =
 {
     [xi.zone.YUHTUNGA_JUNGLE] = convertToWeighted(addLoot(sharedLoot.seeds, zoneData[xi.zone.YUHTUNGA_JUNGLE].loot.racial)),
     [xi.zone.YHOATOR_JUNGLE] = convertToWeighted(addLoot(sharedLoot.seeds, zoneData[xi.zone.YHOATOR_JUNGLE].loot.racial)),
     [xi.zone.WESTERN_ALTEPA_DESERT] = convertToWeighted(addLoot(sharedLoot.seeds, zoneData[xi.zone.WESTERN_ALTEPA_DESERT].loot.racial))
 }
-local w_coins       = convertToWeighted(sharedLoot.coins)
-local w_sealsunique =
+local wCoins       = convertToWeighted(sharedLoot.coins)
+local wSealsUnique =
 {
     [xi.zone.YUHTUNGA_JUNGLE] = convertToWeighted(addLoot(sharedLoot.seals, zoneData[xi.zone.YUHTUNGA_JUNGLE].loot.unique)),
     [xi.zone.YHOATOR_JUNGLE] = convertToWeighted(addLoot(sharedLoot.seals, zoneData[xi.zone.YHOATOR_JUNGLE].loot.unique)),
@@ -170,9 +168,9 @@ end
 
 local function startMapMarkerEvent(eventid, player, digsiteids)
     --[[ Map marker event notes:
-        Event 101 creates the "Treasure" map marker using coordinate args
-        Event 103 shows the "Treasure" map marker using coordinate args
-        Event 105, played on excavation, deletes the "Treasure" map marker
+        Event 101 creates the 'Treasure' map marker using coordinate args
+        Event 103 shows the 'Treasure' map marker using coordinate args
+        Event 105, played on excavation, deletes the 'Treasure' map marker
 
         Parameters for events 101/103 are as follows:
             1: zone id
@@ -204,9 +202,9 @@ xi.beastmentreasure.handleNpcOnTrigger = function(player, digsiteids)
     elseif status == QUEST_AVAILABLE then
         player:startEvent(100) -- Peddlestox says go fetch
     elseif status == QUEST_ACCEPTED then
-        player:startEvent(104) -- "What do I look like, a charity?"
+        player:startEvent(104) -- 'What do I look like, a charity?'
     elseif status == QUEST_COMPLETED then
-        -- Note: Quest will be "completed" after trading the correct items,
+        -- Note: Quest will be 'completed' after trading the correct items,
         -- but will be set to available again after excavating the reward.
         startMapMarkerEvent(103, player, digsiteids) -- Peddlestox reminds you where your digsite is
     end
@@ -215,7 +213,10 @@ end
 xi.beastmentreasure.handleNpcOnTrade = function(player, trade, digsiteids)
     local zd = zoneData[player:getZoneID()]
 
-    if player:getCharVar(zd.statusvar) == QUEST_ACCEPTED and npcUtil.tradeHasExactly(trade, zd.fetchitems) then
+    if
+        player:getCharVar(zd.statusvar) == QUEST_ACCEPTED and
+        npcUtil.tradeHasExactly(trade, zd.fetchitems)
+    then
         -- Assign a random dig site to the player
         player:setCharVar(zd.dsvar, math.random(1, 8))
 
@@ -267,7 +268,7 @@ xi.beastmentreasure.handleQmOnTrigger = function(player, npc, buriedtext, nothin
     if digsiteid == nil or digsiteid ~= qmid then
         player:messageSpecial(nothingtext)
     elseif digsiteid == qmid then
-        -- "It looks like something is buried here. If you had a <pickaxe> you could dig it up."
+        -- 'It looks like something is buried here. If you had a <pickaxe> you could dig it up.'
         player:messageSpecial(buriedtext, 605)
     end
 end
@@ -277,7 +278,7 @@ xi.beastmentreasure.handleQmOnTrade = function(player, npc, trade, digsiteids)
     local digsite = getAssignedDigSite(player)
 
     if
-        npcUtil.tradeHasExactly(trade, 605) and
+        npcUtil.tradeHasExactly(trade, xi.item.PICKAXE) and
         player:getCharVar(zoneData[zoneid].statusvar) == QUEST_COMPLETED and
         npc:getID() == digsiteids[digsite]
     then
@@ -299,13 +300,13 @@ xi.beastmentreasure.handleQmOnEventFinish = function(player, csid)
     if csid == 105 then
         -- Successfully excavating a dig site rewards 4000 gil plus the following items:
         -- First reward is 1 item from the rocks and gems pool
-        local item1 = weightedRandomSelect(w_rocksgems)
-        -- Second reward is 1 item from a pool containing seeds and the zone's "racial" junk
-        local item2 = weightedRandomSelect(w_seedsracial[zoneid])
+        local item1 = weightedRandomSelect(wRocksGems)
+        -- Second reward is 1 item from a pool containing seeds and the zone's 'racial' junk
+        local item2 = weightedRandomSelect(wSeedsRacial[zoneid])
         -- Third reward is a silver, gold, or mythril beastcoin
-        local item3 = weightedRandomSelect(w_coins)
+        local item3 = weightedRandomSelect(wCoins)
         -- Final reward is a seal or the region's exclusive item
-        local item4 = weightedRandomSelect(w_sealsunique[zoneid])
+        local item4 = weightedRandomSelect(wSealsUnique[zoneid])
         -- Distribute rewards
         player:confirmTrade()
         player:addGil(4000)

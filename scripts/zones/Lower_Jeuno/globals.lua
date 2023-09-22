@@ -1,8 +1,7 @@
 -- Zone: Lower Jeuno (245)
 -- Desc: this file contains functions that are shared by multiple luas in this zone's directory
 -----------------------------------
-local ID = require("scripts/zones/Lower_Jeuno/IDs")
-require("scripts/globals/status")
+local ID = zones[xi.zone.LOWER_JEUNO]
 -----------------------------------
 
 local lowerJeunoGlobal =
@@ -15,7 +14,7 @@ local lowerJeunoGlobal =
         local lampNum = lampId - ID.npc.STREETLAMP_OFFSET
         local lampCs = 120 + lampNum
 
-        if GetServerVariable("[JEUNO]CommService") == player:getID() then
+        if GetServerVariable('[JEUNO]CommService') == player:getID() then
             local hour = VanadielHour()
             if hour >= 20 and hour < 21 then
                 player:startEvent(lampCs, 4) -- It is too early to light it.  You must wait until nine o'clock.
@@ -35,7 +34,6 @@ local lowerJeunoGlobal =
             else
                 player:startEvent(lampCs, 6) -- You examine the lamp. It seems that it must be lit manually.
             end
-
         end
     end,
 
@@ -70,7 +68,7 @@ local lowerJeunoGlobal =
         ..............................................................................................]]
     lampPath =
     {
-         { x = 0, y = 0, z = 19 },
+        { x = 0, y = 0, z = 19 },
         { x = -2, y = 0, z = 13 },
         { x = -5, y = 0, z = 13 },
         { x = -7, y = 0, z = 12 },

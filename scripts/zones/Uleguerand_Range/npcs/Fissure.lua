@@ -6,8 +6,7 @@
 -- !pos 460.339 -29.137 220.311 5
 -- !pos 180.207 -77.147 500.276 5
 -----------------------------------
-require("scripts/globals/keyitems")
-local ID = require("scripts/zones/Uleguerand_Range/IDs")
+local ID = zones[xi.zone.ULEGUERAND_RANGE]
 -----------------------------------
 local entity = {}
 
@@ -15,15 +14,14 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-
     local z = player:getZPos()
 
-    if (player:hasKeyItem(xi.ki.MYSTIC_ICE) == true) then
-        if (z > -200 and z < -150) then                -- southern Fissure (J-9)
+    if player:hasKeyItem(xi.ki.MYSTIC_ICE) then
+        if z > -200 and z < -150 then                -- southern Fissure (J-9)
             player:startEvent(2, xi.ki.MYSTIC_ICE)
-        elseif (z > 200 and z < 250) then            -- middle Fissure (K-7)
+        elseif z > 200 and z < 250 then            -- middle Fissure (K-7)
             player:startEvent(3, xi.ki.MYSTIC_ICE)
-        elseif (z > 450) then                        -- northern Fissure (I-6)
+        elseif z > 450 then                        -- northern Fissure (I-6)
             player:startEvent(4, xi.ki.MYSTIC_ICE)
         end
     else
@@ -31,12 +29,11 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
-
-    if ((csid == 2 or csid == 3 or csid == 4) and option == 2) then
+entity.onEventFinish = function(player, csid, option, npc)
+    if (csid == 2 or csid == 3 or csid == 4) and option == 2 then
         player:delKeyItem(xi.ki.MYSTIC_ICE)
     end
 end

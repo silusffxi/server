@@ -14,9 +14,11 @@ local function parseActionShorthand(actionDef)
         if actionDef.cutscene then
             event = event:cutscene()
         end
+
         if actionDef.progress then
             event = event:progress()
         end
+
         return event
     end
 
@@ -39,7 +41,7 @@ local function parseActionShorthand(actionDef)
     end
 
     -- Sequence
-    if #actionDef > 0 and type(actionDef[1]) == "table" then
+    if #actionDef > 0 and type(actionDef[1]) == 'table' then
         local sequence = Sequence:new(actionDef)
         if sequence then
             return sequence
@@ -51,13 +53,13 @@ local function parseActionShorthand(actionDef)
     if info == nil then
         info = actionDef.door
     end
+
     if info ~= nil then
         -- Return -1 to open door, else 0
-        return LambdaAction:new(function ()
+        return LambdaAction:new(function()
             return info and -1 or 0
         end, Action.Priority.Default)
     end
-
 end
 
 -- Parses out short-hand ways of writing quest actions, in order to avoid having to make function declarations for each simple interaction.
@@ -83,7 +85,12 @@ function actionUtil.parseActionDef(actionDef)
         return actionDef
     end
 
-    if not actionDef or type(actionDef) ~= 'table' or actionDef.onTrigger or actionDef.onTrade then
+    if
+        not actionDef or
+        type(actionDef) ~= 'table' or
+        actionDef.onTrigger or
+        actionDef.onTrade
+    then
         return nil
     end
 
@@ -105,7 +112,8 @@ function actionUtil.parseActionDef(actionDef)
         if door == nil then
             door = actionDef.door
         end
-        if door == true then
+
+        if door then
             action:openDoor()
         end
     end
@@ -115,8 +123,8 @@ end
 
 -- Returns a string containing identification for a specific action
 function actionUtil.getActionVarName(secondLevelKey, thirdLevelKey, suffix)
-    suffix = suffix or ""
-    return string.format("[Action][%s][%s]%s", secondLevelKey, thirdLevelKey, suffix)
+    suffix = suffix or ''
+    return string.format('[Action][%s][%s]%s', secondLevelKey, thirdLevelKey, suffix)
 end
 
 return actionUtil

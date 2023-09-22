@@ -41,7 +41,7 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const CLuaAction& action);
 
-    void   ID(uint32 actionTargetID, uint16 newActionTargetID);
+    void   ID(uint32 actionTargetID, uint32 newActionTargetID);
     void   setRecast(uint16 recast);
     uint16 getRecast();
     void   actionID(uint16 actionid);
@@ -50,12 +50,20 @@ public:
     void   messageID(uint32 actionTargetID, uint16 messageID);
     auto   getAnimation(uint32 actionTargetID) -> std::optional<uint16>;
     void   setAnimation(uint32 actionTargetID, uint16 animation);
+    auto   getCategory() -> uint8;
+    void   setCategory(uint8 category);
     void   speceffect(uint32 actionTargetID, uint8 speceffect);
     void   reaction(uint32 actionTargetID, uint8 reaction);
     void   modifier(uint32 actionTargetID, uint8 modifier);
     void   additionalEffect(uint32 actionTargetID, uint16 additionalEffect);
     void   addEffectParam(uint32 actionTargetID, int32 addEffectParam);
     void   addEffectMessage(uint32 actionTargetID, uint16 addEffectMessage);
+    bool   addAdditionalTarget(uint32 actionTargetID);
+
+    bool operator==(const CLuaAction& other) const
+    {
+        return this->m_PLuaAction == other.m_PLuaAction;
+    }
 
     static void Register();
 };

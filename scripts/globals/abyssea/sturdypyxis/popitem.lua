@@ -1,15 +1,14 @@
 -----------------------------------
 -- Abyssea Sturdy Pyxis - Pop Item
 -----------------------------------
-
 xi = xi or {}
 xi.pyxis = xi.pyxis or {}
 
 xi.pyxis.popitem = {}
 
----------------------------------
+-----------------------------------
 -- drop id's for pop item
----------------------------------
+-----------------------------------
 local popitemDrops =
 {
     [xi.zone.ABYSSEA_KONSCHTAT ] = { 2903, 2904, 2906, 2907, 2908, 2909, 2910, 2911, 2912, 2913, 2914 },
@@ -24,11 +23,11 @@ local popitemDrops =
 }
 
 local function GetChestItemTable(npc)
-    local maxItem = npc:getLocalVar("NB_ITEM")
+    local maxItem = npc:getLocalVar('NB_ITEM')
     local itemTable = {}
 
     for i = 1, maxItem do
-        itemTable[i] = npc:getLocalVar("POPITEM" .. i)
+        itemTable[i] = npc:getLocalVar('POPITEM' .. i)
     end
 
     return itemTable
@@ -40,19 +39,20 @@ local function GetRandItem(zoneId)
 end
 
 local function GetLootTable(player, npc)
-    local maxItem = npc:getLocalVar("NB_ITEM")
+    local maxItem = npc:getLocalVar('NB_ITEM')
     local loot = {}
 
     for i = 1, maxItem do
-        table.insert(loot, npc:getLocalVar("POPITEM" ..i))
+        table.insert(loot, npc:getLocalVar('POPITEM' ..i))
     end
+
     return loot
 end
 
 local function GiveItem(player, npc, itemnum)
     local zoneId  = player:getZoneID()
     local ID      = zones[zoneId]
-    local chestid = npc:getLocalVar("CHESTID")
+    local chestid = npc:getLocalVar('CHESTID')
     local chest   = GetNPCByID(chestid)
     local itemList = GetChestItemTable(npc)
 
@@ -66,21 +66,22 @@ local function GiveItem(player, npc, itemnum)
         else
             player:addItem(itemList[itemnum], 1, 0, 0, 0, 0)
             xi.pyxis.messageChest(player, ID.text.OBTAINS_ITEM, itemList[itemnum], 0, 0, 0, npc)
-            chest:setLocalVar("POPITEM" .. itemnum, 0)
+            chest:setLocalVar('POPITEM' .. itemnum, 0)
             itemList[itemnum] = 0
         end
     end
+
     if xi.pyxis.isChestEmpty(itemList) then
         xi.pyxis.removeChest(player, npc, 0, 3)
     end
 end
 
 xi.pyxis.popitem.setPopItems = function(npc)
-    local itemcount = npc:getLocalVar("NB_ITEM")
+    local itemcount = npc:getLocalVar('NB_ITEM')
 
     for i = 1, itemcount do
         local item = GetRandItem(npc:getZoneID())
-        npc:setLocalVar("POPITEM" .. i, item)
+        npc:setLocalVar('POPITEM' .. i, item)
     end
 end
 

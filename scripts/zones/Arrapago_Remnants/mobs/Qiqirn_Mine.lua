@@ -3,9 +3,6 @@
 --  Mob: Qiqirn Mine
 -- Note: Explosive mine from Qiqrin
 -----------------------------------
-local ID = require("scripts/zones/Arrapago_Remnants/IDs")
-require("scripts/globals/status")
------------------------------------
 local entity = {}
 
 entity.onMobSpawn = function(mob)
@@ -13,7 +10,7 @@ entity.onMobSpawn = function(mob)
     mob:hideName(true)
     mob:setUntargetable(true)
     mob:hideHP(true)
-    mob:SetAutoAttackEnabled(false)
+    mob:setAutoAttackEnabled(false)
     mob:setStatus(xi.status.DISAPPEAR)
     mob:setMobMod(xi.mobMod.ALWAYS_AGGRO, 1)
     mob:setMobMod(xi.mobMod.NO_MOVE, 1)

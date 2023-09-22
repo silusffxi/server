@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `item_mods_pet` (
  `value` smallint(5) NOT NULL DEFAULT '0',
  `petType` tinyint(3) unsigned NOT NULL DEFAULT '0',
  PRIMARY KEY (`itemId`,`modId`,`petType`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 AVG_ROW_LENGTH=13 PACK_KEYS=1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AVG_ROW_LENGTH=13 PACK_KEYS=1;
 
 -- (Please keep item ID sequential)
 -- Charivari Earring
@@ -723,8 +723,29 @@ INSERT INTO `item_mods_pet` VALUES (23057,369,1,3);   -- Automaton - REFRESH: 1
 INSERT INTO `item_mods_pet` VALUES (23057,370,3,3);   -- Automaton - REGEN: 3
 INSERT INTO `item_mods_pet` VALUES (23057,384,600,3); -- Automaton - HASTE_GEAR: 600
 
+-- Ankusa Helm +2
+INSERT INTO `item_mods_pet` VALUES (23071,384,500,0); -- All Pets - HASTE_GEAR: 5%
+
+-- Glyphic Horn +2
+INSERT INTO `item_mods_pet` VALUES (23077,23,47,1); -- Avatar: ATT: 47
+INSERT INTO `item_mods_pet` VALUES (23077,28,53,1); -- Avatar: MATT: 53
+
+-- Pitre Taj +2
+INSERT INTO `item_mods_pet` VALUES (23080,23,47,3); -- Automaton: ATT: 47
+INSERT INTO `item_mods_pet` VALUES (23080,24,47,3); -- Automaton: RATT: 47
+INSERT INTO `item_mods_pet` VALUES (23080,25,27,3); -- Automaton: ACC: 27
+INSERT INTO `item_mods_pet` VALUES (23080,26,27,3); -- Automaton: RACC: 27
+INSERT INTO `item_mods_pet` VALUES (23080,369,4,3); -- Automaton: REFRESH: 4
+INSERT INTO `item_mods_pet` VALUES (23080,370,4,3); -- Automaton: REGEN: 4
+
 -- Bagua Galero +2
 INSERT INTO `item_mods_pet` VALUES (23083,2,500,8); -- Luopan - HP: 500
+
+-- Nukumi Cabasset +2
+INSERT INTO `item_mods_pet` VALUES (23093,25,51,0); -- Pet: ACC: 51
+INSERT INTO `item_mods_pet` VALUES (23093,26,51,0); -- Pet: RACC: 51
+INSERT INTO `item_mods_pet` VALUES (23093,30,51,0); -- Pet: MACC: 51
+-- TODO: Monster correlation effects +26
 
 -- Vishap Mail +2
 INSERT INTO `item_mods_pet` VALUES (23120,370,10,2); -- Wyvern - REGEN: 10

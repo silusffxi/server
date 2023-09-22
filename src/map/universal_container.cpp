@@ -45,13 +45,14 @@ CUContainer::CUContainer()
 
 void CUContainer::Clean()
 {
-    if (m_ContainerType == UCONTAINER_DELIVERYBOX)
+    if (m_ContainerType == UCONTAINER_SEND_DELIVERYBOX || m_ContainerType == UCONTAINER_RECV_DELIVERYBOX)
     {
         for (uint8 i = 0; i < UCONTAINER_SIZE; ++i)
         {
-            delete m_PItem[i];
+            destroy(m_PItem[i]);
         }
     }
+
     if (m_ContainerType == UCONTAINER_TRADE)
     {
         for (auto&& PItem : m_PItem)
@@ -62,6 +63,7 @@ void CUContainer::Clean()
             }
         }
     }
+
     m_ContainerType = UCONTAINER_EMPTY;
 
     m_lock   = false;
@@ -113,7 +115,11 @@ UCONTAINERTYPE CUContainer::GetType()
 
 void CUContainer::SetType(UCONTAINERTYPE Type)
 {
-    XI_DEBUG_BREAK_IF(m_ContainerType != UCONTAINER_EMPTY);
+    if (m_ContainerType != UCONTAINER_EMPTY)
+    {
+        ShowWarning("Attempting to set Type of container that has previous value configured.");
+        return;
+    }
 
     m_ContainerType = Type;
 }

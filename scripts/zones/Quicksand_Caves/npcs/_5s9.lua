@@ -4,7 +4,7 @@
 -- Door blocked by Weight system
 -- !pos -345 0 820 208
 -----------------------------------
-local ID = require("scripts/zones/Quicksand_Caves/IDs")
+local ID = zones[xi.zone.QUICKSAND_CAVES]
 -----------------------------------
 local entity = {}
 
@@ -14,8 +14,8 @@ end
 entity.onTrigger = function(player, npc)
     local difX = player:getXPos()-(-352)
     local difZ = player:getZPos()-(820)
-    local Distance = math.sqrt( math.pow(difX, 2) + math.pow(difZ, 2) )
-    if (Distance < 3) then
+    local Distance = math.sqrt(math.pow(difX, 2) + math.pow(difZ, 2))
+    if Distance < 3 then
         return -1
     end
 
@@ -23,10 +23,10 @@ entity.onTrigger = function(player, npc)
     return 1
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

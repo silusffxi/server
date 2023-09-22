@@ -7,8 +7,10 @@
 #include "cbasetypes.h"
 #include "sql_prepared_stmt.h"
 
-#include <mysql.h>
+#include <thread>
 #include <unordered_map>
+
+#include <mysql.h>
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -103,6 +105,8 @@ public:
 
     void SetupKeepalive();
 
+    void CheckCharset();
+
     /// Pings the connection.
     ///
     /// @return SQL_SUCCESS or SQL_ERROR
@@ -114,6 +118,11 @@ public:
     /// @return The size of the escaped string
     size_t EscapeString(char* out_to, const char* from);
     size_t EscapeStringLen(char* out_to, const char* from, size_t from_len);
+
+    /// Escapes a string.
+    ///
+    /// @return The escaped string
+    std::string EscapeString(std::string const& input);
 
     /// Executes a query.
     /// Any previous result is freed.
@@ -186,18 +195,10 @@ public:
     bool TransactionCommit();
     bool TransactionRollback();
 
+    void StartProfiling();
+    void FinishProfiling();
+
     std::shared_ptr<SqlPreparedStatement> GetPreparedStatement(std::string const& name);
-
-    // NOTE: You need to be very careful of the lifetime you pass into these std::functions.
-    //     : You should capture by value and be very careful of capturing pointers.
-    //     : `const char*` is a pointer! If you need to pass that in, construct a std::string
-    //     : and capture that by value!
-    void Async(std::function<void(SqlConnection*)>&& func);
-    void Async(std::string const& query);
-
-    void HandleAsync();
-
-    void SetLatencyWarning(bool _LatencyWarning);
 
 private:
     Sql_t*      self;
@@ -214,5 +215,7 @@ private:
     void InitPreparedStatements();
 
     std::unordered_map<std::string, std::shared_ptr<SqlPreparedStatement>> m_PreparedStatements;
+
+    std::thread::id m_ThreadId;
 };
 #endif // _COMMON_SQL_H

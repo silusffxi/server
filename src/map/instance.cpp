@@ -1,4 +1,4 @@
-/*
+﻿/*
 ===========================================================================
 
 Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 #include "lua/luautils.h"
 #include "zone.h"
 
-#include "../common/timer.h"
+#include "common/timer.h"
 
 CInstance::CInstance(CZone* zone, uint16 instanceid)
 : CZoneEntities(zone)
@@ -45,19 +45,19 @@ CInstance::~CInstance()
 {
     for (auto entity : m_mobList)
     {
-        delete entity.second;
+        destroy(entity.second);
     }
     for (auto entity : m_npcList)
     {
-        delete entity.second;
+        destroy(entity.second);
     }
     for (auto entity : m_petList)
     {
-        delete entity.second;
+        destroy(entity.second);
     }
     for (auto entity : m_trustList)
     {
-        delete entity.second;
+        destroy(entity.second);
     }
 }
 
@@ -118,7 +118,7 @@ void CInstance::LoadInstance()
 
         // Add to Lua cache
         // TODO: This will happen more often than needed, but not so often that it's a performance concern
-        auto zone     = (const char*)m_zone->GetName();
+        auto zone     = m_zone->GetName();
         auto name     = m_instanceName;
         auto filename = fmt::format("./scripts/zones/{}/instances/{}.lua", zone, name);
         luautils::CacheLuaObjectFromFile(filename);
@@ -142,7 +142,7 @@ void CInstance::RegisterChar(CCharEntity* PChar)
     {
         m_commander = PChar->id;
     }
-    m_registeredChars.push_back(PChar->id);
+    m_registeredChars.emplace_back(PChar->id);
 }
 
 uint8 CInstance::GetLevelCap() const
@@ -150,9 +150,9 @@ uint8 CInstance::GetLevelCap() const
     return m_levelcap;
 }
 
-const int8* CInstance::GetName()
+const std::string& CInstance::GetName()
 {
-    return (const int8*)m_instanceName.c_str();
+    return m_instanceName;
 }
 
 position_t CInstance::GetEntryLoc()

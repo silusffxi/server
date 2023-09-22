@@ -4,7 +4,7 @@
 -- Type: Travelling Merchant NPC / NPC Quiver Maker / Windurst 1st Place
 -- !pos 4 1 -43 241
 -----------------------------------
-local ID = require("scripts/zones/Windurst_Woods/IDs")
+local ID = zones[xi.zone.WINDURST_WOODS]
 -----------------------------------
 local entity = {}
 
@@ -103,6 +103,7 @@ entity.onTrade = function(player, npc, trade)
                         player:messageSpecial(ID.text.NOKKHI_BAD_COUNT)
                         return
                     end
+
                     local stacks = itemQty / 99
                     carnationsNeeded = carnationsNeeded + stacks
                     giveToPlayer[#giveToPlayer + 1] = { v[2], stacks }
@@ -110,6 +111,7 @@ entity.onTrade = function(player, npc, trade)
                     break
                 end
             end
+
             if not validSlot then
                 player:messageSpecial(ID.text.NOKKHI_BAD_ITEM)
                 return
@@ -118,7 +120,10 @@ entity.onTrade = function(player, npc, trade)
     end
 
     -- check for correct number of carnations
-    if carnationsNeeded == 0 or trade:getItemQty(948) ~= carnationsNeeded then
+    if
+        carnationsNeeded == 0 or
+        trade:getItemQty(xi.item.CARNATION) ~= carnationsNeeded
+    then
         player:messageSpecial(ID.text.NOKKHI_BAD_COUNT)
         return
     end
@@ -135,6 +140,7 @@ entity.onTrade = function(player, npc, trade)
         player:addItem(v[1], v[2])
         player:messageSpecial(ID.text.ITEM_OBTAINED, v[1])
     end
+
     player:tradeComplete()
 end
 
@@ -142,10 +148,10 @@ entity.onTrigger = function(player, npc)
     player:startEvent(667, npc:getID())
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

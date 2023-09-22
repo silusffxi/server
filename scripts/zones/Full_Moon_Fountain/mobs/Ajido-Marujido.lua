@@ -3,9 +3,7 @@
 --  Mob: Ajido-Marujido
 -- Ally during Windurst Mission 9-2
 -----------------------------------
-local ID = require("scripts/zones/Full_Moon_Fountain/IDs")
-require("scripts/globals/status")
-require("scripts/globals/magic")
+local ID = zones[xi.zone.FULL_MOON_FOUNTAIN]
 -----------------------------------
 local entity = {}
 
@@ -36,7 +34,7 @@ entity.onMobInitialize = function(mob)
 end
 
 entity.onMobSpawn = function(ajidoMob)
-    ajidoMob:addListener("MAGIC_START", "MAGIC_MSG", function(mob, spell, action)
+    ajidoMob:addListener('MAGIC_START', 'MAGIC_MSG', function(mob, spell, action)
         -- Burst
         if spell:getID() == 212 then
             mob:showText(mob, ID.text.PLAY_TIME_IS_OVER)
@@ -47,7 +45,9 @@ entity.onMobSpawn = function(ajidoMob)
     end)
 
     -- TODO: This doesn't work, but the logic is here.
-    ajidoMob:timer(40000, function(mobArg) ajidoSelectTarget(mobArg) end)
+    ajidoMob:timer(40000, function(mobArg)
+        ajidoSelectTarget(mobArg)
+    end)
 end
 
 entity.onMobRoam = function(mob)
@@ -58,10 +58,11 @@ entity.onMobEngaged = function(mob, target)
 end
 
 entity.onMobFight = function(mob, target)
-    if mob:getHPP() < 50 and mob:getLocalVar("saidMessage") == 0 then
+    if mob:getHPP() < 50 and mob:getLocalVar('saidMessage') == 0 then
         mob:showText(mob, ID.text.DONT_GIVE_UP)
-        mob:setLocalVar("saidMessage", 1)
+        mob:setLocalVar('saidMessage', 1)
     end
+
     if target:isEngaged() then
         mob:setMobMod(xi.mobMod.TELEPORT_TYPE, 1)
     end

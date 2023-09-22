@@ -46,7 +46,7 @@ public:
     uint16 getRecast();
     uint16 getRecastID();
     uint16 getRange();
-    auto   getName() -> const char*;
+    auto   getName() -> const std::string&;
     uint16 getAnimation();
     uint16 getAddType(); // see map/ability.h for definitions. These can tell if the ability is a Merit ability, Astral Flow only ability, etc
 
@@ -58,6 +58,11 @@ public:
     uint16 getVE();
     void   setVE(uint16 ve);
     void   setRange(float range);
+
+    bool operator==(const CLuaAbility& other) const
+    {
+        return this->m_PLuaAbility == other.m_PLuaAbility;
+    }
 
     static void Register();
 };

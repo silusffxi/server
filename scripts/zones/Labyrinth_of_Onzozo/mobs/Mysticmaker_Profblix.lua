@@ -2,13 +2,12 @@
 -- Area: Labyrinth of Onzozo
 --   NM: Mysticmaker Profblix
 -----------------------------------
-mixins = { require("scripts/mixins/job_special") }
-require("scripts/globals/regimes")
+mixins = { require('scripts/mixins/job_special') }
 -----------------------------------
 local entity = {}
 
 entity.onMobInitialize = function(mob)
-    mob:addMod(xi.mod.SILENCERES, 80)
+    mob:addMod(xi.mod.SILENCE_MEVA, 80)
 end
 
 entity.onMobDeath = function(mob, player, optParams)

@@ -3,9 +3,7 @@
 --  Mob: Brittle Rock
 -- Immune to sleep (light, dark), poison, cannot regain HP on deaggro
 -----------------------------------
-local ID = require("scripts/zones/Lebros_Cavern/IDs")
-require("scripts/globals/assault")
-require("scripts/globals/status")
+local ID = zones[xi.zone.LEBROS_CAVERN]
 -----------------------------------
 local entity = {}
 
@@ -14,15 +12,15 @@ entity.onMobSpawn = function(mob)
     mob:setMobMod(xi.mobMod.NO_REST, 0)
     mob:setMobMod(xi.mobMod.EXP_BONUS, -100)
     mob:setMobMod(xi.mobMod.NO_MOVE, 1)
-    mob:SetAutoAttackEnabled(false)
+    mob:setAutoAttackEnabled(false)
     mob:setMod(xi.mod.UDMGPHYS, -75)
     mob:setMod(xi.mod.UDMGBREATH, -95)
     mob:setMod(xi.mod.UDMGRANGE, -95)
     mob:setMod(xi.mod.UDMGMAGIC, -90)
-    mob:setMod(xi.mod.CURSERES, 9999)
+    mob:setMod(xi.mod.CURSE_MEVA, 9999)
     mob:setMod(xi.mod.EVA, 0)
     mob:setMobMod(xi.mobMod.NO_DROPS, 1)
-    mob:addListener("WEAPONSKILL_TAKE", "BRITTLE_ROCK_WEAPONSKILL_TAKE", function(mobArg, user, wsid)
+    mob:addListener('WEAPONSKILL_TAKE', 'BRITTLE_ROCK_WEAPONSKILL_TAKE', function(mobArg, user, wsid)
         if wsid == 1838 then
             mobArg:setHP(0)
         end
@@ -30,8 +28,8 @@ entity.onMobSpawn = function(mob)
 end
 
 entity.onMobDeath = function(mob, player, optParams)
-    if mob:getLocalVar("dead") == 0 then
-        mob:setLocalVar("dead", 1)
+    if mob:getLocalVar('dead') == 0 then
+        mob:setLocalVar('dead', 1)
         local mobID = mob:getID()
         local instance = mob:getInstance()
 

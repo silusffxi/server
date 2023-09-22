@@ -22,7 +22,7 @@
 #ifndef _CUNIVERSALCONTAINER_H
 #define _CUNIVERSALCONTAINER_H
 
-#include "../common/cbasetypes.h"
+#include "common/cbasetypes.h"
 #include <vector>
 
 enum UCONTAINERTYPE
@@ -34,7 +34,8 @@ enum UCONTAINERTYPE
     UCONTAINER_TRADE,
     UCONTAINER_USEITEM,
     UCONTAINER_AUCTION,
-    UCONTAINER_DELIVERYBOX
+    UCONTAINER_SEND_DELIVERYBOX,
+    UCONTAINER_RECV_DELIVERYBOX,
 };
 
 #define UCONTAINER_SIZE 16
@@ -77,9 +78,9 @@ public:
 private:
     UCONTAINERTYPE m_ContainerType;
 
-    bool                m_lock;
-    uint8               m_count;
-    uint16              m_target;
+    bool                m_lock{};
+    uint8               m_count{};
+    uint16              m_target{};
     std::vector<CItem*> m_PItem;
 };
 

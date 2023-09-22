@@ -4,12 +4,6 @@
 -- Tsetseroon !pos -13 -6 69 53
 -- Qm9 !pos -406 6.5 -440 68
 -----------------------------------
-require('scripts/globals/items')
-require('scripts/globals/keyitems')
-require('scripts/globals/quests')
-require('scripts/globals/npc_util')
-require('scripts/globals/interaction/quest')
------------------------------------
 
 local quest = Quest:new(xi.quest.log_id.AHT_URHGAN, xi.quest.id.ahtUrhgan.WHAT_FRIENDS_ARE_FOR)
 
@@ -23,9 +17,9 @@ quest.sections =
 
         [xi.zone.AYDEEWA_SUBTERRANE] =
         {
-            onRegionEnter =
+            onTriggerAreaEnter =
             {
-                [2] = function(player, region)
+                [2] = function(player, triggerArea)
                     return quest:progressEvent(7)
                 end,
             },
@@ -97,7 +91,7 @@ quest.sections =
                 onTrade = function(player, npc, trade)
                     if
                         quest:getVar(player, 'Prog') == 2 and
-                        npcUtil.tradeHasExactly(trade, { xi.items.CHUNK_OF_TIN_ORE, xi.items.COBALT_JELLYFISH })
+                        npcUtil.tradeHasExactly(trade, { xi.item.CHUNK_OF_TIN_ORE, xi.item.COBALT_JELLYFISH })
                     then
                         return quest:progressEvent(18)
                     end
@@ -111,9 +105,10 @@ quest.sections =
                     npcUtil.giveKeyItem(player, xi.ki.POT_OF_TSETSEROONS_STEW)
                     quest:setVar(player, 'Prog', 3)
                 end,
+
                 [20] = function(player, csid, option, npc)
                     if player:hasKeyItem(xi.ki.MAP_OF_AYDEEWA_SUBTERRANE) then
-                        if npcUtil.giveItem(player, xi.items.IMPERIAL_BRONZE_PIECE) then
+                        if npcUtil.giveItem(player, xi.item.IMPERIAL_BRONZE_PIECE) then
                             quest:complete(player)
                         end
                     else
@@ -130,7 +125,10 @@ quest.sections =
             ['qm9'] =
             {
                 onTrigger = function(player, npc)
-                    if quest:getVar(player, 'Prog') == 3 and player:hasKeyItem(xi.ki.POT_OF_TSETSEROONS_STEW) then
+                    if
+                        quest:getVar(player, 'Prog') == 3 and
+                        player:hasKeyItem(xi.ki.POT_OF_TSETSEROONS_STEW)
+                    then
                         return quest:progressEvent(8)
                     end
                 end,

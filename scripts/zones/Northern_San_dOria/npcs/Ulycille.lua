@@ -4,9 +4,7 @@
 -- Type: Woodworking Adv. Synthesis Image Support
 -- !pos -183.320 9.999 269.651 231
 -----------------------------------
-require("scripts/globals/status")
-require("scripts/globals/crafting")
-local ID = require("scripts/zones/Northern_San_dOria/IDs")
+local ID = zones[xi.zone.NORTHERN_SAN_DORIA]
 -----------------------------------
 local entity = {}
 
@@ -14,12 +12,11 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-    local guildMember = xi.crafting.isGuildMember(player, 9)
     local skillLevel = player:getSkillLevel(xi.skill.WOODWORKING)
     local cost = xi.crafting.getAdvImageSupportCost(player, xi.skill.WOODWORKING)
 
-    if guildMember == 1 then
-        if player:hasStatusEffect(xi.effect.WOODWORKING_IMAGERY) == false then
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.WOODWORKING) then
+        if not player:hasStatusEffect(xi.effect.WOODWORKING_IMAGERY) then
             player:startEvent(623, cost, skillLevel, 0, 207, player:getGil(), 0, 4095, 0)
         else
             player:startEvent(623, cost, skillLevel, 0, 207, player:getGil(), 28482, 4095, 0)
@@ -29,10 +26,10 @@ entity.onTrigger = function(player, npc)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     local cost = xi.crafting.getAdvImageSupportCost(player, xi.skill.WOODWORKING)
 
     if csid == 623 and option == 1 then

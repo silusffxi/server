@@ -19,8 +19,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 ===========================================================================
 */
 
-#include "../map.h"
 #include "common/socket.h"
+#include "map.h"
 
 #include "synth_suggestion.h"
 #include <map>
@@ -80,8 +80,6 @@ CSynthSuggestionRecipePacket::CSynthSuggestionRecipePacket(uint16 skillID, uint1
     {
         maxSkill = skillLevel;
     }
-
-    ShowDebug("%d", selectedRecipeOffset);
 
     const char* fmtQuery = "SELECT KeyItem, Wood, Smith, Gold, Cloth, Leather, Bone, Alchemy, Cook, Crystal, Result, \
         Ingredient1, Ingredient2, Ingredient3, Ingredient4, Ingredient5, Ingredient6, Ingredient7, Ingredient8 \

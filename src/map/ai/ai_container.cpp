@@ -19,17 +19,16 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 ===========================================================================
 */
 
-#include "ai_container.h"
+#include "ai/ai_container.h"
 
-#include "../entities/baseentity.h"
-#include "../entities/battleentity.h"
-#include "../entities/charentity.h"
-#include "../entities/mobentity.h"
-#include "../packets/entity_animation.h"
-#include "../status_effect_container.h"
-#include "controllers/mob_controller.h"
-#include "controllers/pet_controller.h"
-#include "controllers/player_controller.h"
+#include "ai/controllers/mob_controller.h"
+#include "ai/controllers/pet_controller.h"
+#include "ai/controllers/player_controller.h"
+#include "entities/baseentity.h"
+#include "entities/battleentity.h"
+#include "entities/charentity.h"
+#include "entities/mobentity.h"
+#include "packets/entity_animation.h"
 #include "states/ability_state.h"
 #include "states/attack_state.h"
 #include "states/death_state.h"
@@ -44,6 +43,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 #include "states/respawn_state.h"
 #include "states/trigger_state.h"
 #include "states/weaponskill_state.h"
+#include "status_effect_container.h"
 
 CAIContainer::CAIContainer(CBaseEntity* _PEntity)
 : CAIContainer(_PEntity, nullptr, nullptr, nullptr)
@@ -203,14 +203,14 @@ bool CAIContainer::Internal_Engage(uint16 targetid)
         //#TODO: remove m_battleTarget if possible (need to check disengage)
         // Check if an entity can change to the attack state
         // Allow entity with prevent action effect to very briefly switch to the attack state to be properly engaged
-        if (CanChangeState() || (GetCurrentState() && GetCurrentState()->IsCompleted()) || entity->StatusEffectContainer->HasPreventActionEffect())
+        if (CanChangeState() || (GetCurrentState() && GetCurrentState()->IsCompleted()) || entity->StatusEffectContainer->HasPreventActionEffect(true))
         {
             if (ForceChangeState<CAttackState>(entity, targetid))
             {
                 entity->OnEngage(*static_cast<CAttackState*>(m_stateStack.top().get()));
 
                 // Resume being inactive if entity has a status effect preventing them from doing actions
-                if (entity->StatusEffectContainer->HasPreventActionEffect())
+                if (entity->StatusEffectContainer->HasPreventActionEffect(true))
                 {
                     entity->PAI->Inactive(0ms, false);
                 }
@@ -527,6 +527,11 @@ void CAIContainer::QueueAction(queueAction_t&& action)
 bool CAIContainer::QueueEmpty()
 {
     return ActionQueue.isEmpty();
+}
+
+void CAIContainer::checkQueueImmediately()
+{
+    ActionQueue.checkAction(server_clock::now());
 }
 
 bool CAIContainer::Internal_Despawn(bool instantDespawn)

@@ -2,19 +2,11 @@
 -- Area: Dynamis - Xarcabard
 --  Mob: Animated Kunai
 -----------------------------------
-require("scripts/globals/status")
-local ID = require("scripts/zones/Dynamis-Xarcabard/IDs")
+local ID = zones[xi.zone.DYNAMIS_XARCABARD]
 -----------------------------------
 local entity = {}
 
 entity.onMobEngaged = function(mob, target)
-
-    if (mob:getAnimationSub() == 3) then
-        SetDropRate(109, 1579, 1000)
-    else
-        SetDropRate(109, 1579, 0)
-    end
-
     target:showText(mob, ID.text.ANIMATED_KUNAI_DIALOG)
 end
 
@@ -28,6 +20,7 @@ end
 
 entity.onMobDeath = function(mob, player, optParams)
     player:showText(mob, ID.text.ANIMATED_KUNAI_DIALOG + 1)
+    xi.magian.onMobDeath(mob, player, optParams, set{ 3113 })
 end
 
 return entity

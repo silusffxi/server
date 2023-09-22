@@ -2,7 +2,7 @@
 -- Area: Temenos E T
 --  Mob: Light Elemental
 -----------------------------------
-local ID = require("scripts/zones/Temenos/IDs")
+local ID = zones[xi.zone.TEMENOS]
 -----------------------------------
 local entity = {}
 
@@ -29,6 +29,7 @@ entity.onMobDeath = function(mob, player, optParams)
                     GetNPCByID(ID.npc.TEMENOS_C_CRATE[2]):setStatus(xi.status.NORMAL)
                 end
             end,
+
             [ID.mob.TEMENOS_C_MOB[2] + 2] = function()
                 if
                     GetMobByID(ID.mob.TEMENOS_C_MOB[2]):isDead() and

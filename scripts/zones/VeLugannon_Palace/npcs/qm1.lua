@@ -3,7 +3,7 @@
 --  NPC: ??? (qm1)
 -- !pos -370.039 16.014 -274.378 177
 -----------------------------------
-local ID = require("scripts/zones/VeLugannon_Palace/IDs")
+local ID = zones[xi.zone.VELUGANNON_PALACE]
 -----------------------------------
 local entity = {}
 
@@ -11,43 +11,38 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-    local hideTime = 0
+    local hideTime = 1
 
-    if (player:hasItem(16575) == false and player:getFreeSlotsCount() >= 1) then
-        player:addItem(16575)
-        player:messageSpecial(ID.text.ITEM_OBTAINED, 16575) -- Curtana
+    if not player:hasItem(xi.item.CURTANA) and player:getFreeSlotsCount() >= 1 then
+        player:addItem(xi.item.CURTANA)
+        player:messageSpecial(ID.text.ITEM_OBTAINED, xi.item.CURTANA) -- Curtana
 
         -- ??? dissapears for 2 hours and reappears on new position
         hideTime = 7200
     else
-        player:messageSpecial(ID.text.ITEM_CANNOT_BE_OBTAINED, 16575) -- Curtana
-
-        -- ??? just change position
-        hideTime = 1
+        player:messageSpecial(ID.text.ITEM_CANNOT_BE_OBTAINED, xi.item.CURTANA) -- Curtana
     end
 
-    local randpos = math.random(1, 8)
-
-    switch (randpos): caseof
+    local curtanaPos =
     {
-        [1] = function (x) npc:setPos(-370.039, 16.014, -274.378); end,
-        [2] = function (x) npc:setPos(-389, 16, -274); end,
-        [3] = function (x) npc:setPos(-434, 16, -229); end,
-        [4] = function (x) npc:setPos(-434, 16, -210); end,
-        [5] = function (x) npc:setPos(434, 13, -210); end,
-        [6] = function (x) npc:setPos(434, 16, -230); end,
-        [7] = function (x) npc:setPos(390, 16, -194); end,
-        [8] = function (x) npc:setPos(370, 16, -194); end,
+        [1] = { -370.039, 16.014, -274.378 },
+        [2] = {     -389,     16,     -274 },
+        [3] = {     -434,     16,     -229 },
+        [4] = {     -434,     16,     -210 },
+        [5] = {      434,     13,     -210 },
+        [6] = {      434,     16,     -230 },
+        [7] = {      390,     16,     -194 },
+        [8] = {      370,     16,     -194 },
     }
 
+    npc:setPos(unpack(curtanaPos[math.random(1, 8)]))
     npc:hideNPC(hideTime)
-
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

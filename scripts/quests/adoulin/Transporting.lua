@@ -6,13 +6,7 @@
 -- Kongramm         : !pos 61 32 138 256
 -- qm_sluice_gate_6 : !pos -563 -5.768 61.5 258
 -----------------------------------
-require('scripts/globals/items')
-require('scripts/globals/keyitems')
-require('scripts/globals/npc_util')
-require('scripts/globals/quests')
-require('scripts/globals/interaction/quest')
------------------------------------
-local ralaID = require('scripts/zones/Rala_Waterways/IDs')
+local ralaID = zones[xi.zone.RALA_WATERWAYS]
 -----------------------------------
 
 local quest = Quest:new(xi.quest.log_id.ADOULIN, xi.quest.id.adoulin.TRANSPORTING)
@@ -89,7 +83,7 @@ quest.sections =
             {
                 onTrigger = function(player, npc)
                     if quest:getVar(player, 'Prog') == 1 then
-                        return mission:progressEvent(2802)
+                        return quest:progressEvent(2802)
                     end
                 end,
             },

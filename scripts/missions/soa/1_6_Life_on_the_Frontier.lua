@@ -5,10 +5,6 @@
 -- !addmission 12 7
 -- Brenton : !pos -86.036 3.349 18.121 256
 -----------------------------------
-require('scripts/globals/keyitems')
-require('scripts/globals/missions')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
 require('scripts/missions/soa/helpers')
 -----------------------------------
 
@@ -24,7 +20,7 @@ mission.sections =
     {
         check = function(player, currentMission, missionStatus, vars)
             return currentMission == mission.missionId and
-                   xi.soa.helpers.imprimaturGate(player, 10)
+                xi.soa.helpers.imprimaturGate(player, 10)
         end,
 
         [xi.zone.WESTERN_ADOULIN] =

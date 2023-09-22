@@ -1,11 +1,6 @@
 -----------------------------------
 -- Zone: Hall_of_the_Gods (251)
 -----------------------------------
-local ID = require('scripts/zones/Hall_of_the_Gods/IDs')
-require('scripts/globals/conquest')
-require('scripts/globals/missions')
-require('scripts/globals/zone')
------------------------------------
 local zoneObject = {}
 
 zoneObject.onInitialize = function(zone)
@@ -14,26 +9,33 @@ end
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
         player:setPos(-0.011, -1.848, -176.133, 192)
-    elseif player:getCurrentMission(xi.mission.log_id.ACP) == xi.mission.id.acp.REMEMBER_ME_IN_YOUR_DREAMS and prevZone == xi.zone.ROMAEVE then
+    elseif
+        player:getCurrentMission(xi.mission.log_id.ACP) == xi.mission.id.acp.REMEMBER_ME_IN_YOUR_DREAMS and
+        prevZone == xi.zone.ROMAEVE
+    then
         cs = 5
     end
 
     return cs
 end
 
-zoneObject.onConquestUpdate = function(zone, updatetype)
-    xi.conq.onConquestUpdate(zone, updatetype)
+zoneObject.onConquestUpdate = function(zone, updatetype, influence, owner, ranking, isConquestAlliance)
+    xi.conq.onConquestUpdate(zone, updatetype, influence, owner, ranking, isConquestAlliance)
 end
 
-zoneObject.onRegionEnter = function(player, region)
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
     if csid == 5 then
         player:completeMission(xi.mission.log_id.ACP, xi.mission.id.acp.REMEMBER_ME_IN_YOUR_DREAMS)
         player:addMission(xi.mission.log_id.ACP, xi.mission.id.acp.BORN_OF_HER_NIGHTMARES)

@@ -1,9 +1,6 @@
 -----------------------------------
 -- Area: Yuhtunga_Jungle
 -----------------------------------
-require("scripts/globals/zone")
------------------------------------
-
 zones = zones or {}
 
 zones[xi.zone.YUHTUNGA_JUNGLE] =
@@ -44,17 +41,17 @@ zones[xi.zone.YUHTUNGA_JUNGLE] =
         THE_OPO_OPOS_ATTACK           = 7707,  -- The Opo-opos attack!
         LOGGING_IS_POSSIBLE_HERE      = 7708,  -- Logging is possible here if you have <item>.
         HARVESTING_IS_POSSIBLE_HERE   = 7715,  -- Harvesting is possible here if you have <item>.
-        SOMETHING_IS_BURIED_HERE      = 7769,  -- It looks like something is buried here. If you had <item> you could dig it up.
-        GARRISON_BASE                 = 7796,  -- Hm? What is this? %? How do I know this is not some [San d'Orian/Bastokan/Windurstian] trick?
-        SWARM_APPEARED                = 7842,  -- A swarm has appeared!
-        PLAYER_OBTAINS_ITEM           = 7882,  -- <name> obtains <item>!
-        UNABLE_TO_OBTAIN_ITEM         = 7883,  -- You were unable to obtain the item.
-        PLAYER_OBTAINS_TEMP_ITEM      = 7884,  -- <name> obtains the temporary item: <item>!
-        ALREADY_POSSESS_TEMP          = 7885,  -- You already possess that temporary item.
-        NO_COMBINATION                = 7890,  -- You were unable to enter a combination.
-        UNITY_WANTED_BATTLE_INTERACT  = 7952,  -- Those who have accepted % must pay # Unity accolades to participate. The content for this Wanted battle is #. [Ready to begin?/You do not have the appropriate object set, so your rewards will be limited.]
-        REGIME_REGISTERED             = 10068, -- New training regime registered!
-        COMMON_SENSE_SURVIVAL         = 12062, -- It appears that you have arrived at a new survival guide provided by the Adventurers' Mutual Aid Network. Common sense dictates that you should now be able to teleport here from similar tomes throughout the world.
+        SOMETHING_IS_BURIED_HERE      = 7757,  -- It looks like something is buried here. If you had <item> you could dig it up.
+        GARRISON_BASE                 = 7784,  -- Hm? What is this? %? How do I know this is not some [San d'Orian/Bastokan/Windurstian] trick?
+        SWARM_APPEARED                = 7830,  -- A swarm has appeared!
+        PLAYER_OBTAINS_ITEM           = 7870,  -- <name> obtains <item>!
+        UNABLE_TO_OBTAIN_ITEM         = 7871,  -- You were unable to obtain the item.
+        PLAYER_OBTAINS_TEMP_ITEM      = 7872,  -- <name> obtains the temporary item: <item>!
+        ALREADY_POSSESS_TEMP          = 7873,  -- You already possess that temporary item.
+        NO_COMBINATION                = 7878,  -- You were unable to enter a combination.
+        UNITY_WANTED_BATTLE_INTERACT  = 7940,  -- Those who have accepted % must pay # Unity accolades to participate. The content for this Wanted battle is #. [Ready to begin?/You do not have the appropriate object set, so your rewards will be limited.]
+        REGIME_REGISTERED             = 10056, -- New training regime registered!
+        COMMON_SENSE_SURVIVAL         = 12050, -- It appears that you have arrived at a new survival guide provided by the Adventurers' Mutual Aid Network. Common sense dictates that you should now be able to teleport here from similar tomes throughout the world.
     },
     mob =
     {
@@ -74,7 +71,7 @@ zones[xi.zone.YUHTUNGA_JUNGLE] =
     {
         BLUE_RAFFLESIA_OFFSET = 17281586,
         TUNING_OUT_QM         = 17281590, -- qm2 in npc_list
-        OVERSEER_BASE         = 17281600, -- Zorchorevi_RK in npc_list
+        OVERSEER_BASE         = GetFirstID('Zorchorevi_RK'),
         CERMET_HEADSTONE      = 17281625,
         PEDDLESTOX            = 17281640,
         BEASTMEN_TREASURE     =
@@ -88,21 +85,9 @@ zones[xi.zone.YUHTUNGA_JUNGLE] =
             17281649, -- qm9
             17281650, -- qm10
         },
-        HARVESTING =
-        {
-            17281636,
-            17281637,
-            17281638,
-        },
-        LOGGING =
-        {
-            17281630,
-            17281631,
-            17281632,
-            17281633,
-            17281634,
-            17281635,
-        },
+
+        HARVESTING = GetTableOfIDs('Harvesting_Point'),
+        LOGGING    = GetTableOfIDs('Logging_Point'),
     },
 }
 

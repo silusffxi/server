@@ -4,18 +4,17 @@
 -- Type: Bonecraft Normal/Adv. Image Support
 -- !pos -57.056 -7 -88.377 48
 -----------------------------------
-require("scripts/globals/status")
-require("scripts/globals/crafting")
-local ID = require("scripts/zones/Al_Zahbi/IDs")
+local ID = zones[xi.zone.AL_ZAHBI]
 -----------------------------------
 local entity = {}
 
 entity.onTrade = function(player, npc, trade)
-    local guildMember = xi.crafting.isGuildMember(player, 2)
-
-    if guildMember == 1 then
-        if trade:hasItemQty(2184, 1) and trade:getItemCount() == 1 then
-            if player:hasStatusEffect(xi.effect.BONECRAFT_IMAGERY) == false then
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.BONECRAFT) then
+        if
+            trade:hasItemQty(xi.item.IMPERIAL_BRONZE_PIECE, 1) and
+            trade:getItemCount() == 1
+        then
+            if not player:hasStatusEffect(xi.effect.BONECRAFT_IMAGERY) then
                 player:tradeComplete()
                 player:startEvent(225, 8, 0, 0, 0, 188, 0, 6, 0)
             else
@@ -26,24 +25,23 @@ entity.onTrade = function(player, npc, trade)
 end
 
 entity.onTrigger = function(player, npc)
-    local guildMember = xi.crafting.isGuildMember(player, 2)
     local skillLevel = player:getSkillLevel(xi.skill.BONECRAFT)
 
-    if guildMember == 1 then
-        if player:hasStatusEffect(xi.effect.BONECRAFT_IMAGERY) == false then
-            player:startEvent(224, 8, skillLevel, 0, 511, 188, 0, 6, 2184)
+    if xi.crafting.hasJoinedGuild(player, xi.crafting.guild.BONECRAFT) then
+        if not player:hasStatusEffect(xi.effect.BONECRAFT_IMAGERY) then
+            player:startEvent(224, 8, skillLevel, 0, 511, 188, 0, 6, xi.item.IMPERIAL_BRONZE_PIECE)
         else
-            player:startEvent(224, 8, skillLevel, 0, 511, 188, 7121, 6, 2184)
+            player:startEvent(224, 8, skillLevel, 0, 511, 188, 7121, 6, xi.item.IMPERIAL_BRONZE_PIECE)
         end
     else
         player:startEvent(224, 0, 0, 0, 0, 0, 0, 6, 0) -- Standard Dialogue
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 224 and option == 1 then
         player:messageSpecial(ID.text.IMAGE_SUPPORT, 0, 6, 1)
         player:addStatusEffect(xi.effect.BONECRAFT_IMAGERY, 1, 0, 120)

@@ -25,7 +25,7 @@
 
 #include "message_standard.h"
 
-#include "../entities/charentity.h"
+#include "entities/charentity.h"
 
 CMessageStandardPacket::CMessageStandardPacket(MsgStd MessageID)
 {
@@ -33,6 +33,14 @@ CMessageStandardPacket::CMessageStandardPacket(MsgStd MessageID)
     this->setSize(0x10);
 
     ref<uint16>(0x0A) = static_cast<uint16>(MessageID);
+}
+
+CMessageStandardPacket::CMessageStandardPacket(uint16 MessageID)
+{
+    this->setType(0x09);
+    this->setSize(0x10);
+
+    ref<uint16>(0x0A) = MessageID;
 }
 
 CMessageStandardPacket::CMessageStandardPacket(uint32 param0, uint16 MessageID)
@@ -73,7 +81,7 @@ CMessageStandardPacket::CMessageStandardPacket(CCharEntity* PChar, uint32 param0
 
             ref<uint8>(0x0C) = 0x10;
 
-            snprintf((char*)data + (0x0D), 24, "string2 %s", PChar->GetName());
+            snprintf((char*)data + (0x0D), 24, "string2 %s", PChar->GetName().c_str());
         }
     }
     else
@@ -98,13 +106,11 @@ CMessageStandardPacket::CMessageStandardPacket(uint32 param0, uint32 param1, uin
 CMessageStandardPacket::CMessageStandardPacket(CCharEntity* PChar, uint32 param0, MsgStd MessageID)
 {
     this->setType(0x09);
-    this->setSize(0x30);
-
-    // XI_DEBUG_BREAK_IF(MessageID != 0x58);
+    this->setSize(0x34);
 
     ref<uint16>(0x0A) = static_cast<uint16>(MessageID);
 
-    snprintf((char*)data + (0x0D), 40, "string2 %s string3 %u", PChar->GetName(), param0);
+    snprintf((char*)data + (0x0D), 40, "string2 %s string3 %u", PChar->GetName().c_str(), param0);
 
     // ref<uint8>(data,(0x2F)) = 0x02;
 }

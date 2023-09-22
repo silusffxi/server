@@ -27,8 +27,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 #include <set>
 #include <vector>
 
-#include "../common/cbasetypes.h"
-#include "../common/mmo.h"
+#include "common/cbasetypes.h"
+#include "common/mmo.h"
 #include "sol/sol.hpp"
 #include <unordered_map>
 
@@ -114,8 +114,8 @@ struct BattlefieldInitiator_t
     uint32      id;
 
     BattlefieldInitiator_t()
+    : id(0)
     {
-        id = 0;
     }
 };
 
@@ -162,6 +162,7 @@ public:
     bool CheckInProgress();
     bool IsOccupied() const;
     bool isInteraction() const;
+    bool isEntered(CCharEntity* PChar) const;
 
     void ForEachPlayer(const std::function<void(CCharEntity*)>& func);
     void ForEachEnemy(const std::function<void(CMobEntity*)>& func);
@@ -188,7 +189,6 @@ public:
     void setArmouryCrate(uint32 entityId);
 
     void         ApplyLevelRestrictions(CCharEntity* PChar) const;
-    void         ClearEnmityForEntity(CBattleEntity* PEntity);
     bool         InsertEntity(CBaseEntity* PEntity, bool inBattlefield = false, BATTLEFIELDMOBCONDITION conditions = CONDITION_NONE, bool ally = false);
     CBaseEntity* GetEntity(CBaseEntity* PEntity);
     bool         IsRegistered(CCharEntity* PChar);
@@ -202,6 +202,11 @@ public:
     // Groups
     void addGroup(BattlefieldGroup group);
     void handleDeath(CBaseEntity* PEntity);
+
+    static void setPlayerEntered(CCharEntity* PChar, bool entered);
+    static bool hasPlayerEntered(CCharEntity* PChar);
+
+    static uint16 getBattlefieldArea(CCharEntity* PChar);
 
     uint8 m_isMission;
     bool  m_showTimer = true;
@@ -225,17 +230,17 @@ private:
     time_point             m_StartTime;
     time_point             m_Tick;
     time_point             m_FightTick;
-    duration               m_TimeLimit;
+    duration               m_TimeLimit{};
     time_point             m_WipeTime;
-    duration               m_FinishTime;
-    duration               m_LastPromptTime;
+    duration               m_FinishTime{};
+    duration               m_LastPromptTime{};
     size_t                 m_MaxParticipants;
     uint8                  m_LevelCap;
     // Entity id of the Armoury Crate that appears upon victory
     uint32     m_armouryCrate = 0;
     const bool m_isInteraction;
 
-    time_point m_cleanupTime;
+    time_point m_cleanupTime{};
     bool       m_cleanedPlayers = false;
     bool       m_Cleanup        = false;
     bool       m_Attacked       = false;

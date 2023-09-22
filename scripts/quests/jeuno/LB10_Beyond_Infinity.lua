@@ -4,15 +4,7 @@
 -- Log ID: 3, Quest ID: 137
 -- Nomad Moogle : !pos 10.012 1.453 121.883 243
 -----------------------------------
-require('scripts/globals/items')
-require('scripts/globals/keyitems')
-require('scripts/globals/npc_util')
-require('scripts/globals/quests')
-require('scripts/globals/titles')
-require('scripts/globals/zone')
-require('scripts/globals/interaction/quest')
------------------------------------
-local ruludeID = require('scripts/zones/RuLude_Gardens/IDs')
+local ruludeID = zones[xi.zone.RULUDE_GARDENS]
 -----------------------------------
 
 local quest = Quest:new(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.BEYOND_INFINITY)
@@ -48,7 +40,13 @@ quest.sections =
             {
                 [10045] = function(player, csid, option, npc)
                     -- This options start quest.
-                    if option == 13 or option == 14 or option == 19 or option == 20 or option == 21 then
+                    if
+                        option == 13 or
+                        option == 14 or
+                        option == 19 or
+                        option == 20 or
+                        option == 21
+                    then
                         quest:begin(player)
                     end
 
@@ -128,7 +126,7 @@ quest.sections =
                 end,
 
                 onTrade = function(player, npc, trade)
-                    if npcUtil.tradeHasExactly(trade, { { xi.items.HIGH_KINDREDS_CREST, 5 } }) then
+                    if npcUtil.tradeHasExactly(trade, { { xi.item.HIGH_KINDREDS_CREST, 5 } }) then
                         return quest:progressEvent(10195, 1)
                     end
                 end,

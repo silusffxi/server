@@ -3,9 +3,7 @@
 --  NPC: Takiyah
 -- Type: Regional Merchant
 -----------------------------------
-local ID = require("scripts/zones/Metalworks/IDs")
-require("scripts/globals/conquest")
-require("scripts/globals/shop")
+local ID = zones[xi.zone.METALWORKS]
 -----------------------------------
 local entity = {}
 
@@ -24,13 +22,12 @@ entity.onTrigger = function(player, npc)
         player:showText(npc, ID.text.TAKIYAH_OPEN_DIALOG)
         xi.shop.general(player, stock, xi.quest.fame_area.BASTOK)
     end
-
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
 end
 
 return entity

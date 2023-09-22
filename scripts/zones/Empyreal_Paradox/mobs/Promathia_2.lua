@@ -3,10 +3,7 @@
 --  Mob: Promathia
 -- Note: Phase 2
 -----------------------------------
-local ID = require("scripts/zones/Empyreal_Paradox/IDs")
-require("scripts/globals/status")
-require("scripts/globals/titles")
-require("scripts/globals/magic")
+local ID = zones[xi.zone.EMPYREAL_PARADOX]
 -----------------------------------
 local entity = {}
 
@@ -19,18 +16,18 @@ end
 entity.onMobSpawn = function(mob)
     local battlefield = mob:getBattlefield()
     if GetMobByID(ID.mob.PROMATHIA_OFFSET + (battlefield:getArea() - 1) * 2):isDead() then
-        battlefield:setLocalVar("phaseChange", 0)
+        battlefield:setLocalVar('phaseChange', 0)
     end
 end
 
 entity.onMobEngaged = function(mob, target)
     local bcnmAllies = mob:getBattlefield():getAllies()
     for i, v in pairs(bcnmAllies) do
-        if v:getName() == "Prishe" then
+        if v:getName() == 'Prishe' then
             if not v:getTarget() then
-                v:entityAnimationPacket("prov")
+                v:entityAnimationPacket('prov')
                 v:showText(v, ID.text.PRISHE_TEXT + 1)
-                v:setLocalVar("ready", mob:getID())
+                v:setLocalVar('ready', mob:getID())
             end
         else
             v:addEnmity(mob, 0, 1)
@@ -42,9 +39,15 @@ entity.onMobFight = function(mob, target)
     if mob:getAnimationSub() == 3 and not mob:hasStatusEffect(xi.effect.STUN) then
         mob:setAnimationSub(0)
         mob:stun(1500)
-    elseif mob:getAnimationSub() == 2 and not mob:hasStatusEffect(xi.effect.MAGIC_SHIELD) then
+    elseif
+        mob:getAnimationSub() == 2 and
+        not mob:hasStatusEffect(xi.effect.MAGIC_SHIELD)
+    then
         mob:setAnimationSub(0)
-    elseif mob:getAnimationSub() == 1 and not mob:hasStatusEffect(xi.effect.PHYSICAL_SHIELD) then
+    elseif
+        mob:getAnimationSub() == 1 and
+        not mob:hasStatusEffect(xi.effect.PHYSICAL_SHIELD)
+    then
         mob:setAnimationSub(0)
     end
 

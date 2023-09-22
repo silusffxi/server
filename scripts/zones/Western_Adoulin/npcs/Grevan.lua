@@ -1,12 +1,8 @@
 -----------------------------------
 -- Area: Western Adoulin
 --  NPC: Grevan
--- Type: Standard NPC and Quest NPC
 -- Involved With Quest: 'Order Up'
 -- !pos 50 0 6 256
------------------------------------
-require("scripts/globals/quests")
-require("scripts/globals/utils")
 -----------------------------------
 local entity = {}
 
@@ -15,7 +11,7 @@ end
 
 entity.onTrigger = function(player, npc)
     local orderUp = player:getQuestStatus(xi.quest.log_id.ADOULIN, xi.quest.id.adoulin.ORDER_UP)
-    local orderGrevan = utils.mask.getBit(player:getCharVar("Order_Up_NPCs"), 10)
+    local orderGrevan = utils.mask.getBit(player:getCharVar('Order_Up_NPCs'), 10)
 
     if orderUp == QUEST_ACCEPTED and not orderGrevan then
         -- Progresses Quest: 'Order Up'
@@ -29,20 +25,17 @@ entity.onTrigger = function(player, npc)
                 -- Standard dialogue before stamping out plague in Svenja quest line
                 player:startEvent(171)
             end
-        else
-            -- Standard dialogue prior to Svenja quest line
-            player:startEvent(541)
         end
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     if csid == 69 then
         -- Progresses Quest: 'Order Up'
-        player:setCharVar("Order_Up_NPCs", utils.mask.setBit(player:getCharVar("Order_Up_NPCs"), 10, true))
+        player:setCharVar('Order_Up_NPCs', utils.mask.setBit(player:getCharVar('Order_Up_NPCs'), 10, true))
     end
 end
 

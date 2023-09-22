@@ -1,8 +1,7 @@
 -----------------------------------
 -- Zone: Vunkerl_Inlet_[S] (83)
 -----------------------------------
-local ID = require('scripts/zones/Vunkerl_Inlet_[S]/IDs')
-require('scripts/globals/status')
+local ID = zones[xi.zone.VUNKERL_INLET_S]
 -----------------------------------
 local zoneObject = {}
 
@@ -12,7 +11,11 @@ end
 zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
         player:setPos(-393.238, -50.034, 741.199, 2)
     end
 
@@ -45,13 +48,13 @@ zoneObject.onGameHour = function(zone)
     end
 end
 
-zoneObject.onRegionEnter = function(player, region)
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
 end
 
-zoneObject.onEventUpdate = function(player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
 end
 
-zoneObject.onEventFinish = function(player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
 end
 
 return zoneObject

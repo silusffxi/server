@@ -23,7 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 #include "common/socket.h"
 #include "common/utils.h"
 
-#include "../data_loader.h"
+#include "data_loader.h"
 #include "search_list.h"
 
 #include <cstring>
@@ -34,8 +34,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/
 CLinkshellListPacket::CLinkshellListPacket(uint32 linkshellid, uint32 Total)
 : m_offset(192)
 {
-    memset(m_data, 0, sizeof(m_data));
-
     ref<uint8>(m_data, (0x0A)) = 0x00; // is final packet
     ref<uint8>(m_data, (0x0B)) = 0x82; // packet type
 
@@ -60,8 +58,8 @@ bool CLinkshellListPacket::AddPlayer(SearchEntity* PPlayer)
 
     m_offset = packBitsLE(m_data, SEARCH_NAME, m_offset, 5);
 
-    m_offset    = packBitsLE(m_data, strlen((const char*)PPlayer->name), m_offset, 4);
-    auto length = strlen((const char*)PPlayer->name);
+    auto length = std::min(PPlayer->name.size(), size_t(15));
+    m_offset    = packBitsLE(m_data, length, m_offset, 4);
 
     for (std::size_t c = 0; c < length; ++c)
     {
@@ -128,7 +126,7 @@ bool CLinkshellListPacket::AddPlayer(SearchEntity* PPlayer)
     ref<uint8>(m_data, size_offset) = m_offset / 8 - size_offset - 1; // Entity data size
     ref<uint16>(m_data, (0x08))     = m_offset / 8;                   // Size of the data to send
 
-    delete PPlayer;
+    destroy(PPlayer);
 
     return true;
 }

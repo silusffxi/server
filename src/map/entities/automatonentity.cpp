@@ -20,20 +20,20 @@
 */
 
 #include "automatonentity.h"
-#include "../ai/ai_container.h"
-#include "../ai/controllers/automaton_controller.h"
-#include "../ai/states/magic_state.h"
-#include "../ai/states/mobskill_state.h"
-#include "../mob_modifier.h"
-#include "../packets/action.h"
-#include "../packets/char_job_extra.h"
-#include "../packets/entity_update.h"
-#include "../packets/pet_sync.h"
-#include "../recast_container.h"
-#include "../status_effect_container.h"
-#include "../utils/mobutils.h"
-#include "../utils/puppetutils.h"
+#include "ai/ai_container.h"
+#include "ai/controllers/automaton_controller.h"
+#include "ai/states/magic_state.h"
+#include "ai/states/mobskill_state.h"
 #include "common/utils.h"
+#include "mob_modifier.h"
+#include "packets/action.h"
+#include "packets/char_job_extra.h"
+#include "packets/entity_update.h"
+#include "packets/pet_sync.h"
+#include "recast_container.h"
+#include "status_effect_container.h"
+#include "utils/mobutils.h"
+#include "utils/puppetutils.h"
 
 CAutomatonEntity::CAutomatonEntity()
 : CPetEntity(PET_TYPE::AUTOMATON)
@@ -103,6 +103,27 @@ void CAutomatonEntity::addElementCapacity(uint8 element, int8 value)
 uint8 CAutomatonEntity::getElementCapacity(uint8 element)
 {
     return m_ElementEquip[element];
+}
+
+uint8 CAutomatonEntity::getElementalCapacityBonus()
+{
+    return m_elementalCapacityBonus;
+}
+
+void CAutomatonEntity::setElementalCapacityBonus(uint8 bonus)
+{
+    if (bonus == m_elementalCapacityBonus)
+    {
+        return;
+    }
+
+    int8 difference = static_cast<int8>(bonus) - m_elementalCapacityBonus;
+    for (size_t i = 0; i < m_ElementMax.size(); ++i)
+    {
+        m_ElementMax[i] += difference;
+    }
+
+    m_elementalCapacityBonus = bonus;
 }
 
 void CAutomatonEntity::burdenTick()
@@ -227,7 +248,7 @@ void CAutomatonEntity::OnMobSkillFinished(CMobSkillState& state, action_t& actio
 
 void CAutomatonEntity::Spawn()
 {
-    status = allegiance == ALLEGIANCE_TYPE::MOB ? STATUS_TYPE::MOB : STATUS_TYPE::NORMAL;
+    status = allegiance == ALLEGIANCE_TYPE::MOB ? STATUS_TYPE::UPDATE : STATUS_TYPE::NORMAL;
     updatemask |= UPDATE_HP;
     PAI->Reset();
     PAI->EventHandler.triggerListener("SPAWN", CLuaBaseEntity(this));

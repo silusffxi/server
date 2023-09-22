@@ -4,11 +4,7 @@
 -- Starts and Finishes Quest: The Old Monument (start only), A Minstrel in Despair, Painful Memory (BARD AF1)
 -- !pos -17 0 -61 245
 -----------------------------------
-local ID = require("scripts/zones/Lower_Jeuno/IDs")
-require("scripts/globals/settings")
-require("scripts/globals/status")
-require("scripts/globals/keyitems")
-require("scripts/globals/quests")
+local ID = zones[xi.zone.LOWER_JEUNO]
 -----------------------------------
 local entity = {}
 
@@ -32,27 +28,20 @@ entity.onTrigger = function(player, npc)
     local job            = player:getMainJob()
     local level          = player:getMainLvl()
 
-    -- THE OLD MONUMENT
-    if
-        player:getQuestStatus(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.THE_OLD_MONUMENT) == QUEST_AVAILABLE and
-        level >= xi.settings.main.ADVANCED_JOB_LEVEL
-    then
-        player:startEvent(102)
-
     -- PAINFUL MEMORY (Bard AF1)
-    elseif
+    if
         painfulMemory == QUEST_AVAILABLE and
         job == xi.job.BRD and
         level >= xi.settings.main.AF1_QUEST_LEVEL
     then
-        if player:getCharVar("PainfulMemoryCS") == 0 then
-            player:startEvent(138) -- Long dialog for "Painful Memory"
+        if player:getCharVar('PainfulMemoryCS') == 0 then
+            player:startEvent(138) -- Long dialog for 'Painful Memory'
         else
-            player:startEvent(137) -- Short dialog for "Painful Memory"
+            player:startEvent(137) -- Short dialog for 'Painful Memory'
         end
 
     elseif painfulMemory == QUEST_ACCEPTED then
-        player:startEvent(136) -- During Quest "Painful Memory"
+        player:startEvent(136) -- During Quest 'Painful Memory'
 
     -- CIRCLE OF TIME (Bard AF3)
     elseif
@@ -72,47 +61,41 @@ entity.onTrigger = function(player, npc)
 
     else
         player:messageSpecial(ID.text.MERTAIRE_DEFAULT)
-
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
-    -- THE OLD MONUMENT
-    if csid == 102 then
-        player:setCharVar("TheOldMonument_Event", 1)
-
+entity.onEventFinish = function(player, csid, option, npc)
     -- A MINSTREL IN DESPAIR
-    elseif csid == 101 then
-        player:addGil(xi.settings.main.GIL_RATE * 2100)
-        player:messageSpecial(ID.text.GIL_OBTAINED, xi.settings.main.GIL_RATE * 2100)
+    if csid == 101 then
+        npcUtil.giveCurrency(player, 'gil', 2100)
         player:tradeComplete()
         player:completeQuest(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.A_MINSTREL_IN_DESPAIR)
         player:addFame(xi.quest.fame_area.JEUNO, 30)
 
         -- Placing this here allows the player to get additional poetic
         -- parchments should they drop them until this quest is complete
-        player:setCharVar("TheOldMonument_Event", 0)
+        player:setCharVar('TheOldMonument_Event', 0)
 
     -- PAINFUL MEMORY (Bard AF1)
     elseif csid == 138 and option == 0 then
-        player:setCharVar("PainfulMemoryCS", 1) -- player declined quest
+        player:setCharVar('PainfulMemoryCS', 1) -- player declined quest
 
     elseif
         (csid == 137 or csid == 138) and
         option == 1
     then
         player:addQuest(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.PAINFUL_MEMORY)
-        player:setCharVar("PainfulMemoryCS", 0)
+        player:setCharVar('PainfulMemoryCS', 0)
         player:addKeyItem(xi.ki.MERTAIRES_BRACELET)
         player:messageSpecial(ID.text.KEYITEM_OBTAINED, xi.ki.MERTAIRES_BRACELET)
 
     -- CIRCLE OF TIME (Bard AF3)
     elseif csid == 139 then
         player:addQuest(xi.quest.log_id.JEUNO, xi.quest.id.jeuno.THE_CIRCLE_OF_TIME)
-        player:setCharVar("circleTime", 1)
+        player:setCharVar('circleTime', 1)
     end
 end
 

@@ -22,8 +22,8 @@
 #ifndef _CPETSKILL_H
 #define _CPETSKILL_H
 
-#include "../common/cbasetypes.h"
-#include "../common/mmo.h"
+#include "common/cbasetypes.h"
+#include "common/mmo.h"
 
 class CPetSkill
 {
@@ -82,8 +82,8 @@ public:
     void setSecondarySkillchain(uint8 skillchain);
     void setTertiarySkillchain(uint8 skillchain);
 
-    const std::string getName() const;
-    void              setName(const std::string& name);
+    const std::string& getName() const;
+    void               setName(const std::string& name);
 
 private:
     uint16      m_ID;

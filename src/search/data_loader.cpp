@@ -45,7 +45,7 @@ CDataLoader::~CDataLoader()
  *                                                                       *
  ************************************************************************/
 
-std::vector<ahHistory*> CDataLoader::GetAHItemHystory(uint16 ItemID, bool stack)
+std::vector<ahHistory*> CDataLoader::GetAHItemHistory(uint16 ItemID, bool stack)
 {
     std::vector<ahHistory*> HistoryList;
 
@@ -66,10 +66,10 @@ std::vector<ahHistory*> CDataLoader::GetAHItemHystory(uint16 ItemID, bool stack)
             PAHHistory->Price = sql->GetUIntData(0);
             PAHHistory->Data  = sql->GetUIntData(1);
 
-            snprintf((char*)PAHHistory->Name1, 15, "%s", sql->GetData(2));
-            snprintf((char*)PAHHistory->Name2, 15, "%s", sql->GetData(3));
+            PAHHistory->Name1 = sql->GetStringData(2);
+            PAHHistory->Name2 = sql->GetStringData(3);
 
-            HistoryList.push_back(PAHHistory);
+            HistoryList.emplace_back(PAHHistory);
         }
         std::reverse(HistoryList.begin(), HistoryList.end());
     }
@@ -87,9 +87,18 @@ std::vector<ahItem*> CDataLoader::GetAHItemsToCategory(uint8 AHCategoryID, int8*
     ShowDebug("try find category %u", AHCategoryID);
 
     std::vector<ahItem*> ItemList;
+    const char*          selectFrom = "item_basic";
+    if (settings::get<bool>("search.OMIT_NO_HISTORY"))
+    {
+        // Get items that have been listed before
+        selectFrom = "(SELECT item_basic.* "
+                     "FROM item_basic "
+                     "INNER JOIN auction_house_items ON item_basic.itemid = auction_house_items.itemid"
+                     ") AS item_basic";
+    }
 
     const char* fmtQuery = "SELECT item_basic.itemid, item_basic.stackSize, COUNT(*)-SUM(stack), SUM(stack) "
-                           "FROM item_basic "
+                           "FROM %s "
                            "LEFT JOIN auction_house ON item_basic.itemId = auction_house.itemid AND auction_house.buyer_name IS NULL "
                            "LEFT JOIN item_equipment ON item_basic.itemid = item_equipment.itemid "
                            "LEFT JOIN item_weapon ON item_basic.itemid = item_weapon.itemid "
@@ -97,8 +106,7 @@ std::vector<ahItem*> CDataLoader::GetAHItemsToCategory(uint8 AHCategoryID, int8*
                            "GROUP BY item_basic.itemid "
                            "%s";
 
-    int32 ret = sql->Query(fmtQuery, AHCategoryID, OrderByString);
-
+    int32 ret = sql->Query(fmtQuery, selectFrom, AHCategoryID, OrderByString);
     if (ret != SQL_ERROR && sql->NumRows() != 0)
     {
         while (sql->NextRow() == SQL_SUCCESS)
@@ -109,16 +117,53 @@ std::vector<ahItem*> CDataLoader::GetAHItemsToCategory(uint8 AHCategoryID, int8*
 
             PAHItem->SingleAmount = sql->GetIntData(2);
             PAHItem->StackAmount  = sql->GetIntData(3);
+            PAHItem->Category     = AHCategoryID;
 
             if (sql->GetIntData(1) == 1)
             {
                 PAHItem->StackAmount = -1;
             }
 
-            ItemList.push_back(PAHItem);
+            ItemList.emplace_back(PAHItem);
         }
     }
+
     return ItemList;
+}
+
+// Return single item including category and how many are listed
+ahItem CDataLoader::GetAHItemFromItemID(uint16 ItemID)
+{
+    const char* fmtQuery = "SELECT aH, COUNT(*)-SUM(stack), SUM(stack) "
+                           "FROM item_basic "
+                           "LEFT JOIN auction_house ON item_basic.itemId = auction_house.itemid AND auction_house.buyer_name IS NULL "
+                           "LEFT JOIN item_equipment ON item_basic.itemid = item_equipment.itemid "
+                           "LEFT JOIN item_weapon ON item_basic.itemid = item_weapon.itemid "
+                           "WHERE item_basic.itemid = %u";
+
+    int32 ret = sql->Query(fmtQuery, ItemID);
+
+    ahItem CAHItem       = {};
+    CAHItem.ItemID       = ItemID;
+    CAHItem.Category     = 0;
+    CAHItem.SingleAmount = 0;
+    CAHItem.StackAmount  = 0;
+
+    if (ret != SQL_ERROR && sql->NumRows() != 0)
+    {
+        while (sql->NextRow() == SQL_SUCCESS)
+        {
+            CAHItem.Category     = sql->GetIntData(0);
+            CAHItem.SingleAmount = sql->GetIntData(1);
+            CAHItem.StackAmount  = sql->GetIntData(2);
+
+            if (sql->GetIntData(1) == 1)
+            {
+                CAHItem.StackAmount = 0;
+            }
+        }
+    }
+    return CAHItem;
 }
 
 /************************************************************************
@@ -215,10 +260,9 @@ std::list<SearchEntity*> CDataLoader::GetPlayersList(search_req sr, int* count)
         int visibleResults = 0; // capped at first 20
         while (sql->NextRow() == SQL_SUCCESS)
         {
-            SearchEntity* PPlayer = new SearchEntity;
-            memset(PPlayer, 0, sizeof(SearchEntity));
+            SearchEntity* PPlayer = new SearchEntity();
 
-            memcpy(PPlayer->name, sql->GetData(2), 15);
+            PPlayer->name = sql->GetStringData(2);
 
             PPlayer->id       = sql->GetUIntData(0);
             PPlayer->zone     = (uint16)sql->GetIntData(3);
@@ -344,7 +388,7 @@ std::list<SearchEntity*> CDataLoader::GetPlayersList(search_req sr, int* count)
             if (sr.nameLen > 0)
             {
                 std::string dbname;
-                dbname.insert(0, (char*)PPlayer->name);
+                dbname.insert(0, PPlayer->name);
 
                 // can't be this name, too long
                 if (sr.nameLen > dbname.length())
@@ -373,7 +417,7 @@ std::list<SearchEntity*> CDataLoader::GetPlayersList(search_req sr, int* count)
             }
             if (visibleResults < 40)
             {
-                PlayersList.push_back(PPlayer);
+                PlayersList.emplace_back(PPlayer);
                 visibleResults++;
             }
             totalResults++;
@@ -394,7 +438,7 @@ std::list<SearchEntity*> CDataLoader::GetPlayersList(search_req sr, int* count)
  *                                                                       *
  ************************************************************************/
 
-std::list<SearchEntity*> CDataLoader::GetPartyList(uint16 PartyID, uint16 AllianceID)
+std::list<SearchEntity*> CDataLoader::GetPartyList(uint32 PartyID, uint32 AllianceID)
 {
     std::list<SearchEntity*> PartyList;
 
@@ -416,11 +460,9 @@ std::list<SearchEntity*> CDataLoader::GetPartyList(uint16 PartyID, uint16 Allian
     {
         while (sql->NextRow() == SQL_SUCCESS)
         {
-            SearchEntity* PPlayer = new SearchEntity;
-            memset(PPlayer, 0, sizeof(SearchEntity));
+            SearchEntity* PPlayer = new SearchEntity();
 
-            memcpy(PPlayer->name, sql->GetData(2), 15);
-
+            PPlayer->name        = sql->GetStringData(2);
             PPlayer->id          = sql->GetUIntData(0);
             PPlayer->zone        = (uint16)sql->GetIntData(3);
             PPlayer->nation      = (uint8)sql->GetIntData(4);
@@ -471,7 +513,7 @@ std::list<SearchEntity*> CDataLoader::GetPartyList(uint16 PartyID, uint16 Allian
 
             PPlayer->flags2 = PPlayer->flags1;
 
-            PartyList.push_back(PPlayer);
+            PartyList.emplace_back(PPlayer);
         }
     }
     return PartyList;
@@ -505,11 +547,9 @@ std::list<SearchEntity*> CDataLoader::GetLinkshellList(uint32 LinkshellID)
     {
         while (sql->NextRow() == SQL_SUCCESS)
         {
-            SearchEntity* PPlayer = new SearchEntity;
-            memset(PPlayer, 0, sizeof(SearchEntity));
+            SearchEntity* PPlayer = new SearchEntity();
 
-            memcpy(PPlayer->name, sql->GetData(2), 15);
-
+            PPlayer->name           = sql->GetStringData(2);
             PPlayer->id             = sql->GetUIntData(0);
             PPlayer->zone           = (uint16)sql->GetIntData(3);
             PPlayer->nation         = (uint8)sql->GetIntData(4);
@@ -554,7 +594,7 @@ std::list<SearchEntity*> CDataLoader::GetLinkshellList(uint32 LinkshellID)
 
             PPlayer->flags2 = PPlayer->flags1;
 
-            LinkshellList.push_back(PPlayer);
+            LinkshellList.emplace_back(PPlayer);
         }
     }
 
@@ -571,7 +611,7 @@ std::string CDataLoader::GetSearchComment(uint32 playerId)
         return std::string();
     }
 
-    return std::string((const char*)sql->GetData(0));
+    return sql->GetStringData(0);
 }
 
 struct ListingToExpire

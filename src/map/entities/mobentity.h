@@ -103,12 +103,6 @@ enum BEHAVIOUR : uint16
 
 class CMobSkillState;
 
-/************************************************************************
- *                                                                       *
- *                                                                       *
- *                                                                       *
- ************************************************************************/
-
 class CMobEntity : public CBattleEntity
 {
 public:
@@ -178,15 +172,13 @@ public:
 
     virtual void Spawn() override;
     virtual void FadeOut() override;
+    virtual bool isWideScannable() override;
 
     bool   m_AllowRespawn; // if true, allow respawn
     uint32 m_RespawnTime;  // respawn time
     uint32 m_DropItemTime; // time until monster death animation
 
     uint32 m_DropID; // dropid of items to be dropped. dropid in Database (mob_droplist)
-
-    // ItemID, <Droprate, DropType>
-    std::map<uint16, std::pair<uint16, uint8>> m_DropListModifications;
 
     uint8  m_minLevel; // lowest possible level of the mob
     uint8  m_maxLevel; // highest possible level of the mob
@@ -222,7 +214,6 @@ public:
     uint8     m_Type; // mob type
     bool      m_Aggro;
     bool      m_TrueDetection; // Has true sight or sound
-    uint16    m_Detects;       // mobs detection methods, sight, sound, etc
     uint8     m_Link;          // link with mobs of it's family
     bool      m_isAggroable;   // Can be aggroed by other monsters when in the player allegiance
     uint16    m_Behaviour;     // mob behaviour
@@ -257,9 +248,9 @@ public:
 
     bool m_CallForHelpBlocked;
 
-    CEnmityContainer* PEnmityContainer; // система ненависти монстров
+    CEnmityContainer* PEnmityContainer;
 
-    CMobSpellContainer* SpellContainer; // retrieves spells for the mob
+    CMobSpellContainer* SpellContainer;
 
     bool m_IsClaimable;
 

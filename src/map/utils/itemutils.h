@@ -24,16 +24,16 @@
 
 #include <vector>
 
-#include "../items/item.h"
-#include "../items/item_currency.h"
-#include "../items/item_equipment.h"
-#include "../items/item_fish.h"
-#include "../items/item_furnishing.h"
-#include "../items/item_general.h"
-#include "../items/item_linkshell.h"
-#include "../items/item_puppet.h"
-#include "../items/item_usable.h"
-#include "../items/item_weapon.h"
+#include "items/item.h"
+#include "items/item_currency.h"
+#include "items/item_equipment.h"
+#include "items/item_fish.h"
+#include "items/item_furnishing.h"
+#include "items/item_general.h"
+#include "items/item_linkshell.h"
+#include "items/item_puppet.h"
+#include "items/item_usable.h"
+#include "items/item_weapon.h"
 
 #define MAX_ITEMID        32768
 #define MAX_DROPID        5000
@@ -51,15 +51,20 @@ enum DROP_TYPE
 struct DropItem_t
 {
     DropItem_t(uint8 DropType, uint16 ItemID, uint16 DropRate);
+    DropItem_t(uint8 DropType, uint16 ItemID, uint16 DropRate, bool hasFixedRate);
     uint8  DropType;
     uint16 ItemID;
     uint16 DropRate;
+    bool   hasFixedRate;
 };
 
 struct DropGroup_t
 {
     DropGroup_t(uint16 GroupRate);
+    DropGroup_t(uint16 GroupRate, bool hasFixedRate);
+
     uint16                  GroupRate;
+    bool                    hasFixedRate;
     std::vector<DropItem_t> Items;
 };
 
@@ -77,6 +82,18 @@ struct LootItem_t
 };
 
 typedef std::vector<LootItem_t> LootList_t;
+
+struct LootContainer
+{
+    LootContainer(DropList_t* dropList);
+    DropList_t drops;
+
+    void ForEachGroup(const std::function<void(const DropGroup_t&)>& func);
+    void ForEachItem(const std::function<void(const DropItem_t&)>& func);
+
+private:
+    DropList_t* dropList;
+};
 
 /************************************************************************
  *                                                                       *

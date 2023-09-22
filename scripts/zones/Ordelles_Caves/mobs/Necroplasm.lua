@@ -3,11 +3,6 @@
 --   NM: Necroplasm
 -- Involved in Eco Warrior (San d'Oria)
 -----------------------------------
-local ID = require("scripts/zones/Ordelles_Caves/IDs")
-require("scripts/globals/quests")
-require("scripts/globals/status")
-require("scripts/globals/mobs")
------------------------------------
 local entity = {}
 
 entity.onMobInitialize = function(mob)
@@ -19,8 +14,11 @@ entity.onAdditionalEffect = function(mob, target, damage)
 end
 
 entity.onMobDeath = function(mob, player, optParams)
-    if player:getCharVar("EcoStatus") == 1 and player:hasStatusEffect(xi.effect.LEVEL_RESTRICTION) then
-        player:setCharVar("EcoStatus", 2)
+    if
+        player:getCharVar('EcoStatus') == 1 and
+        player:hasStatusEffect(xi.effect.LEVEL_RESTRICTION)
+    then
+        player:setCharVar('EcoStatus', 2)
     end
 end
 

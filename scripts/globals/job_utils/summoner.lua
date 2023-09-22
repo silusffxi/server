@@ -1,18 +1,16 @@
 -----------------------------------
 -- Summoner Job Utilities
 -----------------------------------
-require("scripts/globals/ability")
-require("scripts/globals/status")
-require("scripts/globals/msg")
-require("scripts/globals/jobpoints")
-require("scripts/globals/damage/tp")
+require('scripts/globals/ability')
+require('scripts/globals/jobpoints')
+require('scripts/globals/combat/tp')
 -----------------------------------
 xi = xi or {}
 xi.job_utils = xi.job_utils or {}
 xi.job_utils.summoner = xi.job_utils.summoner or {}
 -----------------------------------
 
--- sort of a misnomer, as if Apogee is up, the "base" mp cost rises.
+-- sort of a misnomer, as if Apogee is up, the 'base' mp cost rises.
 local function getBaseMPCost(player, ability)
     local baseMPCostMap =
     {
@@ -33,7 +31,7 @@ local function getBaseMPCost(player, ability)
     end
 
     if baseMPCost == nil then
-        printf("[warning] scripts/globals/job_utils/summoner.lua::getBaseMPCost(): MP cost for xi.jobAbility with id %d not implemented.", ability:getID())
+        printf('[warning] scripts/globals/job_utils/summoner.lua::getBaseMPCost(): MP cost for xi.jobAbility with id %d not implemented.', ability:getID())
         return 9999
     end
 
@@ -116,12 +114,27 @@ xi.job_utils.summoner.onUseBloodPact = function(player, pet, target, petskill)
 end
 
 -- to be removed once damage is overhauled
-xi.job_utils.summoner.calculateTPReturn = function (avatar, target, damage, numHits)
+xi.job_utils.summoner.calculateTPReturn = function(avatar, target, damage, numHits)
     if damage ~= 0 and numHits > 0 then -- absorbed hits still give TP, though we can't know how many hits actually connected in the current avatar damage formulas
-        local tpReturn = xi.damage.tp.getSingleMeleeHitTPReturn(avatar, target)
+        local tpReturn = xi.combat.tp.getSingleMeleeHitTPReturn(avatar, target)
         tpReturn = tpReturn + 10 * (numHits - 1) -- extra hits give 10 TP each
         avatar:setTP(tpReturn)
     else
         avatar:setTP(0)
+    end
+end
+
+xi.job_utils.summoner.useManaCede = function(player, ability, action)
+    local avatar = player:getPet()
+
+    if avatar ~= nil then
+        local avatarTP = avatar:getTP()
+        local bonusTP = 1000 + player:getJobPointLevel(xi.jp.MANA_CEDE_EFFECT) * 50
+        local manaCedeBonus = (100 + player:getMod(xi.mod.ENHANCES_MANA_CEDE)) / 100
+        local avatarNewTP = utils.clamp(avatarTP + bonusTP * manaCedeBonus, 1000, 3000)
+
+        action:ID(player:getID(), avatar:getID())
+        avatar:setTP(avatarNewTP)
+        player:delMP(100)
     end
 end

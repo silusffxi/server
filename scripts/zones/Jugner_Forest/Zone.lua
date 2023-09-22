@@ -1,12 +1,8 @@
 -----------------------------------
 -- Zone: Jugner_Forest (104)
 -----------------------------------
-local ID = require('scripts/zones/Jugner_Forest/IDs')
+local ID = zones[xi.zone.JUGNER_FOREST]
 require('scripts/quests/i_can_hear_a_rainbow')
-require('scripts/globals/chocobo_digging')
-require('scripts/globals/conquest')
-require('scripts/globals/helm')
-require('scripts/globals/zone')
 require('scripts/missions/amk/helpers')
 -----------------------------------
 local zoneObject = {}
@@ -16,7 +12,7 @@ zoneObject.onChocoboDig = function(player, precheck)
 end
 
 zoneObject.onInitialize = function(zone)
-    zone:registerRegion(1, -484, 10, 292, 0, 0, 0) -- Sets Mark for "Under Oath" Quest cutscene.
+    zone:registerTriggerArea(1, -484, 10, 292, 0, 0, 0) -- Sets Mark for "Under Oath" Quest cutscene.
 
     UpdateNMSpawnPoint(ID.mob.FRAELISSA)
     GetMobByID(ID.mob.FRAELISSA):setRespawnTime(math.random(900, 10800))
@@ -33,11 +29,15 @@ zoneObject.onInitialize = function(zone)
     xi.voidwalker.zoneOnInit(zone)
 end
 
-zoneObject.onZoneIn = function( player, prevZone)
+zoneObject.onZoneIn = function(player, prevZone)
     local cs = -1
 
-    if player:getXPos() == 0 and player:getYPos() == 0 and player:getZPos() == 0 then
-        player:setPos( 342, -5, 15.117, 169)
+    if
+        player:getXPos() == 0 and
+        player:getYPos() == 0 and
+        player:getZPos() == 0
+    then
+        player:setPos(-594, -7, -442, 253)
     end
 
     if quests.rainbow.onZoneIn(player) then
@@ -52,25 +52,29 @@ zoneObject.onZoneIn = function( player, prevZone)
     return cs
 end
 
-zoneObject.onConquestUpdate = function(zone, updatetype)
-    xi.conq.onConquestUpdate(zone, updatetype)
+zoneObject.onConquestUpdate = function(zone, updatetype, influence, owner, ranking, isConquestAlliance)
+    xi.conq.onConquestUpdate(zone, updatetype, influence, owner, ranking, isConquestAlliance)
 end
 
-zoneObject.onRegionEnter = function( player, region)
-    if region:GetRegionID() == 1 and player:getCharVar("UnderOathCS") == 7 then -- Quest: Under Oath - PLD AF3
+zoneObject.onTriggerAreaEnter = function(player, triggerArea)
+    if
+        triggerArea:GetTriggerAreaID() == 1 and
+        player:getCharVar('UnderOathCS') == 7
+    then
+        -- Quest: Under Oath - PLD AF3
         player:startEvent(14)
     end
 end
 
-zoneObject.onEventUpdate = function( player, csid, option)
+zoneObject.onEventUpdate = function(player, csid, option, npc)
     if csid == 15 then
         quests.rainbow.onEventUpdate(player)
     end
 end
 
-zoneObject.onEventFinish = function( player, csid, option)
+zoneObject.onEventFinish = function(player, csid, option, npc)
     if csid == 14 then
-        player:setCharVar("UnderOathCS", 8) -- Quest: Under Oath - PLD AF3
+        player:setCharVar('UnderOathCS', 8) -- Quest: Under Oath - PLD AF3
     end
 end
 

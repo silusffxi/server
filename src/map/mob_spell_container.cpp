@@ -61,41 +61,41 @@ void CMobSpellContainer::AddSpell(SpellID spellId)
     uint8 aoe = battleutils::GetSpellAoEType(m_PMob, spell);
     if (aoe > 0 && spell->canTargetEnemy())
     {
-        m_gaList.push_back(spellId);
+        m_gaList.emplace_back(spellId);
     }
     else if (spell->isSevere())
     {
         // select spells like death and impact
-        m_severeList.push_back(spellId);
+        m_severeList.emplace_back(spellId);
     }
     else if (spell->canTargetEnemy() && !spell->isSevere())
     {
         // add to damage list
-        m_damageList.push_back(spellId);
+        m_damageList.emplace_back(spellId);
     }
     else if (spell->isDebuff())
     {
-        m_debuffList.push_back(spellId);
+        m_debuffList.emplace_back(spellId);
     }
     else if (spell->isNa())
     {
         // na spell and erase
-        m_naList.push_back(spellId);
+        m_naList.emplace_back(spellId);
     }
     else if (spell->isRaise())
     {
         // raise family
-        m_raiseList.push_back(spellId);
+        m_raiseList.emplace_back(spellId);
     }
     else if (spell->isHeal())
     { // includes blue mage healing spells, wild carrot etc
         // add to healing
-        m_healList.push_back(spellId);
+        m_healList.emplace_back(spellId);
     }
     else if (spell->isBuff())
     {
         // buff
-        m_buffList.push_back(spellId);
+        m_buffList.emplace_back(spellId);
     }
     else
     {
@@ -153,7 +153,7 @@ std::optional<SpellID> CMobSpellContainer::GetBestAvailable(SPELLFAMILY family)
             bool isNotInRecast = !m_PMob->PRecastContainer->Has(RECAST_MAGIC, static_cast<uint16>(id));
             if (sameFamily && enoughMP && isNotInRecast)
             {
-                matches.push_back(id);
+                matches.emplace_back(id);
             }
         };
     };
@@ -334,14 +334,14 @@ std::optional<SpellID> CMobSpellContainer::GetBestAgainstTargetWeakness(CBattleE
     // clang-format off
     std::vector<int16> resistances
     {
-        PTarget->getMod(Mod::FIRE_MEVA),
-        PTarget->getMod(Mod::ICE_MEVA),
-        PTarget->getMod(Mod::WIND_MEVA),
-        PTarget->getMod(Mod::EARTH_MEVA),
-        PTarget->getMod(Mod::THUNDER_MEVA),
-        PTarget->getMod(Mod::WATER_MEVA),
-        PTarget->getMod(Mod::LIGHT_MEVA),
-        PTarget->getMod(Mod::DARK_MEVA),
+        PTarget->getMod(Mod::FIRE_RES_RANK),
+        PTarget->getMod(Mod::ICE_RES_RANK),
+        PTarget->getMod(Mod::WIND_RES_RANK),
+        PTarget->getMod(Mod::EARTH_RES_RANK),
+        PTarget->getMod(Mod::THUNDER_RES_RANK),
+        PTarget->getMod(Mod::WATER_RES_RANK),
+        PTarget->getMod(Mod::LIGHT_RES_RANK),
+        PTarget->getMod(Mod::DARK_RES_RANK),
     };
     // clang-format on
 

@@ -4,23 +4,25 @@
 -- Notes: Opens door _471 near password #3
 -- !pos -45.228 -17.832 22.392 151
 -----------------------------------
-local ID = require("scripts/zones/Castle_Oztroja/IDs")
-require("scripts/globals/status")
+local ID = zones[xi.zone.CASTLE_OZTROJA]
 -----------------------------------
 local entity = {}
 
 entity.onTrigger = function(player, npc)
     local brassDoor = GetNPCByID(npc:getID() - 4)
 
-    if npc:getAnimation() == xi.anim.CLOSE_DOOR and brassDoor:getAnimation() == xi.anim.CLOSE_DOOR then
+    if
+        npc:getAnimation() == xi.anim.CLOSE_DOOR and
+        brassDoor:getAnimation() == xi.anim.CLOSE_DOOR
+    then
         player:startEvent(10)
     end
 end
 
-entity.onEventUpdate = function(player, csid, option)
+entity.onEventUpdate = function(player, csid, option, npc)
 end
 
-entity.onEventFinish = function(player, csid, option)
+entity.onEventFinish = function(player, csid, option, npc)
     local brassDoor = GetNPCByID(ID.npc.SECOND_PASSWORD_STATUE - 2)
     local torch1 = GetNPCByID(ID.npc.SECOND_PASSWORD_STATUE + 1)
     local torch2 = GetNPCByID(ID.npc.SECOND_PASSWORD_STATUE + 2)

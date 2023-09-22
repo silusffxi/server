@@ -5,10 +5,6 @@
 -- !addmission 12 14
 -- Ergon Locus : !pos -140.000 10.000 60.000 270
 -----------------------------------
-require('scripts/globals/missions')
-require('scripts/globals/interaction/mission')
-require('scripts/globals/zone')
------------------------------------
 
 local mission = Mission:new(xi.mission.log_id.SOA, xi.mission.id.soa.AN_AIMLESS_JOURNEY)
 
@@ -26,9 +22,9 @@ mission.sections =
 
         [xi.zone.CIRDAS_CAVERNS] =
         {
-            onRegionEnter =
+            onTriggerAreaEnter =
             {
-                [1] = function(player, region)
+                [1] = function(player, triggerArea)
                     return mission:progressEvent(12)
                 end,
             },

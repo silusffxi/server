@@ -2,12 +2,9 @@
 -- Area: PsoXja
 --  NPC: TOWER_C_Lift_E !pos 310 1.250 290
 -----------------------------------
-require("scripts/globals/status")
------------------------------------
 local entity = {}
 
 entity.onSpawn = function(npc)
-
     local elevator =
     {
         id = xi.elevator.TIMED_AUTOMATIC,
