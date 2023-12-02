@@ -173,8 +173,10 @@ CCharEntity::CCharEntity()
     m_mkeCurrent = 0;
     m_asaCurrent = 0;
 
+    m_PMonstrosity = nullptr;
+
     m_Costume             = 0;
-    m_Monstrosity         = 0;
+    m_Costume2            = 0;
     m_hasTractor          = 0;
     m_hasRaise            = 0;
     m_weaknessLvl         = 0;
@@ -217,7 +219,7 @@ CCharEntity::CCharEntity()
     PRecastContainer       = std::make_unique<CCharRecastContainer>(this);
     PLatentEffectContainer = new CLatentEffectContainer(this);
 
-    retriggerLatentsAfterPacketParsing = false;
+    retriggerLatents = false;
 
     resetPetZoningInfo();
     petZoningInfo.petID = 0;
@@ -873,10 +875,12 @@ void CCharEntity::delTrait(CTrait* PTrait)
 bool CCharEntity::ValidTarget(CBattleEntity* PInitiator, uint16 targetFlags)
 {
     TracyZoneScoped;
+
     if (StatusEffectContainer->GetConfrontationEffect() != PInitiator->StatusEffectContainer->GetConfrontationEffect())
     {
         return false;
     }
+
     if (isDead())
     {
         return (targetFlags & TARGET_PLAYER_DEAD) != 0;
@@ -892,9 +896,27 @@ bool CCharEntity::ValidTarget(CBattleEntity* PInitiator, uint16 targetFlags)
         return true;
     }
 
-    if (((targetFlags & TARGET_PLAYER_PARTY) ||
-         ((targetFlags & TARGET_PLAYER_PARTY_PIANISSIMO) && PInitiator->StatusEffectContainer->HasStatusEffect(EFFECT_PIANISSIMO))) &&
-        ((PParty && PInitiator->PParty == PParty) || (PInitiator->PMaster && PInitiator->PMaster->PParty == PParty)) && PInitiator != this)
+    bool isSameParty      = PParty && PInitiator->PParty && PInitiator->PParty == PParty;
+    bool isSameAlliance   = PParty && PParty->m_PAlliance && PInitiator->PParty && PInitiator->PParty->m_PAlliance && PParty->m_PAlliance == PInitiator->PParty->m_PAlliance;
+    bool isPartyPetMaster = PInitiator->PMaster && PInitiator->PMaster->PParty && PInitiator->PMaster->PParty == PParty;
+    bool isSoloPetMaster  = PParty == nullptr && PInitiator->PMaster == this;
+    bool targetsParty     = targetFlags & TARGET_PLAYER_PARTY;
+    bool targetsAlliance  = targetFlags & TARGET_PLAYER_ALLIANCE;
+    bool hasPianissimo    = (targetFlags & TARGET_PLAYER_PARTY_PIANISSIMO) && PInitiator->StatusEffectContainer->HasStatusEffect(EFFECT_PIANISSIMO);
+    bool isDifferentChar  = PInitiator != this;
+
+    // Alliance member valid target.
+    if (targetsAlliance &&
+        isSameAlliance &&
+        isDifferentChar)
+    {
+        return true;
+    }
+
+    // Party member valid targeting.
+    if ((targetsParty || hasPianissimo) &&
+        (isSameParty || isPartyPetMaster || isSoloPetMaster) &&
+        isDifferentChar)
     {
         return true;
     }
@@ -905,6 +927,7 @@ bool CCharEntity::ValidTarget(CBattleEntity* PInitiator, uint16 targetFlags)
         {
             return true;
         }
+
         // Can cast on self and others in party but potency gets no bonuses from equipment mods if entrust is active
         if (!PInitiator->StatusEffectContainer->HasStatusEffect(EFFECT_ENTRUST) && PInitiator == this)
         {
@@ -1285,9 +1308,16 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
         return;
     }
 
+    uint8 findFlags = 0;
+
+    if ((PAbility->getValidTarget() & TARGET_PLAYER_DEAD) == TARGET_PLAYER_DEAD)
+    {
+        findFlags |= FINDFLAGS_DEAD;
+    }
+
     auto* PTarget = static_cast<CBattleEntity*>(state.GetTarget());
     PAI->TargetFind->reset();
-    PAI->TargetFind->findSingleTarget(PTarget);
+    PAI->TargetFind->findSingleTarget(PTarget, findFlags);
 
     // Check if target is untargetable
     if (PAI->TargetFind->m_targets.size() == 0)
@@ -1408,6 +1438,10 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
                 action.recast -= 10; // remove 10 seconds
             }
         }
+        else if (PAbility->getID() == ABILITY_READY || PAbility->getID() == ABILITY_SIC)
+        {
+            action.recast = static_cast<uint16>(std::max<int16>(0, action.recast - getMod(Mod::SIC_READY_RECAST)));
+        }
 
         action.id         = this->id;
         action.actiontype = PAbility->getActionType();
@@ -1510,7 +1544,7 @@ void CCharEntity::OnAbility(CAbilityState& state, action_t& action)
 
             float distance = PAbility->getRange();
 
-            PAI->TargetFind->findWithinArea(this, AOE_RADIUS::ATTACKER, distance);
+            PAI->TargetFind->findWithinArea(this, AOE_RADIUS::ATTACKER, distance, findFlags);
 
             uint16 prevMsg = 0;
             for (auto&& PTargetFound : PAI->TargetFind->m_targets)

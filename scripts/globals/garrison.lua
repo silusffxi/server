@@ -628,7 +628,7 @@ end
 local function isPlayerOnTallyLockout(player)
     if
         xi.settings.main.GARRISON_ONCE_PER_WEEK and
-        os.time() < player:getCharVar('[Garrison]NextEntryTime')
+        player:getCharVar('[Garrison]NextEntryTime') ~= 0
     then
         return true
     end
@@ -652,7 +652,7 @@ end
 -- Stores the next valid entry time on trading player based on next conquest tally.
 local function saveTallyLockout(player)
     if xi.settings.main.GARRISON_ONCE_PER_WEEK then
-        player:setCharVar('[Garrison]NextEntryTime', getConquestTally())
+        player:setCharVar('[Garrison]NextEntryTime', 1, NextConquestTally())
     end
 end
 
@@ -758,13 +758,14 @@ xi.garrison.onTrade = function(player, npc, trade, guardNation)
     -- Get zone information
     local zone     = player:getZone()
     local zoneID   = zone:getID()
-    local nationID = GetRegionOwner(zone:getRegionID())
     local zoneData = xi.garrison.zoneData[zoneID]
 
     -- If called outside of Garrison areas
-    if zoneData == nil then
+    if not zoneData then
         return
     end
+
+    local nationID = GetRegionOwner(zone:getRegionID())
 
     -- If info is missing, a debug message will be logged and Garrison will not begin
     if xi.garrison.getAllyInfo(zoneID, zoneData, nationID) == nil then

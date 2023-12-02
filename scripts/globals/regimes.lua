@@ -1202,7 +1202,7 @@ xi.regime.bookOnEventFinish = function(player, option, regimeType)
             end,
 
             ['HOMING_INSTINCT'] = function()
-                player:addStatusEffectEx(xi.effect.TELEPORT, 0, xi.teleport.id.WARP, 0, 1)
+                player:addStatusEffectEx(xi.effect.TELEPORT, 0, xi.teleport.id.WARP, 0, 3)
             end,
 
             ['RERAISE'] = function()
@@ -1380,7 +1380,7 @@ xi.regime.checkRegime = function(player, mob, regimeId, index, regimeType)
         return
     end
 
-    -- people in alliance get no fields credit unless FOV_REWARD_ALLIANCE is 1 in scripts/globals/settings.lua
+    -- people in alliance get no fields credit unless FOV_REWARD_ALLIANCE is 1 in settings/main.lua
     if
         xi.settings.main.FOV_REWARD_ALLIANCE ~= 1 and
         regimeType == xi.regime.type.FIELDS and
@@ -1389,7 +1389,7 @@ xi.regime.checkRegime = function(player, mob, regimeId, index, regimeType)
         return
     end
 
-    -- people in alliance get no grounds credit unless GOV_REWARD_ALLIANCE is 1 in scripts/globals/settings.lua
+    -- people in alliance get no grounds credit unless GOV_REWARD_ALLIANCE is 1 in settings/main.lua
     if
         xi.settings.main.GOV_REWARD_ALLIANCE ~= 1 and
         regimeType == xi.regime.type.GROUNDS and

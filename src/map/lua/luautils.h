@@ -130,6 +130,7 @@ namespace luautils
     void SendEntityVisualPacket(uint32 npcid, const char* command);
     void InitInteractionGlobal();
     auto GetZone(uint16 zoneId) -> std::optional<CLuaZone>;
+    auto GetItemByID(uint32 itemId) -> std::optional<CLuaItem>;
     auto GetNPCByID(uint32 npcid, sol::object const& instanceObj) -> std::optional<CLuaBaseEntity>;
     auto GetMobByID(uint32 mobid, sol::object const& instanceObj) -> std::optional<CLuaBaseEntity>;
     auto GetEntityByID(uint32 mobid, sol::object const& instanceObj, sol::object const& arg3) -> std::optional<CLuaBaseEntity>;
@@ -283,6 +284,11 @@ namespace luautils
     auto   OnMobSkillTarget(CBattleEntity* PTarget, CBaseEntity* PMob, CMobSkill* PMobSkill) -> CBattleEntity*;
     int32  OnAutomatonAbilityCheck(CBaseEntity* PChar, CAutomatonEntity* PAutomaton, CMobSkill* PMobSkill);
     int32  OnAutomatonAbility(CBaseEntity* PTarget, CBaseEntity* PMob, CMobSkill* PMobSkill, CBaseEntity* PMobMaster, action_t* action);
+
+    auto GetMonstrosityLuaTable(CCharEntity* PChar) -> sol::table;
+    void SetMonstrosityLuaTable(CCharEntity* PChar, sol::table data);
+    void OnMonstrosityUpdate(CCharEntity* PChar);
+    void OnMonstrosityReturnToEntrance(CCharEntity* PChar);
 
     int32 OnAbilityCheck(CBaseEntity* PChar, CBaseEntity* PTarget, CAbility* PAbility, CBaseEntity** PMsgTarget);
     int32 OnPetAbility(CBaseEntity* PTarget, CBaseEntity* PMob, CMobSkill* PMobSkill, CBaseEntity* PPetMaster, action_t* action);

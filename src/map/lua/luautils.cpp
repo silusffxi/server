@@ -75,6 +75,7 @@
 #include "map.h"
 #include "message.h"
 #include "mobskill.h"
+#include "monstrosity.h"
 #include "packets/action.h"
 #include "packets/char_emotion.h"
 #include "packets/char_update.h"
@@ -156,6 +157,7 @@ namespace luautils
         lua.set_function("GarbageCollectStep", &luautils::garbageCollectStep);
         lua.set_function("GarbageCollectFull", &luautils::garbageCollectFull);
         lua.set_function("GetZone", &luautils::GetZone);
+        lua.set_function("GetItemByID", &luautils::GetItemByID);
         lua.set_function("GetNPCByID", &luautils::GetNPCByID);
         lua.set_function("GetMobByID", &luautils::GetMobByID);
         lua.set_function("GetEntityByID", &luautils::GetEntityByID);
@@ -172,6 +174,7 @@ namespace luautils
         lua.set_function("GetSystemTime", &luautils::GetSystemTime);
         lua.set_function("JstMidnight", &luautils::JstMidnight);
         lua.set_function("JstWeekday", &luautils::JstWeekday);
+        lua.set_function("NextConquestTally", &luautils::NextJstWeek);
         lua.set_function("NextGameTime", &luautils::NextGameTime);
         lua.set_function("NextJstDay", &luautils::JstMidnight);
         lua.set_function("NextJstWeek", &luautils::NextJstWeek);
@@ -708,7 +711,7 @@ namespace luautils
 
         if (!std::filesystem::exists(filename))
         {
-            ShowTrace("luautils::CacheLuaObjectFromFile: File does not exist: %s", filename);
+            ShowTrace("luautils::CacheLuaObjectFromFile: Tried to load file but it does not exist: %s", filename);
             return;
         }
 
@@ -878,7 +881,7 @@ namespace luautils
 
         std::unordered_map<std::string, sol::table> idLuaTables;
 
-        lua.set_function("GetTableOfIDs", [&](std::string const& name, std::optional<int> optRange) -> sol::table
+        lua.set_function("GetTableOfIDs", [&](std::string const& name, std::optional<int> optRange, std::optional<int> optOffset) -> sol::table
         {
             // Is it already built and cached?
             if (idLuaTables.find(name) != idLuaTables.end())
@@ -908,7 +911,8 @@ namespace luautils
                     return table;
                 }
 
-                uint32 startId = entriesVec.front();
+                uint32 offset  = optOffset.value_or(0);
+                uint32 startId = entriesVec.front() + offset;
                 uint32 endId   = startId + range;
 
                 // TODO: Set this up to be able to iterate negatively too
@@ -1049,6 +1053,16 @@ namespace luautils
         {
             PNpc->loc.zone->PushPacket(PNpc, CHAR_INRANGE, new CEntityVisualPacket(PNpc, command));
         }
+    }
+
+    std::optional<CLuaItem> GetItemByID(uint32 itemId)
+    {
+        if (auto* PItem = itemutils::GetItemPointer(itemId))
+        {
+            return CLuaItem(PItem);
+        }
+
+        return std::nullopt;
     }
 
     std::optional<CLuaBaseEntity> GetNPCByID(uint32 npcid, sol::object const& instanceObj)
@@ -1426,12 +1440,16 @@ namespace luautils
     uint32 NextJstWeek()
     {
         TracyZoneScoped;
-        uint32 jstWeekday      = CVanaTime::getInstance()->getJstWeekDay();
+        uint32 jstWeekday      = (CVanaTime::getInstance()->getJstWeekDay() + 6) % 7;
         uint32 nextJstMidnight = CVanaTime::getInstance()->getJstMidnight();
 
         // Start with the "Next" Midnight, and apply N days worth of time to it
-        return nextJstMidnight + (7 - jstWeekday) * 60 * 60 * 24;
+        // jstWeekday is offset by 1 here, so that Monday (JST) is the reference.
+
+        return nextJstMidnight + (6 - jstWeekday) * 60 * 60 * 24;
     }
+
+    // NOTE: NextConquestTally exists for clarity, and is bound to the above function
 
     uint32 VanadielMoonPhase()
     {
@@ -3874,6 +3892,179 @@ namespace luautils
         }
 
         return result.get_type(0) == sol::type::number ? result.get<int32>(0) : 0;
+    }
+
+    auto GetMonstrosityLuaTable(CCharEntity* PChar) -> sol::table
+    {
+        TracyZoneScoped;
+
+        // TODO: lua_monstrosity.cpp?
+        auto table = lua.create_table();
+
+        table["monstrosityId"] = PChar->m_PMonstrosity->MonstrosityId;
+        table["species"]       = PChar->m_PMonstrosity->Species;
+        table["flags"]         = PChar->m_PMonstrosity->Flags;
+        table["entry_x"]       = PChar->m_PMonstrosity->EntryPos.x;
+        table["entry_y"]       = PChar->m_PMonstrosity->EntryPos.y;
+        table["entry_z"]       = PChar->m_PMonstrosity->EntryPos.z;
+        table["entry_rot"]     = PChar->m_PMonstrosity->EntryPos.rotation;
+        table["entry_zone_id"] = PChar->m_PMonstrosity->EntryZoneId;
+        table["entry_mjob"]    = PChar->m_PMonstrosity->EntryMainJob;
+        table["entry_sjob"]    = PChar->m_PMonstrosity->EntrySubJob;
+
+        {
+            std::size_t idx = 0;
+            table["levels"] = lua.create_table();
+            for (auto entry : PChar->m_PMonstrosity->levels)
+            {
+                table["levels"][idx++] = entry;
+            }
+        }
+
+        {
+            std::size_t idx    = 0;
+            table["instincts"] = lua.create_table();
+            for (auto entry : PChar->m_PMonstrosity->instincts)
+            {
+                table["instincts"][idx++] = entry;
+            }
+        }
+
+        {
+            std::size_t idx   = 0;
+            table["variants"] = lua.create_table();
+            for (auto entry : PChar->m_PMonstrosity->variants)
+            {
+                table["variants"][idx++] = entry;
+            }
+        }
+
+        return table;
+    }
+
+    void SetMonstrosityLuaTable(CCharEntity* PChar, sol::table table)
+    {
+        TracyZoneScoped;
+
+        if (table["monstrosityId"].valid())
+        {
+            PChar->m_PMonstrosity->MonstrosityId = table.get<uint8>("monstrosityId");
+        }
+
+        if (table["species"].valid())
+        {
+            PChar->m_PMonstrosity->Species = table.get<uint16>("species");
+        }
+
+        if (table["flags"].valid())
+        {
+            PChar->m_PMonstrosity->Flags = table.get<uint16>("flags");
+        }
+
+        if (table["entry_x"].valid())
+        {
+            PChar->m_PMonstrosity->EntryPos.x = table.get<float>("entry_x");
+        }
+
+        if (table["entry_y"].valid())
+        {
+            PChar->m_PMonstrosity->EntryPos.y = table.get<float>("entry_y");
+        }
+
+        if (table["entry_z"].valid())
+        {
+            PChar->m_PMonstrosity->EntryPos.z = table.get<float>("entry_z");
+        }
+
+        if (table["entry_rot"].valid())
+        {
+            PChar->m_PMonstrosity->EntryPos.rotation = table.get<uint8>("entry_rot");
+        }
+
+        if (table["entry_zone_id"].valid())
+        {
+            PChar->m_PMonstrosity->EntryZoneId = table.get<uint16>("entry_zone_id");
+        }
+
+        if (table["entry_mjob"].valid())
+        {
+            PChar->m_PMonstrosity->EntryMainJob = table.get<uint8>("entry_mjob");
+        }
+
+        if (table["entry_sjob"].valid())
+        {
+            PChar->m_PMonstrosity->EntrySubJob = table.get<uint8>("entry_sjob");
+        }
+
+        if (table["levels"].valid())
+        {
+            for (auto const& [keyObj, valObj] : table.get<sol::table>("levels"))
+            {
+                uint8 key = keyObj.as<uint8>();
+                uint8 val = valObj.as<uint8>();
+                PChar->m_PMonstrosity->levels[key] |= val;
+            }
+        }
+
+        if (table["instincts"].valid())
+        {
+            for (auto const& [keyObj, valObj] : table.get<sol::table>("instincts"))
+            {
+                uint8 key = keyObj.as<uint8>();
+                uint8 val = valObj.as<uint8>();
+                PChar->m_PMonstrosity->instincts[key] |= val;
+            }
+        }
+
+        if (table["variants"].valid())
+        {
+            for (auto const& [keyObj, valObj] : table.get<sol::table>("variants"))
+            {
+                uint8 key = keyObj.as<uint8>();
+                uint8 val = valObj.as<uint8>();
+                PChar->m_PMonstrosity->variants[key] |= val;
+            }
+        }
+    }
+
+    void OnMonstrosityUpdate(CCharEntity* PChar)
+    {
+        TracyZoneScoped;
+
+        sol::function onMonstrosityUpdate = lua["xi"]["monstrosity"]["onMonstrosityUpdate"];
+        if (!onMonstrosityUpdate.valid())
+        {
+            ShowError("luautils::OnMonstrosityUpdate");
+            return;
+        }
+
+        auto result = onMonstrosityUpdate(CLuaBaseEntity(PChar), GetMonstrosityLuaTable(PChar));
+        if (!result.valid())
+        {
+            sol::error err = result;
+            ShowError("luautils::OnMonstrosityUpdate: %s", err.what());
+            return;
+        }
+    }
+
+    void OnMonstrosityReturnToEntrance(CCharEntity* PChar)
+    {
+        TracyZoneScoped;
+
+        sol::function onMonstrosityReturnToEntrance = lua["xi"]["monstrosity"]["onMonstrosityReturnToEntrance"];
+        if (!onMonstrosityReturnToEntrance.valid())
+        {
+            ShowError("luautils::retuonMonstrosityReturnToEntrancernToEntrance");
+            return;
+        }
+
+        auto result = onMonstrosityReturnToEntrance(CLuaBaseEntity(PChar));
+        if (!result.valid())
+        {
+            sol::error err = result;
+            ShowError("luautils::onMonstrosityReturnToEntrance: %s", err.what());
+            return;
+        }
     }
 
     int32 OnMagicCastingCheck(CBaseEntity* PChar, CBaseEntity* PTarget, CSpell* PSpell)

@@ -19,6 +19,7 @@ abilityObject.onAbilityCheck = function(player, target, ability)
         player:hasItem(xi.item.THUNDER_CARD, 0) or
         player:hasItem(xi.item.TRUMP_CARD, 0)
     then
+        ability:setRecast(math.max(0, ability:getRecast() - player:getMod(xi.mod.QUICK_DRAW_RECAST)))
         return 0, 0
     else
         return 71, 0
@@ -38,7 +39,7 @@ abilityObject.onUseAbility = function(player, target, ability, action)
     dmg            = adjustForTarget(target, dmg, xi.element.THUNDER)
 
     params.targetTPMult = 0 -- Quick Draw does not feed TP
-    dmg                 = xi.ability.takeDamage(target, player, params, true, dmg, xi.attackType.MAGICAL, xi.damageType.LIGHTNING, xi.slot.RANGED, 1, 0, 0, 0, action, nil)
+    dmg                 = xi.ability.takeDamage(target, player, params, true, dmg, xi.attackType.MAGICAL, xi.damageType.THUNDER, xi.slot.RANGED, 1, 0, 0, 0, action, nil)
 
     if dmg > 0 then
         local effects = {}

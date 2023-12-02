@@ -11763,21 +11763,7 @@ INSERT INTO `mob_droplist` VALUES (1441,2,0,1000,1455,0);       -- One Byne Bill
 -- ZoneID: 135 - Kindred Warrior
 -- ZoneID: 135 - Kindred Monk
 -- ZoneID: 135 - Kindred Thief
--- ZoneID: 135 - Kindred Warrior
--- ZoneID: 135 - Kindred White Mage
--- ZoneID: 135 - Kindred Red Mage
--- ZoneID: 135 - Kindred Monk
--- ZoneID: 135 - Kindred Black Mage
--- ZoneID: 135 - Kindred Thief
--- ZoneID: 135 - Kindred Paladin
--- ZoneID: 135 - Kindred Dark Knight
--- ZoneID: 135 - Kindred Beastmaster
--- ZoneID: 135 - Kindred Bard
--- ZoneID: 135 - Kindred Ranger
--- ZoneID: 135 - Kindred Samurai
--- ZoneID: 135 - Kindred Ninja
--- ZoneID: 135 - Kindred Dragoon
--- ZoneID: 135 - Kindred Summoner
+INSERT INTO `mob_droplist` VALUES (1442,0,0,1000,3494,@RARE);   -- Forgotten Hope (Rare, 5%)
 INSERT INTO `mob_droplist` VALUES (1442,0,0,1000,11305,@VRARE); -- Etoile Casaque (Very Rare, 1%)
 INSERT INTO `mob_droplist` VALUES (1442,0,0,1000,11465,@VRARE); -- Mirage Keffiyeh (Very Rare, 1%)
 INSERT INTO `mob_droplist` VALUES (1442,0,0,1000,11468,@VRARE); -- Commodore Tricorne (Very Rare, 1%)
@@ -14973,7 +14959,6 @@ INSERT INTO `mob_droplist` VALUES (1852,0,0,1000,3253,@UNCOMMON); -- High-Qualit
 -- ZoneID:  33 - Omaern Rng
 -- ZoneID:  33 - Omaern Rdm
 -- ZoneID:  33 - Omaern Thf
--- ZoneID:  65 - Firedance Magmaal Ja
 INSERT INTO `mob_droplist` VALUES (1853,0,0,1000,1786,90); -- Aern Organ (9.0%)
 INSERT INTO `mob_droplist` VALUES (1853,0,0,1000,1783,80); -- Sample Of Luminian Tissue (8.0%)
 INSERT INTO `mob_droplist` VALUES (1853,0,0,1000,4104,60); -- Fire Cluster (6.0%)
@@ -26774,6 +26759,26 @@ INSERT INTO `mob_droplist` VALUES (3284,0,0,1000,19120,@UNCOMMON); -- Avis (Unco
 
 -- ZoneID:  88 - Olgoi-Khorkhoi
 INSERT INTO `mob_droplist` VALUES (3285,0,0,1000,18768,@COMMON); -- Poppet Katars (Uncommon, 15%)
+
+-- ZoneID:  65 - Firedance Magmaal Ja
+INSERT INTO `mob_droplist` VALUES (3286,0,0,1000,19234,@VCOMMON); -- Lyft Hexagun (Very common, 24%)
+
+-- ZoneID:  61 - Chary Apkallu
+INSERT INTO `mob_droplist` VALUES (3287,0,0,1000,2815,@UNCOMMON); -- Aptant of arkhe (Uncommon, 10%)
+INSERT INTO `mob_droplist` VALUES (3287,0,0,1000,2818,@COMMON);   -- Aptant of ishis (Common, 15%)
+
+-- ZoneID: 24 - Flockbock
+INSERT INTO `mob_droplist` VALUES (3288,0,0,1000,2836,@UNCOMMON); -- Woolly Pelage (Uncommon, 10%)
+
+-- ZoneID: 113 - Zmey Gorynych
+INSERT INTO `mob_droplist` VALUES (3289,0,0,1000,2811,@COMMON); -- Aptant of primus (Common, 15%)
+INSERT INTO `mob_droplist` VALUES (3289,0,0,1000,2813,@COMMON); -- Aptant of durus (Common, 15%)
+
+INSERT INTO `mob_droplist` VALUES (3290,0,0,1000,19107,@VCOMMON); -- Dark Ixion: Azoth
+INSERT INTO `mob_droplist` VALUES (3290,0,0,1000,11289,@COMMON);  -- Dark Ixion: Ixion Cloak
+INSERT INTO `mob_droplist` VALUES (3290,0,0,1000,16242,@VCOMMON); -- Dark Ixion: Ixion Cape
+INSERT INTO `mob_droplist` VALUES (3290,0,0,1000,2654,@ALWAYS);   -- Dark Ixion: Horn
+INSERT INTO `mob_droplist` VALUES (3290,0,0,1000,2655,@ALWAYS);   -- Dark Ixion: Tail
 
 /*!40000 ALTER TABLE `mob_droplist` ENABLE KEYS */;
 UNLOCK TABLES;

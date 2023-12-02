@@ -416,7 +416,7 @@ local keyitems =
             { cutoff = 693, itemId = xi.item.GOLD_INGOT },
             { cutoff = 786, itemId = xi.item.HI_ELIXIR },
             { cutoff = 789, itemId = xi.item.HI_ETHER_P1 },
-            { cutoff = 831, itemId = xi.item.HI_POTION_I },
+            { cutoff = 831, itemId = xi.item.HI_POTION_P1 },
             { cutoff = 835, itemId = xi.item.JADEITE },
             { cutoff = 856, itemId = xi.item.MAHOGANY_LOG },
             { cutoff = 907, itemId = xi.item.MYTHRIL_INGOT },
@@ -493,7 +493,7 @@ local keyitems =
                 augments =
                 {
                     {  25, 0, 4 }, -- Attack+1-5
-                    { 516, 0, 1 }, -- INT+1-2
+                    { 516, 0, 0 }, -- INT+1
                     {  97, 0, 4 }, -- Pet: Attack and Ranged Attack+1-5
                     {  29, 0, 4 }, -- Ranged Attack+1-5
                     { 512, 0, 1 }, -- STR+1-2
@@ -544,7 +544,7 @@ local keyitems =
             { cutoff =  602, itemId = xi.item.SPOOL_OF_GOLD_THREAD },
             { cutoff =  627, itemId = xi.item.SLAB_OF_GRANITE },
             { cutoff =  658, itemId = xi.item.HI_ETHER_P2 },
-            { cutoff =  901, itemId = xi.item.HI_POTION_II },
+            { cutoff =  901, itemId = xi.item.HI_POTION_P2 },
             { cutoff =  963, itemId = xi.item.SPOOL_OF_MALBORO_FIBER },
             { cutoff =  982, itemId = xi.item.PHILOSOPHERS_STONE },
             { cutoff = 1019, itemId = xi.item.PHOENIX_FEATHER },
@@ -677,7 +677,7 @@ local keyitems =
             { cutoff = 633, itemId = xi.item.DIAMOND },
             { cutoff = 643, itemId = xi.item.EMERALD },
             { cutoff = 714, itemId = xi.item.HI_ETHER_P3 },
-            { cutoff = 785, itemId = xi.item.HI_POTION_III },
+            { cutoff = 785, itemId = xi.item.HI_POTION_P3 },
             { cutoff = 805, itemId = xi.item.CHUNK_OF_ORICHALCUM_ORE },
             { cutoff = 815, itemId = xi.item.CHUNK_OF_PLATINUM_ORE },
             { cutoff = 835, itemId = xi.item.RUBY },
@@ -1023,7 +1023,7 @@ local keyitems =
             { cutoff =  642, itemId = xi.item.GOLD_INGOT },
             { cutoff =  776, itemId = xi.item.HI_ELIXIR },
             { cutoff =  821, itemId = xi.item.HI_ETHER_P1 },
-            { cutoff =  851, itemId = xi.item.HI_POTION_I },
+            { cutoff =  851, itemId = xi.item.HI_POTION_P1 },
             { cutoff =  866, itemId = xi.item.MAHOGANY_LOG },
             { cutoff =  881, itemId = xi.item.MYTHRIL_INGOT },
             { cutoff =  896, itemId = xi.item.PAINITE },
@@ -1193,7 +1193,7 @@ local keyitems =
             { cutoff =  614, itemId = xi.item.DIAMOND },
             { cutoff =  646, itemId = xi.item.EMERALD },
             { cutoff =  662, itemId = xi.item.HI_ETHER_P3 },
-            { cutoff =  694, itemId = xi.item.HI_POTION_III },
+            { cutoff =  694, itemId = xi.item.HI_POTION_P3 },
             { cutoff =  742, itemId = xi.item.CHUNK_OF_ORICHALCUM_ORE },
             { cutoff =  790, itemId = xi.item.RUBY },
             { cutoff =  822, itemId = xi.item.SCROLL_OF_CURE_V },
@@ -1473,7 +1473,7 @@ local keyitems =
                 augments =
                 {
                     -- assumed magic skill caps are all the same
-                    { 133, 0,  5 }, -- Magic Attack Bonus+1-2
+                    { 133, 0,  1 }, -- Magic Attack Bonus+1-2
                     {  35, 0,  1 }, -- Magic Accuracy+1-2
                     { 141, 0,  2 }, -- Conserve MP+1-3
                     {  53, 0,  4 }, -- Spell Interruption Rate-1-5%
@@ -1526,7 +1526,7 @@ local keyitems =
             },
             { cutoff =  595, itemId = xi.item.SPOOL_OF_GOLD_THREAD },
             { cutoff =  643, itemId = xi.item.HI_ETHER_P2 },
-            { cutoff =  714, itemId = xi.item.HI_POTION_II },
+            { cutoff =  714, itemId = xi.item.HI_POTION_P2 },
             { cutoff =  785, itemId = xi.item.SPOOL_OF_MALBORO_FIBER },
             { cutoff =  856, itemId = xi.item.VIAL_OF_BLACK_BEETLE_BLOOD },
             { cutoff =  927, itemId = xi.item.PHILOSOPHERS_STONE },
@@ -1576,7 +1576,7 @@ local keyitems =
             { cutoff =  708, itemId = xi.item.DIAMOND },
             { cutoff =  744, itemId = xi.item.EMERALD },
             { cutoff =  780, itemId = xi.item.SPOOL_OF_GOLD_THREAD },
-            { cutoff =  798, itemId = xi.item.HI_POTION_III },
+            { cutoff =  798, itemId = xi.item.HI_POTION_P3 },
             { cutoff =  816, itemId = xi.item.CHUNK_OF_PLATINUM_ORE },
             { cutoff =  834, itemId = xi.item.CHUNK_OF_ORICHALCUM_ORE },
             { cutoff =  870, itemId = xi.item.RUBY },
@@ -1873,7 +1873,7 @@ entity.onTrigger = function(player, npc)
                             xi.settings.main.ENABLE_ASA == 1 and
                             not player:hasItem(xi.item.NEXUS_CAPE)
 
-    local receivedNexusCape = player:getCharVar('receivedNexusCape') == 1
+    local receivedNexusCape = player:hasCompletedUniqueEvent(xi.uniqueEvent.RECEIVED_NEXUS_CAPE)
     local kiArgs = { 0, 0, 0, 0 }
 
     -- Reminder that a "true" here removes the option from the player's menu
@@ -1922,13 +1922,13 @@ entity.onEventFinish = function(player, csid, option, npc)
     if csid == 10099 then
         if
             option == 16777216 and
-            player:getCharVar('receivedNexusCape') == 0 and
+            not player:hasCompletedUniqueEvent(xi.uniqueEvent.RECEIVED_NEXUS_CAPE) and
             npcUtil.giveItem(player, xi.item.NEXUS_CAPE)
         then
-            player:setCharVar('receivedNexusCape', 1)
+            player:setUniqueEvent(xi.uniqueEvent.RECEIVED_NEXUS_CAPE)
         elseif
             option == 33554432 or
-            (option == 16777216 and player:getCharVar('receivedNexusCape') == 1)
+            (option == 16777216 and player:hasCompletedUniqueEvent(xi.uniqueEvent.RECEIVED_NEXUS_CAPE))
         then
             player:addUsedItem(xi.item.NEXUS_CAPE)
         elseif option >= 1 and option <= 20 then

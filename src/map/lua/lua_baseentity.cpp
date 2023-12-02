@@ -3150,7 +3150,7 @@ sol::table CLuaBaseEntity::getTeleportTable(uint8 type)
             return teleTable;
             break;
         case TELEPORT_TYPE::WAYPOINT:
-            for (uint8 x = 0; x < 5; x++)
+            for (uint8 x = 0; x < 2; x++)
             {
                 teleTable.add(PChar->teleport.waypoints.access[x]);
             }
@@ -4572,8 +4572,7 @@ void CLuaBaseEntity::equipItem(uint16 itemID, sol::object const& container)
         if (auto* PItem = dynamic_cast<CItemEquipment*>(PChar->getStorage(containerID)->GetItem(slotId)))
         {
             charutils::EquipItem(PChar, slotId, PItem->getSlotType(), containerID);
-            charutils::SaveCharEquip(PChar);
-            charutils::SaveCharLook(PChar);
+            PChar->RequestPersist(CHAR_PERSIST::EQUIP);
         }
     }
 }
@@ -5149,6 +5148,25 @@ void CLuaBaseEntity::setModelId(uint16 modelId, sol::object const& slotObj)
 }
 
 /************************************************************************
+ *  Function: getCostume()
+ *  Purpose : Returns the PC's appearance
+ *  Example : player:getCostume()
+ ************************************************************************/
+
+uint16 CLuaBaseEntity::getCostume()
+{
+    if (m_PBaseEntity->objtype != TYPE_PC)
+    {
+        ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->GetName());
+        return 0;
+    }
+
+    auto* PChar = static_cast<CCharEntity*>(m_PBaseEntity);
+
+    return PChar->m_Costume;
+}
+
+/************************************************************************
  *  Function: setCostume()
  *  Purpose : Updates the PC's appearance
  *  Example : player:setCostume( costumeId )
@@ -5173,29 +5191,9 @@ void CLuaBaseEntity::setCostume(uint16 costume)
 }
 
 /************************************************************************
- *  Function: getCostume()
+ *  Function: getCostume2()
  *  Purpose : Returns the PC's appearance
  *  Example : player:getCostume()
- ************************************************************************/
-
-uint16 CLuaBaseEntity::getCostume()
-{
-    if (m_PBaseEntity->objtype != TYPE_PC)
-    {
-        ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->GetName());
-        return 0;
-    }
-
-    auto* PChar = static_cast<CCharEntity*>(m_PBaseEntity);
-
-    return PChar->m_Costume;
-}
-
-/************************************************************************
- *  Function: getCostume2()
- *  Purpose : Sets or returns a monstrosity costume
- *  Example : player:costume2( costumeId )
- *  Notes   : Not currently implemented
  ************************************************************************/
 
 uint16 CLuaBaseEntity::getCostume2()
@@ -5207,14 +5205,14 @@ uint16 CLuaBaseEntity::getCostume2()
     }
 
     auto* PChar = static_cast<CCharEntity*>(m_PBaseEntity);
-    return PChar->m_Monstrosity;
+
+    return PChar->m_Costume2;
 }
 
 /************************************************************************
  *  Function: setCostume2()
- *  Purpose : Sets or returns a monstrosity costume
- *  Example : player:costume2( costumeId )
- *  Notes   : Not currently implemented
+ *  Purpose : Updates the PC's appearance
+ *  Example : player:setCostume2( costumeId )
  ************************************************************************/
 
 void CLuaBaseEntity::setCostume2(uint16 costume)
@@ -5227,14 +5225,13 @@ void CLuaBaseEntity::setCostume2(uint16 costume)
 
     auto* PChar = static_cast<CCharEntity*>(m_PBaseEntity);
 
-    if (PChar->m_Monstrosity != costume && PChar->status != STATUS_TYPE::SHUTDOWN && PChar->status != STATUS_TYPE::DISAPPEAR)
+    if (PChar->m_Costume2 != costume && PChar->status != STATUS_TYPE::SHUTDOWN && PChar->status != STATUS_TYPE::DISAPPEAR)
     {
-        PChar->m_Monstrosity = costume;
+        PChar->m_Costume2 = costume;
         PChar->updatemask |= UPDATE_LOOK;
         PChar->pushPacket(new CCharAppearancePacket(PChar));
     }
 }
-
 /************************************************************************
  *  Function: getAnimation()
  *  Purpose : Returns the assigned default animation of an entity
@@ -6072,6 +6069,7 @@ void CLuaBaseEntity::setLevel(uint8 level)
         jobpointutils::RefreshGiftMods(PChar);
         charutils::BuildingCharSkillsTable(PChar);
         charutils::BuildingCharAbilityTable(PChar);
+        charutils::BuildingCharWeaponSkills(PChar);
         charutils::BuildingCharTraitsTable(PChar);
 
         PChar->UpdateHealth();
@@ -6347,6 +6345,136 @@ void CLuaBaseEntity::addJobTraits(uint8 jobID, uint8 level)
     if (PEntity != nullptr)
     {
         battleutils::AddTraits(PEntity, traits::GetTraits(jobID), level);
+    }
+}
+
+sol::table CLuaBaseEntity::getMonstrosityData()
+{
+    auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity);
+    if (PChar == nullptr)
+    {
+        return sol::lua_nil;
+    }
+
+    bool startsWithMonstrosityData = PChar->m_PMonstrosity != nullptr;
+    if (!startsWithMonstrosityData)
+    {
+        monstrosity::ReadMonstrosityData(PChar);
+    }
+
+    auto table = luautils::GetMonstrosityLuaTable(PChar);
+
+    // If we didn't start with Monstrosity data, we should wipe it out now so we
+    // don't change modes
+    if (!startsWithMonstrosityData)
+    {
+        PChar->m_PMonstrosity = nullptr;
+    }
+
+    return table;
+}
+
+void CLuaBaseEntity::setMonstrosityData(sol::table table)
+{
+    auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity);
+    if (PChar == nullptr)
+    {
+        return;
+    }
+
+    bool startsWithMonstrosityData = PChar->m_PMonstrosity != nullptr;
+
+    // NOTE: This will populate m_PMonstrosity if it doesn't exist
+    monstrosity::ReadMonstrosityData(PChar);
+
+    luautils::SetMonstrosityLuaTable(PChar, table);
+
+    monstrosity::WriteMonstrosityData(PChar);
+
+    // If we didn't start with Monstrosity data, we should wipe it out now so we
+    // don't change modes
+    if (!startsWithMonstrosityData)
+    {
+        PChar->m_PMonstrosity = nullptr;
+    }
+    else
+    {
+        monstrosity::SendFullMonstrosityUpdate(PChar);
+    }
+}
+
+bool CLuaBaseEntity::getBelligerencyFlag()
+{
+    auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity);
+    if (PChar == nullptr)
+    {
+        return false;
+    }
+
+    if (PChar->m_PMonstrosity == nullptr)
+    {
+        return false;
+    }
+
+    return PChar->m_PMonstrosity->Belligerency;
+}
+
+void CLuaBaseEntity::setBelligerencyFlag(bool flag)
+{
+    auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity);
+    if (PChar == nullptr)
+    {
+        return;
+    }
+
+    monstrosity::SetBelligerencyFlag(PChar, flag);
+}
+
+auto CLuaBaseEntity::getMonstrositySize() -> uint8
+{
+    auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity);
+    if (PChar == nullptr)
+    {
+        return 0;
+    }
+
+    if (PChar->m_PMonstrosity == nullptr)
+    {
+        return 0;
+    }
+
+    return PChar->m_PMonstrosity->Size;
+}
+
+void CLuaBaseEntity::setMonstrosityEntryData(float x, float y, float z, uint8 rot, uint16 zoneId, uint8 mjob, uint8 sjob)
+{
+    auto* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity);
+    if (PChar == nullptr)
+    {
+        return;
+    }
+
+    bool startsWithMonstrosityData = PChar->m_PMonstrosity != nullptr;
+    if (!startsWithMonstrosityData)
+    {
+        monstrosity::ReadMonstrosityData(PChar);
+    }
+
+    PChar->m_PMonstrosity->EntryPos.x        = x;
+    PChar->m_PMonstrosity->EntryPos.y        = y;
+    PChar->m_PMonstrosity->EntryPos.z        = z;
+    PChar->m_PMonstrosity->EntryPos.rotation = rot;
+    PChar->m_PMonstrosity->EntryZoneId       = zoneId;
+    PChar->m_PMonstrosity->EntryMainJob      = mjob;
+    PChar->m_PMonstrosity->EntrySubJob       = sjob;
+
+    monstrosity::WriteMonstrosityData(PChar);
+
+    // If we didn't start with Monstrosity data, we should wipe it out now so we
+    // don't change modes
+    if (!startsWithMonstrosityData)
+    {
+        PChar->m_PMonstrosity = nullptr;
     }
 }
 
@@ -10840,6 +10968,39 @@ bool CLuaBaseEntity::hasEnteredBattlefield()
 }
 
 /************************************************************************
+ *  Function: sendTimerPacket()
+ *  Purpose : sends the packet to enable a timer with durations in seconds
+ *  Example : player:sendTimerPacket(60 * 15)
+ *  Notes   :
+ ************************************************************************/
+
+void CLuaBaseEntity::sendTimerPacket(uint32 seconds)
+{
+    if (m_PBaseEntity->objtype != TYPE_PC)
+    {
+        ShowWarning("CLuaBaseEntity::sendTimerPacket() was called on non CCharEntity!");
+        return;
+    }
+    charutils::SendTimerPacket(static_cast<CCharEntity*>(m_PBaseEntity), seconds);
+}
+
+/************************************************************************
+ *  Function: sendClearTimerPacket()
+ *  Purpose : sends the packet to clear an existing timer
+ *  Example : player:sendClearTimerPacket()
+ *  Notes   :
+ ************************************************************************/
+void CLuaBaseEntity::sendClearTimerPacket()
+{
+    if (m_PBaseEntity->objtype != TYPE_PC)
+    {
+        ShowWarning("CLuaBaseEntity::sendClearTimerPacket() was called on non CCharEntity!");
+        return;
+    }
+    charutils::SendClearTimerPacket(static_cast<CCharEntity*>(m_PBaseEntity));
+}
+
+/************************************************************************
  *  Function: isAlive()
  *  Purpose : Returns true if an Entity is alive
  *  Example : if mob:isAlive() then
@@ -11468,6 +11629,35 @@ bool CLuaBaseEntity::isUsingH2H()
     }
 
     return false;
+}
+
+/************************************************************************
+ *  Function: getBaseWeaponDelay(bool offhand)
+ *  Purpose : Returns the unmodified base delay of an PCs's melee attack without any form of delay reduction
+ *  Example : local delay = player:getBaseWeaponDelay(false)
+ *  Notes   :
+ ************************************************************************/
+
+uint16 CLuaBaseEntity::getBaseWeaponDelay(uint16 slot)
+{
+    if (m_PBaseEntity->objtype != TYPE_PC)
+    {
+        ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->GetName());
+        return false;
+    }
+    CCharEntity* PCharEntity = dynamic_cast<CCharEntity*>(m_PBaseEntity);
+
+    if (PCharEntity)
+    {
+        CItemWeapon* PWeapon = dynamic_cast<CItemWeapon*>(PCharEntity->getEquip(static_cast<SLOTTYPE>(slot)));
+
+        if (PWeapon)
+        {
+            return PWeapon->getBaseDelay();
+        }
+    }
+
+    return 0;
 }
 
 /************************************************************************
@@ -12666,28 +12856,14 @@ bool CLuaBaseEntity::delLatent(uint16 condID, uint16 conditionValue, uint16 mID,
 
 int16 CLuaBaseEntity::getMaxGearMod(Mod modId)
 {
-    CCharEntity* PChar       = dynamic_cast<CCharEntity*>(m_PBaseEntity);
-    uint16       maxModValue = 0;
-
-    if (!PChar)
+    if (m_PBaseEntity->objtype != TYPE_PC)
     {
-        ShowWarning("CLuaBaseEntity::getMaxGearMod() - m_PBaseEntity is not a player.");
+        ShowWarning("Invalid Entity (Non-PC: %s) calling function.", m_PBaseEntity->GetName());
+
         return 0;
     }
 
-    for (uint8 i = 0; i < SLOT_BACK; ++i)
-    {
-        auto* PItem = PChar->getEquip((SLOTTYPE)i);
-        if (PItem && (PItem->isType(ITEM_EQUIPMENT) || PItem->isType(ITEM_WEAPON)))
-        {
-            uint16 modValue = PItem->getModifier(modId);
-            if (modValue > maxModValue)
-            {
-                maxModValue = modValue;
-            }
-        }
-    }
-    return maxModValue;
+    return static_cast<CCharEntity*>(m_PBaseEntity)->getMaxGearMod(static_cast<Mod>(modId));
 }
 
 /************************************************************************
@@ -13435,6 +13611,38 @@ uint16 CLuaBaseEntity::getAmmoDmg()
     }
 
     return weapon->getDamage();
+}
+
+/************************************************************************
+ *  Function: getWeaponHitCount(false)
+ *  Purpose : Gets the number of hits from a weapon
+ *  Example : local numMainHandHits = player:getWeaponHitCount(false)
+ ************************************************************************/
+
+uint16 CLuaBaseEntity::getWeaponHitCount(bool offhand)
+{
+    if (m_PBaseEntity->objtype != TYPE_PC)
+    {
+        ShowWarning("Invalid entity type calling function (%s).", m_PBaseEntity->GetName());
+        return 0;
+    }
+
+    if (CCharEntity* PChar = dynamic_cast<CCharEntity*>(m_PBaseEntity))
+    {
+        CItemWeapon* PMain = dynamic_cast<CItemWeapon*>(PChar->getEquip(SLOT_MAIN));
+        CItemWeapon* PSub  = dynamic_cast<CItemWeapon*>(PChar->getEquip(SLOT_SUB));
+
+        if (offhand && PSub)
+        {
+            return PSub->getHitCount();
+        }
+        else if (PMain)
+        {
+            return PMain->getHitCount();
+        }
+    }
+
+    return 0;
 }
 
 /************************************************************************
@@ -17061,11 +17269,10 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("checkNameFlags", CLuaBaseEntity::checkNameFlags);
     SOL_REGISTER("getModelId", CLuaBaseEntity::getModelId);
     SOL_REGISTER("setModelId", CLuaBaseEntity::setModelId);
-    SOL_REGISTER("setCostume", CLuaBaseEntity::setCostume);
     SOL_REGISTER("getCostume", CLuaBaseEntity::getCostume);
+    SOL_REGISTER("setCostume", CLuaBaseEntity::setCostume);
     SOL_REGISTER("getCostume2", CLuaBaseEntity::getCostume2);
     SOL_REGISTER("setCostume2", CLuaBaseEntity::setCostume2);
-
     SOL_REGISTER("getAnimation", CLuaBaseEntity::getAnimation);
     SOL_REGISTER("setAnimation", CLuaBaseEntity::setAnimation);
     SOL_REGISTER("getAnimationSub", CLuaBaseEntity::getAnimationSub);
@@ -17122,6 +17329,14 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("setLevelCap", CLuaBaseEntity::setLevelCap);
     SOL_REGISTER("levelRestriction", CLuaBaseEntity::levelRestriction);
     SOL_REGISTER("addJobTraits", CLuaBaseEntity::addJobTraits);
+
+    // Monstrosity
+    SOL_REGISTER("getMonstrosityData", CLuaBaseEntity::getMonstrosityData);
+    SOL_REGISTER("setMonstrosityData", CLuaBaseEntity::setMonstrosityData);
+    SOL_REGISTER("getBelligerencyFlag", CLuaBaseEntity::getBelligerencyFlag);
+    SOL_REGISTER("setBelligerencyFlag", CLuaBaseEntity::setBelligerencyFlag);
+    SOL_REGISTER("getMonstrositySize", CLuaBaseEntity::getMonstrositySize);
+    SOL_REGISTER("setMonstrosityEntryData", CLuaBaseEntity::setMonstrosityEntryData);
 
     // Player Titles and Fame
     SOL_REGISTER("getTitle", CLuaBaseEntity::getTitle);
@@ -17334,6 +17549,8 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("isInDynamis", CLuaBaseEntity::isInDynamis);
     SOL_REGISTER("setEnteredBattlefield", CLuaBaseEntity::setEnteredBattlefield);
     SOL_REGISTER("hasEnteredBattlefield", CLuaBaseEntity::hasEnteredBattlefield);
+    SOL_REGISTER("sendTimerPacket", CLuaBaseEntity::sendTimerPacket);
+    SOL_REGISTER("sendClearTimerPacket", CLuaBaseEntity::sendClearTimerPacket);
 
     // Battle Utilities
     SOL_REGISTER("isAlive", CLuaBaseEntity::isAlive);
@@ -17375,6 +17592,7 @@ void CLuaBaseEntity::Register()
 
     SOL_REGISTER("isDualWielding", CLuaBaseEntity::isDualWielding);
     SOL_REGISTER("isUsingH2H", CLuaBaseEntity::isUsingH2H);
+    SOL_REGISTER("getBaseWeaponDelay", CLuaBaseEntity::getBaseWeaponDelay);
     SOL_REGISTER("getBaseDelay", CLuaBaseEntity::getBaseDelay);
     SOL_REGISTER("getBaseRangedDelay", CLuaBaseEntity::getBaseRangedDelay);
 
@@ -17473,6 +17691,7 @@ void CLuaBaseEntity::Register()
     SOL_REGISTER("getRangedDmg", CLuaBaseEntity::getRangedDmg);
     SOL_REGISTER("getRangedDmgRank", CLuaBaseEntity::getRangedDmgRank);
     SOL_REGISTER("getAmmoDmg", CLuaBaseEntity::getAmmoDmg);
+    SOL_REGISTER("getWeaponHitCount", CLuaBaseEntity::getWeaponHitCount);
 
     SOL_REGISTER("removeAmmo", CLuaBaseEntity::removeAmmo);
 

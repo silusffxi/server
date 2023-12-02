@@ -147,6 +147,7 @@ xi.job_utils.dancer.checkStepAbility = function(player, target, ability)
         if player:hasStatusEffect(xi.effect.TRANCE) then
             return 0, 0
         elseif player:getTP() < 100 then
+            -- TODO: Does Step TP Consumed modifier adjust this check?
             return xi.msg.basic.NOT_ENOUGH_TP, 0
         else
             return 0, 0
@@ -188,6 +189,7 @@ end
 
 xi.job_utils.dancer.checkWaltzAbility = function(player, target, ability)
     local waltzInfo = waltzAbilities[ability:getID()]
+    local waltzCost = waltzInfo[1] - player:getMod(xi.mod.WALTZ_COST) * 10
 
     if target:getHP() == 0 then
         return xi.msg.basic.CANNOT_ON_THAT_TARG, 0
@@ -197,7 +199,7 @@ xi.job_utils.dancer.checkWaltzAbility = function(player, target, ability)
         ability:setRecast(math.min(ability:getRecast(), 6))
 
         return 0, 0
-    elseif player:getTP() < waltzInfo[1] then
+    elseif player:getTP() < waltzCost then
         return xi.msg.basic.NOT_ENOUGH_TP, 0
     else
         local newRecast = ability:getRecast()
@@ -237,7 +239,7 @@ xi.job_utils.dancer.useStepAbility = function(player, target, ability, action, s
 
     -- Only remove TP if the player doesn't have Trance.
     if not player:hasStatusEffect(xi.effect.TRANCE) then
-        player:delTP(100)
+        player:delTP(100 + player:getMod(xi.mod.STEP_TP_CONSUMED))
     end
 
     if math.random() <= xi.weaponskills.getHitRate(player, target, true, player:getMod(xi.mod.STEP_ACCURACY)) then
@@ -466,6 +468,7 @@ end
 xi.job_utils.dancer.useWaltzAbility = function(player, target, ability, action)
     local abilityId      = ability:getID()
     local waltzInfo      = waltzAbilities[abilityId]
+    local waltzCost      = waltzInfo[1] - player:getMod(xi.mod.WALTZ_COST) * 10
     local statMultiplier = waltzInfo[2]
     local amtCured       = 0
 
@@ -476,10 +479,10 @@ xi.job_utils.dancer.useWaltzAbility = function(player, target, ability, action)
             abilityId == xi.jobAbility.DIVINE_WALTZ_II
         then
             if player:getID() == target:getID() then
-                player:delTP(waltzInfo[1])
+                player:delTP(waltzCost)
             end
         else
-            player:delTP(waltzInfo[1])
+            player:delTP(waltzCost)
         end
     end
 
