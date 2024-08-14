@@ -190,6 +190,7 @@ player_data = [
     "char_equip.sql",
     "char_equip_saved.sql",
     "char_exp.sql",
+    "char_flags.sql",
     "char_history.sql",
     "char_inventory.sql",
     "char_jobs.sql",
@@ -279,7 +280,7 @@ def fetch_credentials():
         os.getenv("XI_NETWORK_SQL_DATABASE") or settings["network"]["SQL_DATABASE"]
     )
     host = os.getenv("XI_NETWORK_SQL_HOST") or settings["network"]["SQL_HOST"]
-    port = os.getenv("XI_NETWORK_SQL_PORT") or int(settings["network"]["SQL_PORT"])
+    port = int(os.getenv("XI_NETWORK_SQL_PORT") or int(settings["network"]["SQL_PORT"]))
     login = os.getenv("XI_NETWORK_SQL_LOGIN") or settings["network"]["SQL_LOGIN"]
     password = (
         os.getenv("XI_NETWORK_SQL_PASSWORD") or settings["network"]["SQL_PASSWORD"]
@@ -495,13 +496,12 @@ def connect():
             ):
                 result = subprocess.run(
                     [
-                        f"{mysql_bin}mysqladmin{exe}",
+                        f"{mysql_bin}mysql{exe}",
                         f"-h{host}",
                         f"-P{str(port)}",
                         f"-u{login}",
                         f"-p{password}",
-                        "CREATE",
-                        database,
+                        f"-e CREATE DATABASE {database} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci",
                     ],
                     capture_output=True,
                     text=True,
@@ -1260,13 +1260,12 @@ def main():
                 if len(sys.argv) > 2 and str(sys.argv[2]) == database:
                     result = subprocess.run(
                         [
-                            f"{mysql_bin}mysqladmin{exe}",
+                            f"{mysql_bin}mysql{exe}",
                             f"-h{host}",
                             f"-P{str(port)}",
                             f"-u{login}",
                             f"-p{password}",
-                            "CREATE",
-                            database,
+                            f"-e CREATE DATABASE {database} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci",
                         ],
                         capture_output=True,
                         text=True,

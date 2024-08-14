@@ -1,5 +1,6 @@
 xi = xi or {}
 
+---@class jobAbility
 xi.jobAbility =
 {
     MIGHTY_STRIKES     = 16,
@@ -257,7 +258,7 @@ xi.jobAbility =
     -- NONE            = 268,
     IMPETUS            = 269,
     DIVINE_CARESS      = 270,
-    SANCROSANCTITY     = 271,
+    SACROSANCTITY      = 271,
     ENMITY_DOUSE       = 272,
     MANAWELL           = 273,
     SABOTEUR           = 274,
@@ -559,7 +560,7 @@ xi.jobAbility =
     SCISSOR_GAURD      = 696,
     METALLIC_BODY      = 697,
     NEEDLESHOT         = 698,
-    QMQMQM_NEEDLES     = 699,
+    RANDOM_NEEDLES     = 699, -- Stop Changing.
     FROGKICK           = 700,
     SPORE              = 701,
     QUEASYSHROOM       = 702,

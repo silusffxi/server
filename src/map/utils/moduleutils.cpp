@@ -98,12 +98,12 @@ namespace moduleutils
         }
     }
 
-    void OnPushPacket(CBasicPacket* packet)
+    void OnPushPacket(CCharEntity* PChar, CBasicPacket* packet)
     {
         TracyZoneScoped;
         for (auto* module : cppModules())
         {
-            module->OnPushPacket(packet);
+            module->OnPushPacket(PChar, packet);
         }
     }
 
@@ -225,10 +225,10 @@ namespace moduleutils
                             auto zoneName    = parts[2];
                             auto currentPort = map_port == 0 ? settings::get<uint16>("network.MAP_PORT") : map_port;
 
-                            auto ret = sql->Query(fmt::format("SELECT `name`, zoneport FROM zone_settings WHERE `name` = '{}' AND zoneport = {};",
-                                                              zoneName, currentPort)
-                                                      .c_str());
-                            if (ret != SQL_ERROR && sql->NumRows() == 0)
+                            auto ret = _sql->Query(fmt::format("SELECT `name`, zoneport FROM zone_settings WHERE `name` = '{}' AND zoneport = {}",
+                                                               zoneName, currentPort)
+                                                       .c_str());
+                            if (ret != SQL_ERROR && _sql->NumRows() == 0)
                             {
                                 DebugModules(fmt::format("{} does not appear to exist on this process.", zoneName));
                                 continue;

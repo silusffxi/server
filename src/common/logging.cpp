@@ -20,6 +20,7 @@
 */
 
 #include "logging.h"
+
 #include "settings.h"
 #include "tracy.h"
 #include "utils.h"
@@ -179,21 +180,8 @@ namespace logging
         spdlog::set_formatter(std::move(formatter));
     }
 
-    void ClearSinks()
+    void AddBacktrace(std::string const& str)
     {
-        for (auto& name : logNames)
-        {
-            spdlog::get(name)->sinks().clear();
-        }
-    }
-
-    void AddBacktrace(std::string str)
-    {
-        if (BacktraceBuffer.is_full())
-        {
-            BacktraceBuffer.dequeue();
-        }
-
         BacktraceBuffer.enqueue(str);
     }
 
@@ -201,6 +189,7 @@ namespace logging
     {
         std::vector<std::string> backtrace;
 
+        // Emptying in this manner will mean the oldest is returned first, and the most recent is returned last
         while (!BacktraceBuffer.is_empty())
         {
             backtrace.push_back(BacktraceBuffer.dequeue());

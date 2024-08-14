@@ -8,6 +8,8 @@ set(COMMON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/cbasetypes.h
     ${CMAKE_CURRENT_SOURCE_DIR}/console_service.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/console_service.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/database.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/database.h
     ${CMAKE_CURRENT_SOURCE_DIR}/debug.h
     $<$<PLATFORM_ID:Linux>:${CMAKE_CURRENT_SOURCE_DIR}/debug_linux.cpp>
     $<$<PLATFORM_ID:Darwin>:${CMAKE_CURRENT_SOURCE_DIR}/debug_osx.cpp>
@@ -27,8 +29,6 @@ set(COMMON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/settings.h
     ${CMAKE_CURRENT_SOURCE_DIR}/socket.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/socket.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/sql_prepared_stmt.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/sql_prepared_stmt.h
     ${CMAKE_CURRENT_SOURCE_DIR}/sql.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/sql.h
     ${CMAKE_CURRENT_SOURCE_DIR}/string.h

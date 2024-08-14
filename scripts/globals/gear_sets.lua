@@ -1530,7 +1530,7 @@ local gearSets =
         maxEquipped = 5,
         mods =
         {
-            { xi.mod.FAST_CAST, 1, 2, 3, 4 },
+            { xi.mod.FASTCAST, 1, 2, 3, 4 },
         },
     },
 
@@ -2216,9 +2216,9 @@ local gearSets =
         items =
         {
             xi.item.REGAL_RING,
-            xi.item.RUNEIST_BOOTS_P2,
-            xi.item.RUNEIST_BOOTS_P3,
-            xi.item.RUNIEST_TROUSERS_P2,
+            xi.item.RUNEIST_BOTTES_P2,
+            xi.item.RUNEIST_BOTTES_P3,
+            xi.item.RUNIESTS_TROUSERS_P2,
             xi.item.RUNEIST_TROUSERS_P3,
             xi.item.RUNEIST_MITONS_P2,
             xi.item.RUNEIST_MITONS_P3,
@@ -2527,7 +2527,21 @@ local gearSets =
         {
             { xi.mod.AUGMENT_BLU_MAGIC, 2, 3, 4, 5 },
         },
-    }
+    },
+
+    [133] = -- AF3 BLU 109/119 Set: Occasionally triples the WSC of Blue Magic Spells. Will stack with Chain Affinity.
+    {
+        items =
+        {
+            xi.item.VAMPIRIC_MITTS,
+            xi.item.VAMPIRIC_BOOTS,
+        },
+        minEquipped = 2,
+        mods =
+        {
+            { xi.mod.ENH_DRAIN_ASPIR, 5 },
+        },
+    },
 }
 
 -- Build Table to lookup Set ID based on Item ID.  This is cached in xi.gear_sets.itemToSetId table,

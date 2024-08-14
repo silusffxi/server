@@ -13,16 +13,15 @@ mobskillObject.onMobSkillCheck = function(target, mob, skill)
 end
 
 mobskillObject.onMobWeaponSkill = function(target, mob, skill)
-    local dmgmod = 2
-    local info = xi.mobskills.mobMagicalMove(mob, target, skill, mob:getWeaponDmg() * 3, xi.element.DARK, dmgmod, xi.mobskills.magicalTpBonus.MAB_BONUS, 1)
-    local dmg = xi.mobskills.mobFinalAdjustments(info.dmg, mob, skill, target, xi.attackType.MAGICAL, xi.damageType.DARK, xi.mobskills.shadowBehavior.IGNORE_SHADOWS)
-    target:takeDamage(dmg, mob, xi.attackType.MAGICAL, xi.damageType.DARK)
+    local damage = mob:getWeaponDmg() * 3
 
-    -- curse LAST so you don't die
-    local typeEffect = xi.effect.CURSE_I
-    xi.mobskills.mobStatusEffectMove(mob, target, typeEffect, 25, 0, 420)
+    damage = xi.mobskills.mobMagicalMove(mob, target, skill, damage, xi.element.DARK, 2, xi.mobskills.magicalTpBonus.MAB_BONUS, 1)
+    damage = xi.mobskills.mobFinalAdjustments(damage, mob, skill, target, xi.attackType.MAGICAL, xi.damageType.DARK, xi.mobskills.shadowBehavior.IGNORE_SHADOWS)
 
-    return dmg
+    target:takeDamage(damage, mob, xi.attackType.MAGICAL, xi.damageType.DARK)
+    xi.mobskills.mobStatusEffectMove(mob, target, xi.effect.CURSE_I, 25, 0, 420)
+
+    return damage
 end
 
 return mobskillObject

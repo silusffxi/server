@@ -25,6 +25,7 @@
 CMobSkill::CMobSkill(uint16 id)
 : m_ID(id)
 , m_TotalTargets(1)
+, m_primaryTargetID(0)
 , m_Param(0)
 , m_AnimID(0)
 , m_Aoe(0)
@@ -55,7 +56,7 @@ bool CMobSkill::isAoE() const
 
 bool CMobSkill::isConal() const
 {
-    return m_Aoe == 4;
+    return m_Aoe == 4 || m_Aoe == 8;
 }
 
 bool CMobSkill::isSingle() const
@@ -96,9 +97,19 @@ void CMobSkill::setMsg(uint16 msg)
     m_Message = msg;
 }
 
+void CMobSkill::setTargets(const std::vector<CBattleEntity*>& targets)
+{
+    m_Targets = targets;
+}
+
 void CMobSkill::setTotalTargets(uint16 targets)
 {
     m_TotalTargets = targets;
+}
+
+void CMobSkill::setPrimaryTargetID(uint32 targid)
+{
+    m_primaryTargetID = targid;
 }
 
 void CMobSkill::setAnimationID(uint16 animID)
@@ -167,65 +178,6 @@ uint16 CMobSkill::getAnimationID() const
     return m_AnimID;
 }
 
-uint16 CMobSkill::getPetAnimationID() const
-{
-    // levi
-    if (m_AnimID >= 552 && m_AnimID <= 560)
-    {
-        return m_AnimID - 488;
-    }
-
-    // garuda
-    if (m_AnimID >= 565 && m_AnimID <= 573)
-    {
-        return m_AnimID - 485;
-    }
-
-    // titan
-    if (m_AnimID >= 539 && m_AnimID <= 547)
-    {
-        return m_AnimID - 491;
-    }
-
-    // ifrit
-    if (m_AnimID >= 526 && m_AnimID <= 534)
-    {
-        return m_AnimID - 494;
-    }
-
-    // fenrir
-    if (m_AnimID >= 513 && m_AnimID <= 521)
-    {
-        return m_AnimID - 497;
-    }
-
-    // shiva
-    if (m_AnimID >= 578 && m_AnimID <= 586)
-    {
-        return m_AnimID - 482;
-    }
-
-    // rumah
-    if (m_AnimID >= 591 && m_AnimID <= 599)
-    {
-        return m_AnimID - 479;
-    }
-
-    // carbuncle
-    if (m_AnimID >= 605 && m_AnimID <= 611)
-    {
-        return m_AnimID - 605;
-    }
-
-    // wyvern
-    if (m_AnimID >= 621 && m_AnimID <= 632)
-    {
-        return m_AnimID - 493;
-    }
-
-    return m_AnimID;
-}
-
 int16 CMobSkill::getTP() const
 {
     return m_TP;
@@ -237,9 +189,19 @@ uint8 CMobSkill::getHPP() const
     return m_HPP;
 }
 
+auto CMobSkill::getTargets() const -> const std::vector<CBattleEntity*>&
+{
+    return m_Targets;
+}
+
 uint16 CMobSkill::getTotalTargets() const
 {
     return m_TotalTargets;
+}
+
+uint32 CMobSkill::getPrimaryTargetID() const
+{
+    return m_primaryTargetID;
 }
 
 uint16 CMobSkill::getMsg() const

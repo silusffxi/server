@@ -99,16 +99,32 @@ void CAttack::SetCritical(bool value)
     }
     else
     {
-        float attBonus = 0.f;
+        float attBonus = 1.0f;
         if (m_attackType == PHYSICAL_ATTACK_TYPE::KICK)
         {
             if (CStatusEffect* footworkEffect = m_attacker->StatusEffectContainer->GetStatusEffect(EFFECT_FOOTWORK))
             {
-                attBonus = footworkEffect->GetSubPower() / 256.f; // Mod is out of 256
+                attBonus += (footworkEffect->GetSubPower() / 256.f); // Mod is out of 256
             }
         }
 
-        m_damageRatio = battleutils::GetDamageRatio(m_attacker, m_victim, m_isCritical, attBonus);
+        SKILLTYPE skilltype  = SKILLTYPE::SKILL_NONE;
+        SLOTTYPE  weaponSlot = static_cast<SLOTTYPE>(GetWeaponSlot());
+
+        if (m_attacker->objtype == TYPE_PC)
+        {
+            if (auto* weapon = dynamic_cast<CItemWeapon*>(m_attacker->m_Weapons[weaponSlot]))
+            {
+                skilltype = static_cast<SKILLTYPE>(weapon->getSkillType());
+            }
+            else
+            {
+                skilltype = SKILLTYPE::SKILL_HAND_TO_HAND;
+            }
+        }
+
+        // need to pass the weapon slot because damage ratio depends on ATT which varies by slot
+        m_damageRatio = battleutils::GetDamageRatio(m_attacker, m_victim, m_isCritical, attBonus, skilltype, weaponSlot);
     }
 }
 
@@ -174,18 +190,42 @@ bool CAttack::IsBlocked() const
     return m_isBlocked;
 }
 
-bool CAttack::IsParried()
+bool CAttack::IsParried() const
+{
+    return m_isParried;
+}
+
+bool CAttack::CheckParried()
 {
     if (m_attackType != PHYSICAL_ATTACK_TYPE::DAKEN)
     {
-        return attackutils::IsParried(m_attacker, m_victim);
+        if (attackutils::IsParried(m_attacker, m_victim))
+        {
+            m_isParried = true;
+        }
     }
-    return false;
+    return m_isParried;
 }
 
 bool CAttack::IsAnticipated() const
 {
     return m_anticipated;
+}
+
+bool CAttack::IsDeflected() const
+{
+    if (!m_victim->StatusEffectContainer->HasStatusEffect(EFFECT_DEFENSE_BOOST))
+    {
+        return false;
+    }
+
+    uint16 subpower = m_victim->StatusEffectContainer->GetStatusEffect(EFFECT_DEFENSE_BOOST)->GetSubPower();
+    if (subpower == 0)
+    {
+        return false;
+    }
+
+    return infront(m_attacker->loc.p, m_victim->loc.p, subpower);
 }
 
 /************************************************************************
@@ -353,16 +393,17 @@ bool CAttack::CheckAnticipated()
         m_victim->StatusEffectContainer->DelStatusEffect(EFFECT_THIRD_EYE);
         return false;
     }
+    auto* weapon             = dynamic_cast<CItemWeapon*>(m_victim->m_Weapons[SLOT_MAIN]);
+    bool  isValid2HandWeapon = weapon && weapon->isTwoHanded();
+    bool  hasValidSeigan     = isValid2HandWeapon && m_victim->StatusEffectContainer->HasStatusEffect(EFFECT_SEIGAN, 0);
 
-    bool hasSeigan = m_victim->StatusEffectContainer->HasStatusEffect(EFFECT_SEIGAN, 0);
-
-    if (!hasSeigan && pastAnticipations == 0)
+    if (!hasValidSeigan && pastAnticipations == 0)
     {
         m_victim->StatusEffectContainer->DelStatusEffect(EFFECT_THIRD_EYE);
         m_anticipated = true;
         return true;
     }
-    else if (!hasSeigan)
+    else if (!hasValidSeigan)
     {
         m_victim->StatusEffectContainer->DelStatusEffect(EFFECT_THIRD_EYE);
         return false;
@@ -398,6 +439,7 @@ bool CAttack::IsCountered() const
 
 bool CAttack::CheckCounter()
 {
+    // TODO return false if boost is active (when boost gets refactored to be current retail accurate)
     if (m_attackType == PHYSICAL_ATTACK_TYPE::DAKEN)
     {
         return false;
@@ -420,8 +462,12 @@ bool CAttack::CheckCounter()
 
     // counter check (rate AND your hit rate makes it land, else its just a regular hit)
     // having seigan active gives chance to counter at 25% of the zanshin proc rate
-    uint16 seiganChance = 0;
-    if (m_victim->objtype == TYPE_PC && m_victim->StatusEffectContainer->HasStatusEffect(EFFECT_SEIGAN))
+    uint16 seiganChance       = 0;
+    auto*  weapon             = dynamic_cast<CItemWeapon*>(m_victim->m_Weapons[SLOT_MAIN]);
+    bool   isValid2HandWeapon = weapon && weapon->isTwoHanded();
+    bool   hasValidSeigan     = isValid2HandWeapon && m_victim->StatusEffectContainer->HasStatusEffect(EFFECT_SEIGAN, 0);
+
+    if (m_victim->objtype == TYPE_PC && hasValidSeigan)
     {
         seiganChance = m_victim->getMod(Mod::ZANSHIN) + ((CCharEntity*)m_victim)->PMeritPoints->GetMeritValue(MERIT_ZASHIN_ATTACK_RATE, (CCharEntity*)m_victim);
         seiganChance = std::clamp<uint16>(seiganChance, 0, 100);
@@ -473,18 +519,28 @@ bool CAttack::CheckCover()
  ************************************************************************/
 void CAttack::ProcessDamage()
 {
+    auto saDmgBonus = false;
+    auto taDmgBonus = false;
     // Sneak attack.
     if (m_attacker->GetMJob() == JOB_THF && m_isFirstSwing && m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_SNEAK_ATTACK) &&
-        ((abs(m_victim->loc.p.rotation - m_attacker->loc.p.rotation) < 23) || m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_HIDE) ||
+        (behind(m_attacker->loc.p, m_victim->loc.p, 64) || m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_HIDE) ||
          m_victim->StatusEffectContainer->HasStatusEffect(EFFECT_DOUBT)))
     {
-        m_trickAttackDamage += m_attacker->DEX() * (1 + m_attacker->getMod(Mod::SNEAK_ATK_DEX) / 100);
+        m_bonusBasePhysicalDamage += m_attacker->DEX() * (1.0f + m_attacker->getMod(Mod::SNEAK_ATK_DEX) / 100.0f);
+        saDmgBonus = true;
     }
 
     // Trick attack.
     if (m_attacker->GetMJob() == JOB_THF && m_isFirstSwing && m_attackRound->GetTAEntity() != nullptr)
     {
-        m_trickAttackDamage += m_attacker->AGI() * (1 + m_attacker->getMod(Mod::TRICK_ATK_AGI) / 100);
+        m_bonusBasePhysicalDamage += m_attacker->AGI() * (1.0f + m_attacker->getMod(Mod::TRICK_ATK_AGI) / 100.0f);
+        taDmgBonus = true;
+    }
+
+    // Consume mana
+    if (m_attacker->objtype == TYPE_PC)
+    {
+        m_bonusBasePhysicalDamage += battleutils::doConsumeManaEffect((CCharEntity*)m_attacker);
     }
 
     SLOTTYPE slot = (SLOTTYPE)GetWeaponSlot();
@@ -492,15 +548,15 @@ void CAttack::ProcessDamage()
     {
         m_naturalH2hDamage = (int32)(m_attacker->GetSkill(SKILL_HAND_TO_HAND) * 0.11f) + 3;
         m_baseDamage       = m_attacker->GetMainWeaponDmg();
-        m_damage           = (uint32)(((m_baseDamage + m_naturalH2hDamage + m_trickAttackDamage + battleutils::GetFSTR(m_attacker, m_victim, slot)) * m_damageRatio));
+        m_damage           = (uint32)(((m_baseDamage + m_naturalH2hDamage + m_bonusBasePhysicalDamage + battleutils::GetFSTR(m_attacker, m_victim, slot)) * m_damageRatio));
     }
     else if (slot == SLOT_MAIN)
     {
-        m_damage = (uint32)(((m_attacker->GetMainWeaponDmg() + m_trickAttackDamage + battleutils::GetFSTR(m_attacker, m_victim, slot)) * m_damageRatio));
+        m_damage = (uint32)(((m_attacker->GetMainWeaponDmg() + m_bonusBasePhysicalDamage + battleutils::GetFSTR(m_attacker, m_victim, slot)) * m_damageRatio));
     }
     else if (slot == SLOT_SUB)
     {
-        m_damage = (uint32)(((m_attacker->GetSubWeaponDmg() + m_trickAttackDamage + battleutils::GetFSTR(m_attacker, m_victim, slot)) * m_damageRatio));
+        m_damage = (uint32)(((m_attacker->GetSubWeaponDmg() + m_bonusBasePhysicalDamage + battleutils::GetFSTR(m_attacker, m_victim, slot)) * m_damageRatio));
     }
     else if (slot == SLOT_AMMO)
     {
@@ -532,12 +588,6 @@ void CAttack::ProcessDamage()
         m_damage = battleutils::doSoulEaterEffect((CCharEntity*)m_attacker, m_damage);
     }
 
-    // Consume mana
-    if (m_attacker->objtype == TYPE_PC)
-    {
-        m_damage = battleutils::doConsumeManaEffect((CCharEntity*)m_attacker, m_damage);
-    }
-
     // Set attack type to Samba if the attack type is normal.  Don't overwrite other types.  Used for Samba double damage.
     if (m_attackType == PHYSICAL_ATTACK_TYPE::NORMAL && (m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_DRAIN_SAMBA) ||
                                                          m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_ASPIR_SAMBA) || m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_HASTE_SAMBA)))
@@ -547,16 +597,16 @@ void CAttack::ProcessDamage()
 
     // Get damage multipliers.
     m_damage =
-        attackutils::CheckForDamageMultiplier((CCharEntity*)m_attacker, dynamic_cast<CItemWeapon*>(m_attacker->m_Weapons[slot]), m_damage, m_attackType, slot);
+        attackutils::CheckForDamageMultiplier((CCharEntity*)m_attacker, dynamic_cast<CItemWeapon*>(m_attacker->m_Weapons[slot]), m_damage, m_attackType, slot, m_isFirstSwing);
 
     // Apply Sneak Attack Augment Mod
-    if (m_attacker->getMod(Mod::AUGMENTS_SA) > 0 && m_trickAttackDamage > 0 && m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_SNEAK_ATTACK))
+    if (m_attacker->getMod(Mod::AUGMENTS_SA) > 0 && saDmgBonus && m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_SNEAK_ATTACK))
     {
         m_damage += (int32)(m_damage * ((100 + (m_attacker->getMod(Mod::AUGMENTS_SA))) / 100.0f));
     }
 
     // Apply Trick Attack Augment Mod
-    if (m_attacker->getMod(Mod::AUGMENTS_TA) > 0 && m_trickAttackDamage > 0 && m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_TRICK_ATTACK))
+    if (m_attacker->getMod(Mod::AUGMENTS_TA) > 0 && taDmgBonus && m_attacker->StatusEffectContainer->HasStatusEffect(EFFECT_TRICK_ATTACK))
     {
         m_damage += (int32)(m_damage * ((100 + (m_attacker->getMod(Mod::AUGMENTS_TA))) / 100.0f));
     }

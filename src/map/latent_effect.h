@@ -54,7 +54,7 @@ enum class LATENT : uint16
     AVATAR_IN_PARTY        = 21, // party has a specific avatar - PARAM: same as globals/pets.lua (21 for any avatar)
     JOB_IN_PARTY           = 22, // party has job - PARAM: JOBTYPE
     ZONE                   = 23, // in zone - PARAM: zoneid
-    SYNTH_TRAINEE          = 24, // synth skill under 40 + no support
+    SYNTH_TRAINEE          = 24, // synth skill under 40 + no support: PARAM: 48: FISH, 49: WOOD, 50: SMITH, 51: GOLDSMITH, 52: CLOTH, 53: LEATHER, 54: BONE, 55: ALCHEMY, 56: COOKING
     SONG_ROLL_ACTIVE       = 25, // any song or roll active
     TIME_OF_DAY            = 26, // PARAM: 0: DAYTIME 1: NIGHTTIME 2: DUSK-DAWN
     HOUR_OF_DAY            = 27, // PARAM: 1: NEW DAY, 2: DAWN, 3: DAY, 4: DUSK, 5: EVENING, 6: DEAD OF NIGHT
@@ -70,28 +70,28 @@ enum class LATENT : uint16
     JOB_MULTIPLE           = 38, // PARAM: 0: ODD, 2: EVEN, 3-X: DIVISOR
     JOB_MULTIPLE_AT_NIGHT  = 39, // PARAM: 0: ODD, 2: EVEN, 3-X: DIVISOR
     EQUIPPED_IN_SLOT       = 40, // When item is equipped in the specified slot (e.g. Dweomer Knife, Erlking's Sword, etc.) PARAM: slotID
-    // 41 free to use
-    // 42 free to use
-    WEAPON_DRAWN_HP_UNDER = 43, // PARAM: HP PERCENT
-    NATION_CITIZEN        = 44, // Triggered by player being citizen of nation matching param: 0 San d'Oria, 1 Bastok, 2 Windurst
-    MP_UNDER_VISIBLE_GEAR = 45, // mp less than or equal to %, calculated using MP bonuses from visible gear only
-    HP_OVER_VISIBLE_GEAR  = 46, // hp more than or equal to %, calculated using HP bonuses from visible gear only
-    WEAPON_BROKEN         = 47, //
-    IN_DYNAMIS            = 48, //
-    FOOD_ACTIVE           = 49, // food effect (foodId) active - PARAM: FOOD ITEMID
-    JOB_LEVEL_BELOW       = 50, // PARAM: level
-    JOB_LEVEL_ABOVE       = 51, // PARAM: level
-    WEATHER_ELEMENT       = 52, // PARAM: 0: NONE, 1: FIRE, 2: ICE, 3: WIND 4: EARTH, 5: THUNDER, 6: WATER, 7: LIGHT, 8: DARK
-    NATION_CONTROL        = 53, // checks if player region is under nation's control - PARAM: 0: Under own nation's control, 1: Outside own nation's control
-    ZONE_HOME_NATION      = 54, // in zone and citizen of nation (aketons)
-    MP_OVER               = 55, // mp greater than # - PARAM: MP #
-    WEAPON_DRAWN_MP_OVER  = 56, // while weapon is drawn and mp greater than # - PARAM: MP #
-    ELEVEN_ROLL_ACTIVE    = 57, // corsair roll of 11 active
-    IN_ASSAULT            = 58, // is in an Instance battle in a TOAU zone
-    VS_ECOSYSTEM          = 59, // Vs. Specific Ecosystem ID (e.g. Vs. Plantoid: Accuracy+3)
-    VS_FAMILY             = 60, // Vs. Specific Family ID (e.g. Vs. Korrigan: Accuracy+3)
-    VS_SUPERFAMILY        = 61, // Vs. Specific SuperFamily ID (e.g. Vs. Mandragora: Accuracy+3)
-    MAINJOB               = 62, // mainjob - PARAM: JOBTYPE
+    DURING_WS              = 41, // During WS
+    WEATHER_CONDITION      = 42, // See Weather.h for WEATHER enum
+    WEAPON_DRAWN_HP_UNDER  = 43, // PARAM: HP PERCENT
+    NATION_CITIZEN         = 44, // Triggered by player being citizen of nation matching param: 0 San d'Oria, 1 Bastok, 2 Windurst
+    MP_UNDER_VISIBLE_GEAR  = 45, // mp less than or equal to %, calculated using MP bonuses from visible gear only
+    HP_OVER_VISIBLE_GEAR   = 46, // hp more than or equal to %, calculated using HP bonuses from visible gear only
+    WEAPON_BROKEN          = 47, //
+    IN_DYNAMIS             = 48, //
+    FOOD_ACTIVE            = 49, // food effect (foodId) active - PARAM: FOOD ITEMID
+    JOB_LEVEL_BELOW        = 50, // PARAM: level
+    JOB_LEVEL_ABOVE        = 51, // PARAM: level
+    WEATHER_ELEMENT        = 52, // PARAM: 0: NONE, 1: FIRE, 2: ICE, 3: WIND 4: EARTH, 5: THUNDER, 6: WATER, 7: LIGHT, 8: DARK
+    NATION_CONTROL         = 53, // checks if player region is under nation's control - PARAM: 0: Under own nation's control, 1: Outside own nation's control
+    ZONE_HOME_NATION       = 54, // in zone and citizen of nation (aketons)
+    MP_OVER                = 55, // mp greater than # - PARAM: MP #
+    WEAPON_DRAWN_MP_OVER   = 56, // while weapon is drawn and mp greater than # - PARAM: MP #
+    ELEVEN_ROLL_ACTIVE     = 57, // corsair roll of 11 active
+    IN_ASSAULT             = 58, // is in an Instance battle in a TOAU zone
+    VS_ECOSYSTEM           = 59, // Vs. Specific Ecosystem ID (e.g. Vs. Plantoid: Accuracy+3)
+    VS_FAMILY              = 60, // Vs. Specific Family ID (e.g. Vs. Korrigan: Accuracy+3)
+    VS_SUPERFAMILY         = 61, // Vs. Specific SuperFamily ID (e.g. Vs. Mandragora: Accuracy+3)
+    MAINJOB                = 62, // mainjob - PARAM: JOBTYPE
 };
 
 #define MAX_LATENTEFFECTID 63

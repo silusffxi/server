@@ -20,9 +20,9 @@ end
 
 spellObject.onSpellCast = function(caster, target, spell)
     local params = {}
-    params.tpmod = TPMOD_ATTACK
+    params.tpmod = xi.spells.blue.tpMod.ATTACK
     params.attackType = xi.attackType.PHYSICAL
-    params.damageType = xi.damageType.H2H
+    params.damageType = xi.damageType.HTH
     params.scattr = xi.skillchainType.INDURATION
     params.numhits = 1
     params.multiplier = 1.0

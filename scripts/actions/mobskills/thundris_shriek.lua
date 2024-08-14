@@ -10,39 +10,29 @@
 local mobskillObject = {}
 
 mobskillObject.onMobSkillCheck = function(target, mob, skill)
-    if mob:getFamily() == 316 then
-        local mobSkin = mob:getModelId()
+    local mobFamily = mob:getFamily()
+    local mobModel  = mob:getModelId()
 
-        if mobSkin == 1840 then
-            return 0
-        else
-            return 1
-        end
-    end
-
-    if mob:getFamily() == 91 then
-        local mobSkin = mob:getModelId()
-
-        if mobSkin == 1839 then
-            return 0
-        else
-            return 1
-        end
+    if
+        (mobFamily == 91 and mobModel ~= 1839) or
+        (mobFamily == 316 and mobModel ~= 1840)
+    then
+        return 1
     end
 
     return 0
 end
 
 mobskillObject.onMobWeaponSkill = function(target, mob, skill)
-    local typeEffect = xi.effect.TERROR
+    local damage = mob:getWeaponDmg() * 5
 
-    xi.mobskills.mobStatusEffectMove(mob, target, typeEffect, 1, 0, 15)
+    damage = xi.mobskills.mobMagicalMove(mob, target, skill, damage, xi.element.THUNDER, 1, xi.mobskills.magicalTpBonus.NO_EFFECT)
+    damage = xi.mobskills.mobFinalAdjustments(damage, mob, skill, target, xi.attackType.MAGICAL, xi.damageType.THUNDER, xi.mobskills.shadowBehavior.WIPE_SHADOWS)
 
-    local dmgmod = 1
-    local info = xi.mobskills.mobMagicalMove(mob, target, skill, mob:getWeaponDmg() * 5, xi.element.THUNDER, dmgmod, xi.mobskills.magicalTpBonus.NO_EFFECT)
-    local dmg = xi.mobskills.mobFinalAdjustments(info.dmg, mob, skill, target, xi.attackType.MAGICAL, xi.damageType.THUNDER, xi.mobskills.shadowBehavior.WIPE_SHADOWS)
-    target:takeDamage(dmg, mob, xi.attackType.MAGICAL, xi.damageType.THUNDER)
-    return dmg
+    target:takeDamage(damage, mob, xi.attackType.MAGICAL, xi.damageType.THUNDER)
+    xi.mobskills.mobStatusEffectMove(mob, target, xi.effect.TERROR, 1, 0, 15)
+
+    return damage
 end
 
 return mobskillObject

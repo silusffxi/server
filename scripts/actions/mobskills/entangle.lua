@@ -28,9 +28,6 @@ mobskillObject.onMobWeaponSkill = function(target, mob, skill)
 
         return dmg
     elseif mob:getPool() == 671 or mob:getPool() == 1346 then -- Cemetery Cherry and leafless Jidra
-        local typeEffectOne = xi.effect.BIND
-        local typeEffectTwo = xi.effect.POISON
-
         local numhits = 3
         local accmod = 1
         local dmgmod = 2.0
@@ -38,15 +35,14 @@ mobskillObject.onMobWeaponSkill = function(target, mob, skill)
         local dmg = xi.mobskills.mobFinalAdjustments(info.dmg, mob, skill, target, xi.attackType.PHYSICAL, xi.damageType.SLASHING, info.hitslanded)
 
         mob:resetEnmity(target)
-        target:takeDamage(dmg, mob, xi.attackType.PHYSICAL, xi.damageType.SLASHING)
-        skill:setMsg(xi.mobskills.mobStatusEffectMove(mob, target, typeEffectOne, 1, 0, 30))
-        xi.mobskills.mobStatusEffectMove(mob, target, typeEffectTwo, 50, 0, 60)
+        target:takeDamage(dmg, mob, xi.attackType.PHYSICAL, xi.damageType.SLASHING, { breakBind = false })
+        skill:setMsg(xi.mobskills.mobStatusEffectMove(mob, target, xi.effect.BIND, 1, 0, 30))
+        xi.mobskills.mobStatusEffectMove(mob, target, xi.effect.POISON, 50, 0, 60)
 
-        return typeEffectOne
+        return xi.effect.BIND
     else
-        local typeEffect = xi.effect.BIND
-        skill:setMsg(xi.mobskills.mobStatusEffectMove(mob, target, typeEffect, 1, 0, 30))
-        return typeEffect
+        skill:setMsg(xi.mobskills.mobStatusEffectMove(mob, target, xi.effect.BIND, 1, 0, 30))
+        return xi.effect.BIND
     end
 end
 

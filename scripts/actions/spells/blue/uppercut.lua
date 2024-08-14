@@ -21,9 +21,9 @@ end
 spellObject.onSpellCast = function(caster, target, spell)
     local params = {}
     params.ecosystem = xi.ecosystem.PLANTOID
-    params.tpmod = TPMOD_ATTACK
+    params.tpmod = xi.spells.blue.tpMod.ATTACK
     params.attackType = xi.attackType.PHYSICAL
-    params.damageType = xi.damageType.H2H
+    params.damageType = xi.damageType.HTH
     params.scattr = xi.skillchainType.LIQUEFACTION
     params.scattr2 = xi.skillchainType.IMPACTION
     params.numhits = 1

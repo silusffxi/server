@@ -8,19 +8,16 @@ abilityObject.onAbilityCheck = function(player, target, ability)
 end
 
 -- https://www.bg-wiki.com/ffxi/Clarsach_Call
-abilityObject.onPetAbility = function(target, pet, petskill, master)
-    local dINT = math.floor(pet:getStat(xi.mod.INT) - target:getStat(xi.mod.INT))
-    local level = pet:getMainLvl()
-    local damage = 48 + (level * 8)
+abilityObject.onPetAbility = function(target, pet, petskill, summoner, action)
+    xi.job_utils.summoner.onUseBloodPact(target, petskill, summoner, action)
 
-    xi.job_utils.summoner.onUseBloodPact(master, pet, target, petskill)
+    local damage = math.floor(48 + pet:getMainLvl() * 8 + (pet:getStat(xi.mod.INT) - target:getStat(xi.mod.INT)) * 1.5)
 
-    damage = damage + (dINT * 1.5)
     damage = xi.mobskills.mobMagicalMove(pet, target, petskill, damage, xi.element.WIND, 1, xi.mobskills.magicalTpBonus.NO_EFFECT, 0)
-    damage = xi.mobskills.mobAddBonuses(pet, target, damage.dmg, xi.element.WIND)
+    damage = xi.mobskills.mobAddBonuses(pet, target, damage, xi.element.WIND, petskill)
     damage = xi.summon.avatarFinalAdjustments(damage, pet, petskill, target, xi.attackType.MAGICAL, xi.damageType.WIND, 1)
 
-    master:setMP(0)
+    summoner:setMP(0)
     target:takeDamage(damage, pet, xi.attackType.MAGICAL, xi.damageType.WIND)
     target:updateEnmityFromDamage(pet, damage)
 

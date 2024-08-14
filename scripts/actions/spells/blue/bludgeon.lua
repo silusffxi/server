@@ -21,7 +21,7 @@ end
 spellObject.onSpellCast = function(caster, target, spell)
     local params = {}
     params.ecosystem = xi.ecosystem.ARCANA
-    params.tpmod = TPMOD_ACC
+    params.tpmod = xi.spells.blue.tpMod.ACC
     params.bonusacc = 0
     if caster:hasStatusEffect(xi.effect.AZURE_LORE) then
         params.bonusacc = 70
@@ -30,7 +30,7 @@ spellObject.onSpellCast = function(caster, target, spell)
     end
 
     params.attackType = xi.attackType.PHYSICAL
-    params.damageType = xi.damageType.H2H
+    params.damageType = xi.damageType.HTH
     params.scattr = xi.skillchainType.LIQUEFACTION
     params.numhits = 3
     params.multiplier = 1.0

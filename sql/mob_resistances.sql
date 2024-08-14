@@ -26,7 +26,7 @@ CREATE TABLE `mob_resistances` (
   `light_res_rank` smallint(3) NOT NULL DEFAULT 0,
   `dark_res_rank` smallint(3) NOT NULL DEFAULT 0,
   PRIMARY KEY (`resist_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 AVG_ROW_LENGTH=128;
+) ENGINE=Aria TRANSACTIONAL=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci AVG_ROW_LENGTH=128;
 
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -505,3 +505,7 @@ INSERT INTO `mob_resistances` VALUES (511,'Shockmaw',1.0,1.0,1.0,1.0,0,0,0,0,0,0
 INSERT INTO `mob_resistances` VALUES (512,'Cetus',1.0,1.0,1.0,1.0,0,0,0,0,0,0,0,0,0,2,4,2,4,2,4,1,6);
 INSERT INTO `mob_resistances` VALUES (513,'Pakecet',1.0,1.0,1.0,1.0,0,0,0,0,0,0,0,0,0,2,4,2,4,2,4,1,6);
 INSERT INTO `mob_resistances` VALUES (514,'Metus',1.0,1.0,1.0,1.0,0,0,0,0,0,0,0,0,0,2,2,2,2,2,2,0,11);
+INSERT INTO `mob_resistances` VALUES (515,'Wyvern - Ajattara',1.0,1.0,1.0,1.0,0,0,0,0,0,0,0,0,0,3,0,2,0,-1,-1,-1,-2);
+INSERT INTO `mob_resistances` VALUES (516,'Gigas - Alkyoneus',1.0,1.0,1.0,1.0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+INSERT INTO `mob_resistances` VALUES (517,'Gigas - Blizzard',1.0,1.0,1.0,1.0,0,0,0,0,0,0,0,0,0,-2,4,0,0,0,0,0,0);
+INSERT INTO `mob_resistances` VALUES (518,'Proto - Omega',1.0,1.0,1.0,1.0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,0,11);

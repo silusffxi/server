@@ -5,8 +5,8 @@
 #define _COMMON_SQL_H
 
 #include "cbasetypes.h"
-#include "sql_prepared_stmt.h"
 
+#include <string>
 #include <thread>
 #include <unordered_map>
 
@@ -17,6 +17,9 @@
 #endif
 
 #include "logging.h"
+
+// NOTE: This is just a shim to allow easy adoption of database.h
+#include "database.h"
 
 // Return codes
 #define SQL_ERROR   -1
@@ -73,8 +76,6 @@ enum SqlDataType
     SQLDT_LASTID
 };
 
-class SqlPreparedStatement;
-
 class SqlConnection
 {
 public:
@@ -85,6 +86,7 @@ public:
     SqlConnection(const char* user, const char* passwd, const char* host, uint16 port, const char* db);
     ~SqlConnection();
 
+    std::string GetDatabaseName();
     std::string GetClientVersion();
     std::string GetServerVersion();
 
@@ -231,10 +233,9 @@ public:
     void StartProfiling();
     void FinishProfiling();
 
-    std::shared_ptr<SqlPreparedStatement> GetPreparedStatement(std::string const& name);
-
 private:
-    Sql_t*      self;
+    Sql_t* self;
+
     const char* m_User;
     const char* m_Passwd;
     const char* m_Host;
@@ -244,10 +245,6 @@ private:
     uint32 m_PingInterval;
     uint32 m_LastPing;
     bool   m_LatencyWarning;
-
-    void InitPreparedStatements();
-
-    std::unordered_map<std::string, std::shared_ptr<SqlPreparedStatement>> m_PreparedStatements;
 
     std::thread::id m_ThreadId;
 };

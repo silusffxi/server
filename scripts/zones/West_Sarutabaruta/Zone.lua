@@ -5,14 +5,10 @@ require('scripts/quests/i_can_hear_a_rainbow')
 -----------------------------------
 local zoneObject = {}
 
-zoneObject.onChocoboDig = function(player, precheck)
-    return xi.chocoboDig.start(player, precheck)
-end
-
 zoneObject.onInitialize = function(zone)
     xi.conq.setRegionalConquestOverseers(zone:getRegionID())
 
-    xi.helm.initZone(zone, xi.helm.type.HARVESTING)
+    xi.helm.initZone(zone, xi.helmType.HARVESTING)
     xi.voidwalker.zoneOnInit(zone)
 end
 
