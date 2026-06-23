@@ -1,10 +1,23 @@
 cmake_minimum_required(VERSION 3.25)
 
-set_property(GLOBAL PROPERTY CXX_STANDARD 20)
-set_property(GLOBAL PROPERTY CXX_STANDARD_REQUIRED ON)
-set_property(GLOBAL PROPERTY CXX_EXTENSIONS ON)
-set_property(GLOBAL PROPERTY LINKER_LANGUAGE CXX)
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+# https://cmake.org/cmake/help/latest/variable/CMAKE_MSVC_DEBUG_INFORMATION_FORMAT.html
+cmake_policy(SET CMP0141 NEW)
+set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded)
+
+project(server C CXX)
+
+# https://cmake.org/cmake/help/latest/policy/CMP0069.html
+cmake_policy(SET CMP0069 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(LINKER_LANGUAGE CXX)
+set(USE_FOLDERS ON)
+
+# Generate compile_commands.json to make it easier to work with clang based tools
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include(Cache)
