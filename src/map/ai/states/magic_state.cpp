@@ -96,6 +96,13 @@ CMagicState::CMagicState(CBattleEntity* PEntity, uint16 targid, SpellID spellid,
     m_castTime = battleutils::CalculateSpellCastTime(m_PEntity, this);
     m_startPos = m_PEntity->loc.p;
 
+    auto targetID = PTarget->id;
+
+    if (m_PEntity->objtype != TYPE_PC && settings::get<bool>("map.HIDE_READIES_TARGET"))
+    {
+        targetID = m_PEntity->id;
+    }
+
     action_t action{
         .actorId    = m_PEntity->id,
         .actiontype = ActionCategory::MagicStart,
@@ -103,7 +110,7 @@ CMagicState::CMagicState(CBattleEntity* PEntity, uint16 targid, SpellID spellid,
         .spellgroup = m_PSpell->getSpellGroup(),
         .targets    = {
             {
-                .actorId = PTarget->id,
+                .actorId = targetID,
                 .results = {
                     {
                         .param     = static_cast<int32_t>(m_PSpell->getID()),
@@ -121,10 +128,11 @@ CMagicState::CMagicState(CBattleEntity* PEntity, uint16 targid, SpellID spellid,
     // if spell:setFlag(xi.magic.spellFlag.NO_START_MSG) is called, don't give spell start packet
     if (GetSpell()->getFlag() & SPELLFLAG_NO_START_MSG)
     {
-        action.ForEachResult([&](action_result_t& result)
-                             {
-                                 result.messageID = MsgBasic::None;
-                             });
+        action.ForEachResult(
+            [&](action_result_t& result)
+            {
+                result.messageID = MsgBasic::None;
+            });
     }
 
     m_PEntity->loc.zone->PushPacket(m_PEntity, CHAR_INRANGE_SELF, std::make_unique<GP_SERV_COMMAND_BATTLE2>(action));
@@ -169,6 +177,14 @@ bool CMagicState::Update(timer::time_point tick)
 
             Complete();
             return false;
+        }
+
+        auto& PSpell = m_PSpell;
+
+        // Bard songs do not get interrupted here
+        if (PSpell && PSpell->getSpellGroup() != SPELLGROUP_SONG && m_PEntity->StatusEffectContainer->HasPreventActionEffect())
+        {
+            m_interrupted = true;
         }
     }
 
@@ -252,6 +268,12 @@ bool CMagicState::Update(timer::time_point tick)
             return false;
         }
 
+        // Slept/stunned/petrified/etc. at the moment of completion: the cast is interrupted.
+        if (m_PEntity->StatusEffectContainer->HasPreventActionEffect())
+        {
+            m_interrupted = true;
+        }
+
         if (m_interrupted)
         {
             m_PEntity->OnCastInterrupted(*this, action, msg, false);
@@ -274,10 +296,11 @@ bool CMagicState::Update(timer::time_point tick)
         // Zero messageID so spells dont emit messages
         if (GetSpell()->getFlag() & SPELLFLAG_NO_FINISH_MSG)
         {
-            action.ForEachResult([&](action_result_t& result)
-                                 {
-                                     result.messageID = MsgBasic::None;
-                                 });
+            action.ForEachResult(
+                [&](action_result_t& result)
+                {
+                    result.messageID = MsgBasic::None;
+                });
         }
 
         m_PEntity->loc.zone->PushPacket(m_PEntity, CHAR_INRANGE_SELF, std::make_unique<GP_SERV_COMMAND_BATTLE2>(action));
@@ -328,7 +351,7 @@ bool CMagicState::CanCastSpell(CBattleEntity* PTarget, bool isEndOfCast)
 
     if (!m_PEntity->loc.zone->CanUseMisc(m_PSpell->getZoneMisc()))
     {
-        m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, m_PEntity, static_cast<uint16>(m_PSpell->getID()), 0, MsgBasic::CannotUseInArea);
+        m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, m_PEntity, static_cast<uint16>(m_PSpell->getID()), 0, MsgBasic::CannotInThisArea);
         return false;
     }
 
@@ -403,7 +426,7 @@ bool CMagicState::CanCastSpell(CBattleEntity* PTarget, bool isEndOfCast)
         }
     }
 
-    if (!isEndOfCast && m_PEntity->objtype == TYPE_PC && m_PEntity->loc.zone->CanUseMisc(MISC_LOS_PLAYER_BLOCK) && !m_PEntity->CanSeeTarget(PTarget))
+    if (!isEndOfCast && m_PEntity->objtype == TYPE_PC && m_PEntity->loc.zone->CanUseMisc(xi::ZoneMisc::LosPlayerBlock) && !m_PEntity->CanSeeTarget(PTarget))
     {
         m_errorMsg = std::make_unique<GP_SERV_COMMAND_BATTLE_MESSAGE>(m_PEntity, PTarget, static_cast<uint16>(m_PSpell->getID()), 0, MsgBasic::CannotPerformAction);
         return false;
@@ -512,7 +535,7 @@ void CMagicState::ApplyEnmity(CBattleEntity* PTarget, int ce, int ve)
         ve = 480;
     }
 
-    if (m_PEntity->StatusEffectContainer->HasStatusEffect(xi::StatusEffect::DivineEmblem) && m_PSpell->getSkillType() == SKILL_DIVINE_MAGIC)
+    if (m_PEntity->StatusEffectContainer->HasStatusEffect(xi::StatusEffect::DivineEmblem) && m_PSpell->getSkillType() == xi::SkillType::DivineMagic)
     {
         ve = ve * (1.0f + (m_PEntity->StatusEffectContainer->GetStatusEffect(xi::StatusEffect::DivineEmblem)->GetPower() / 100.0f));
         ce = ce * (1.0f + (m_PEntity->StatusEffectContainer->GetStatusEffect(xi::StatusEffect::DivineEmblem)->GetPower() / 100.0f));
@@ -588,7 +611,7 @@ void CMagicState::ApplyEnmity(CBattleEntity* PTarget, int ce, int ve)
     }
 
     if (m_PEntity->StatusEffectContainer->HasStatusEffect(xi::StatusEffect::DivineEmblem) &&
-        m_PSpell->getSkillType() == SKILL_DIVINE_MAGIC &&
+        m_PSpell->getSkillType() == xi::SkillType::DivineMagic &&
         enmityApplied)
     {
         m_PEntity->StatusEffectContainer->DelStatusEffect(xi::StatusEffect::DivineEmblem);

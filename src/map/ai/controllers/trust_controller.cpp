@@ -21,9 +21,7 @@
 
 #include "trust_controller.h"
 
-#include "ability.h"
 #include "ai/helpers/gambits_container.h"
-#include "ai/states/despawn_state.h"
 #include "ai/states/magic_state.h"
 #include "ai/states/range_state.h"
 #include "enmity_container.h"
@@ -31,10 +29,8 @@
 #include "entities/trust_entity.h"
 #include "items/item_weapon.h"
 #include "mob_modifier.h"
-#include "mob_spell_container.h"
 #include "player_controller.h"
 #include "recast_container.h"
-#include "status_effect_container.h"
 #include "utils/charutils.h"
 
 namespace
@@ -69,13 +65,17 @@ CTrustController::CTrustController(CCharEntity* PChar, CTrustEntity* PTrust)
 
 CTrustController::~CTrustController()
 {
-    if (POwner->PAI->IsEngaged())
+    if (POwner->PAI)
     {
-        POwner->PAI->Internal_Disengage();
+        if (POwner->PAI->IsEngaged())
+        {
+            POwner->PAI->Internal_Disengage();
+        }
+        POwner->PAI->PathFind.reset();
     }
-    POwner->PAI->PathFind.reset();
-    POwner->allegiance = ALLEGIANCE_TYPE::PLAYER;
-    POwner->status     = STATUS_TYPE::DISAPPEAR;
+
+    POwner->allegiance = xi::Allegiance::Player;
+    POwner->status     = xi::Status::Disappear;
     m_LastTopEnmity    = nullptr;
 }
 

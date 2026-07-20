@@ -70,6 +70,9 @@ public:
     void handleSignal(const std::error_code& error, int signal);
     void usercheck() const;
     void tryIncreaseRLimits();
+    void tryRaiseTimerResolution();
+    void tryRestoreTimerResolution();
+    void tryPreventBackgroundThrottling() const;
     void tryDisableQuickEditMode() const;
     void tryRestoreQuickEditMode() const;
     void prepareLogging();
@@ -88,7 +91,7 @@ public:
     //
 
     // Is expected to block until requestExit() is called and/or isRunning() returns false
-    virtual void run();
+    virtual auto run() -> bool;
 
     void requestExit();
     auto closeRequested() const -> bool;

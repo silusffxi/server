@@ -19,8 +19,7 @@
 ===========================================================================
 */
 
-#ifndef _CHARENTITY_H
-#define _CHARENTITY_H
+#pragma once
 
 #include "aman.h"
 #include "event_info.h"
@@ -32,18 +31,20 @@
 #include "map_session.h"
 #include "monstrosity.h"
 
-#include "common/cbasetypes.h"
-#include "common/mmo.h"
-#include "common/xi.h"
+#include <common/cbasetypes.h>
+#include <common/mmo.h>
+#include <common/types/flat_hash_map.h>
+#include <common/xi.h>
+
+#include <common/types/hash_map.h>
+#include <common/types/maybe.h>
 
 #include <array>
 #include <bitset>
 #include <deque>
 #include <map>
 #include <memory>
-#include <optional>
 #include <set>
-#include <unordered_map>
 #include <unordered_set>
 
 #include "automaton_entity.h"
@@ -282,8 +283,8 @@ class CRangeState;
 class CItemState;
 class CItemUsable;
 
-typedef std::map<uint32, CBaseEntity*> SpawnIDList_t;
-typedef std::vector<EntityID_t>        BazaarList_t;
+typedef FlatHashMap<uint32, CBaseEntity*> SpawnIDList_t;
+typedef std::vector<EntityID_t>           BazaarList_t;
 
 struct ItemLocation
 {
@@ -341,7 +342,7 @@ public:
 
     auto bindEquip(uint8 equipSlot, CItem* item) -> bool;
     void clearEquip(uint8 equipSlot);
-    auto equipLocation(uint8 equipSlot) const -> std::optional<ItemLocation>;
+    auto equipLocation(uint8 equipSlot) const -> Maybe<ItemLocation>;
 
     uint8            m_ZonesVisitedList[38]{}; // List of zones visited by the character
     xi::bitset<1024> m_SpellList{};            // List of learned spells
@@ -358,7 +359,6 @@ public:
     eminencecache_t  m_eminenceCache{};               // Caching data for Eminence lookups
     assaultlog_t     m_assaultLog{};                  // Assault mission list
     campaignlog_t    m_campaignLog{};                 // Campaign mission list
-    uint32           m_lastBcnmTimePrompt{};          // The last message prompt in seconds
     PetInfo_t        petZoningInfo{};                 // Used to repawn dragoons pets ect on zone
 
     void setPetZoningInfo();                            // Set pet zoning info (when zoning and logging out)
@@ -442,14 +442,6 @@ public:
 
     CBattleEntity* PClaimedMob = nullptr;
 
-    // These missions do not need a list of completed, because client automatically
-    // displays earlier missions completed
-
-    uint16 m_copCurrent; // current mission of Chains of Promathia
-    uint16 m_acpCurrent; // current mission of A Crystalline Prophecy
-    uint16 m_mkeCurrent; // current mission of A Moogle Kupo d'Etat
-    uint16 m_asaCurrent; // current mission of A Shantotto Ascension
-
     // currency_t        m_currency;                 // conquest points, imperial standing points etc
     teleport_t teleport{}; // Outposts, Runic Portals, Homepoints, Survival Guides, Maws, etc.
 
@@ -495,7 +487,6 @@ public:
     CLatentEffectContainer* PLatentEffectContainer;
     bool                    retriggerLatents; // used to retrigger all latent effects if some event requires them to be retriggered
 
-    CItemContainer* PGuildShop;
     EntityID_t      guildShopNpc_{}; // Lua-driven guild shop NPC the PC last opened
     CItemContainer* getStorage(uint8 locationId) const;
 
@@ -646,6 +637,7 @@ public:
     timer::time_point m_LastRangedAttackTime{};
 
     void flushEquipChanges();
+    void resyncEquipment();
     auto inventorySyncState() -> InventorySyncState&;
 
     CHAR_SUBSTATE m_Substate;
@@ -657,8 +649,8 @@ public:
     std::vector<GearSetMod_t>     m_GearSetMods; // The list of gear set mods currently applied to the character.
     std::vector<AuctionHistory_t> m_ah_history;  // AH history list (in the future consider using UContainer)
 
-    std::unordered_map<uint16, timer::time_point> m_PacketRecievedTimestamps;
-    uint16                                        m_LastPacketType{};
+    HashMap<uint16, timer::time_point> m_PacketRecievedTimestamps;
+    uint16                             m_LastPacketType{};
 
     void            SetPlayTime(timer::duration playTime); // Set playtime
     timer::duration GetPlayTime(bool needUpdate = true);   // Get playtime
@@ -752,11 +744,11 @@ public:
 
     void clearCharVarsWithPrefix(const std::string& prefix);
 
-    bool m_Locked{};         // Is the player locked in a cutscene
-    bool m_zoneInCutscene{}; // Is the player currently in a zone-in cutscene
+    bool m_Locked{};     // Is the player locked in a cutscene
+    bool m_isPCHidden{}; // Is the player currently hidden from other players
 
     // Starts a synth with skillType X
-    bool startSynth(SKILLTYPE synthSkill);
+    bool startSynth(xi::SkillType synthSkill);
 
     CCharEntity();
     ~CCharEntity() override;
@@ -802,16 +794,14 @@ private:
 
     InventorySyncState inventorySyncState_;
 
-    mutable std::unordered_map<std::string, std::pair<int32, uint32>> charVarCache;
-    std::unordered_set<std::string>                                   charVarChanges;
-    std::unordered_set<uint32>                                        charTriggerAreaIDs; // Holds any TriggerArea IDs that the player is currently within the bounds of
+    mutable HashMap<std::string, std::pair<int32, uint32>> charVarCache;
+    std::unordered_set<std::string>                        charVarChanges;
+    std::unordered_set<uint32>                             charTriggerAreaIDs; // Holds any TriggerArea IDs that the player is currently within the bounds of
 
     uint8             dataToPersist = 0;
     timer::time_point nextDataPersistTime{};
 
     // TODO: Don't use raw ptrs for this, but don't duplicate whole packets with unique_ptr either.
     std::deque<std::unique_ptr<CBasicPacket>> PacketList;          // The list of packets to be sent to the character during the next network cycle
-    std::unordered_map<uint32, CBasicPacket*> EntityUpdatePackets; // Keep track of entity update packets by ID, such that they can be updated
+    HashMap<uint32, CBasicPacket*>            EntityUpdatePackets; // Keep track of entity update packets by ID, such that they can be updated
 };
-
-#endif

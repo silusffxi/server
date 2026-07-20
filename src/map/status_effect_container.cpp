@@ -30,7 +30,11 @@ When a status effect is gained twice on a player. It can do one or more of the f
 */
 
 #include "common/logging.h"
+
 #include "common/timer.h"
+#include "data/enums/weather.h"
+
+#include <common/types/hash_map.h>
 
 #include <array>
 #include <cstring>
@@ -109,7 +113,7 @@ void LoadEffectsParameters()
         EffectsParams[static_cast<uint16>(id)].WearOffMessageId = data.WearOffMessageId == 0 ? MsgStd::EffectWearsOff : static_cast<MsgStd>(data.WearOffMessageId);
 
         auto filename = fmt::format("./scripts/effects/{}.lua", EffectsParams[static_cast<uint16>(id)].Name);
-        luautils::CacheLuaObjectFromFile(filename);
+        luautils::LoadLuaObjectFromFile(filename);
     }
 }
 
@@ -238,11 +242,11 @@ bool CStatusEffectContainer::CanGainStatusEffect(CStatusEffect* PStatusEffect)
         case xi::StatusEffect::Lullaby:
         {
             uint16 subPower = PStatusEffect->GetSubPower();
-            if (subPower == ELEMENT_LIGHT && m_POwner->hasImmunity(IMMUNITY_LIGHT_SLEEP))
+            if (subPower == ELEMENT_LIGHT && m_POwner->hasImmunity(xi::Immunity::LightSleep))
             {
                 return false;
             }
-            else if (subPower == ELEMENT_DARK && m_POwner->hasImmunity(IMMUNITY_DARK_SLEEP))
+            else if (subPower == ELEMENT_DARK && m_POwner->hasImmunity(xi::Immunity::DarkSleep))
             {
                 return false;
             }
@@ -250,73 +254,73 @@ bool CStatusEffectContainer::CanGainStatusEffect(CStatusEffect* PStatusEffect)
             break;
         }
         case xi::StatusEffect::Weight:
-            if (m_POwner->hasImmunity(IMMUNITY_GRAVITY))
+            if (m_POwner->hasImmunity(xi::Immunity::Gravity))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Bind:
-            if (m_POwner->hasImmunity(IMMUNITY_BIND))
+            if (m_POwner->hasImmunity(xi::Immunity::Bind))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Stun:
-            if (m_POwner->hasImmunity(IMMUNITY_STUN))
+            if (m_POwner->hasImmunity(xi::Immunity::Stun))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Silence:
-            if (m_POwner->hasImmunity(IMMUNITY_SILENCE))
+            if (m_POwner->hasImmunity(xi::Immunity::Silence))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Paralysis:
-            if (m_POwner->hasImmunity(IMMUNITY_PARALYZE))
+            if (m_POwner->hasImmunity(xi::Immunity::Paralyze))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Blindness:
-            if (m_POwner->hasImmunity(IMMUNITY_BLIND))
+            if (m_POwner->hasImmunity(xi::Immunity::Blind))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Slow:
-            if (m_POwner->hasImmunity(IMMUNITY_SLOW))
+            if (m_POwner->hasImmunity(xi::Immunity::Slow))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Poison:
-            if (m_POwner->hasImmunity(IMMUNITY_POISON))
+            if (m_POwner->hasImmunity(xi::Immunity::Poison))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Elegy:
-            if (m_POwner->hasImmunity(IMMUNITY_ELEGY))
+            if (m_POwner->hasImmunity(xi::Immunity::Elegy))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Requiem:
-            if (m_POwner->hasImmunity(IMMUNITY_REQUIEM))
+            if (m_POwner->hasImmunity(xi::Immunity::Requiem))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Terror:
-            if (m_POwner->hasImmunity(IMMUNITY_TERROR))
+            if (m_POwner->hasImmunity(xi::Immunity::Terror))
             {
                 return false;
             }
             break;
         case xi::StatusEffect::Petrification:
-            if (m_POwner->hasImmunity(IMMUNITY_PETRIFY))
+            if (m_POwner->hasImmunity(xi::Immunity::Petrify))
             {
                 return false;
             }
@@ -502,7 +506,7 @@ bool CStatusEffectContainer::AddStatusEffect(std::unique_ptr<CStatusEffect> PSta
 
         m_StatusEffectSet.insert(std::move(PStatusEffectPtr));
 
-        ApplyStateAlteringEffects(PStatusEffect);
+        HandleEffectGainSideEffects(PStatusEffect);
 
         luautils::OnEffectGain(m_POwner, PStatusEffect);
         m_POwner->PAI->EventHandler.triggerListener("EFFECT_GAIN", m_POwner, PStatusEffect);
@@ -773,8 +777,7 @@ void CStatusEffectContainer::KillAllStatusEffect()
     m_POwner->UpdateHealth();
 }
 
-// Apply any state alterations for the effect if applicable.
-void CStatusEffectContainer::ApplyStateAlteringEffects(CStatusEffect* StatusEffect)
+void CStatusEffectContainer::HandleEffectGainSideEffects(CStatusEffect* StatusEffect)
 {
     TracyZoneScoped;
 
@@ -800,11 +803,6 @@ void CStatusEffectContainer::ApplyStateAlteringEffects(CStatusEffect* StatusEffe
             if (effect == xi::StatusEffect::SleepIi || effect == xi::StatusEffect::Lullaby)
             {
                 StatusEffect->SetIcon(static_cast<uint16>(xi::StatusEffect::SleepI));
-            }
-
-            if (!m_POwner->PAI->IsCurrentState<CInactiveState>() && !m_POwner->PAI->IsCurrentState<CMobSkillState>())
-            {
-                m_POwner->PAI->Inactive(0ms, false);
             }
         }
     }
@@ -1081,181 +1079,6 @@ bool CStatusEffectContainer::ApplyBardEffect(CStatusEffect* PStatusEffect, uint8
     return false;
 }
 
-auto CStatusEffectContainer::ApplyCorsairEffect(CStatusEffect* PStatusEffect, uint8 maxRolls, uint8 bustDuration) -> bool
-{
-    // Don't process if not a COR roll.
-    if (!((PStatusEffect->GetStatusID() >= xi::StatusEffect::FightersRoll && PStatusEffect->GetStatusID() <= xi::StatusEffect::NaturalistsRoll) ||
-          (PStatusEffect->GetStatusID() == xi::StatusEffect::RuneistsRoll)))
-    {
-        return false;
-    }
-
-    // Effect Power    = Mod Power
-    // Effect SubID    = Mod ID
-    // Effect SubPower = Roll #
-    // Effect Tier     = Unused Currently (Previously used to store Mod ID)
-
-    // if all match roll #/id/effect then overwrite.
-
-    // If roll #/ effect match then overwrite, but id doesn't, NO xi::StatusEffect
-    // If targ has less than 2 of your rolls on, then just apply
-    // If targ already has 2 of your rolls, remove oldest one and apply this one.
-
-    uint8          numOfEffects = 0;
-    CStatusEffect* oldestRoll   = nullptr;
-
-    for (auto&& PEffect : m_StatusEffectSet)
-    {
-        if ((PEffect->GetStatusID() >= xi::StatusEffect::FightersRoll && PEffect->GetStatusID() <= xi::StatusEffect::NaturalistsRoll) ||
-            PEffect->GetStatusID() == xi::StatusEffect::RuneistsRoll || PEffect->GetStatusID() == xi::StatusEffect::Bust) // is a COR effect
-        {
-            if (PEffect->GetStatusID() == PStatusEffect->GetStatusID() && PEffect->GetSourceTypeParam() == PStatusEffect->GetSourceTypeParam() &&
-                PEffect->GetSubPower() < PStatusEffect->GetSubPower())
-            { // same type, double up
-                if (PStatusEffect->GetSubPower() < 12)
-                {
-                    PStatusEffect->SetDuration(PEffect->GetDuration());
-                    PStatusEffect->SetEffectSlot(PEffect->GetEffectSlot());
-                    DelStatusEffectSilent(PStatusEffect->GetStatusID());
-                    AddStatusEffect(std::unique_ptr<CStatusEffect>(PStatusEffect), EffectNotice::Silent);
-                    return true;
-                }
-                else // We rolled over 12 and busted.
-                {
-                    if (PEffect->GetSourceTypeParam() == m_POwner->id) // Check to see if this effect is from the initial caster.
-                    {
-                        if (!CheckForElevenRoll()) // If caster has 11 roll active, do not gain the bust effect.
-                        {
-                            // Pass Roll effect values into the Bust effect. Used to handle Bust debuffs in scripts/effects/bust.lua
-                            timer::duration duration = 5min;
-                            duration -= std::chrono::seconds(bustDuration);
-                            CStatusEffect* bustEffect = new CStatusEffect(xi::StatusEffect::Bust,                      // Effect ID
-                                                                          static_cast<uint16>(xi::StatusEffect::Bust), // Effect Icon
-                                                                          PStatusEffect->GetPower(),                   // Effect Power (Mod Power)
-                                                                          0s,                                          // Effect Tick
-                                                                          duration,                                    // Effect Duration
-                                                                          PStatusEffect->GetSubID(),                   // Effect SubType (Mod ID)
-                                                                          PStatusEffect->GetSubPower(),                // Effect SubPower (Roll #)
-                                                                          PStatusEffect->GetSubIcon(),                 // Effect SubIcon
-                                                                          PStatusEffect->GetTier());                   // Effect Tier
-
-                            bustEffect->SetSource(PEffect->GetSourceType(), PEffect->GetSourceTypeParam());
-                            bustEffect->SetOriginID(PEffect->GetOriginID());
-
-                            AddStatusEffect(std::unique_ptr<CStatusEffect>(bustEffect), EffectNotice::Silent);
-                            DelStatusEffectSilent(xi::StatusEffect::DoubleUpChance);
-                        }
-                    }
-                    // Everyone still loses the roll effect if the caster rolled 12+(Bust).
-                    DelStatusEffectSilent(PStatusEffect->GetStatusID());
-
-                    return true;
-                }
-            }
-
-            // Handle Roll/Bust ordering
-            if (PEffect->GetSourceTypeParam() == PStatusEffect->GetSourceTypeParam() || PEffect->GetStatusID() == xi::StatusEffect::Bust)
-            {
-                // Increment if its a roll or a bust from yourself. Do not count busts when counting roll effects from others.
-                if (!(PEffect->GetStatusID() == xi::StatusEffect::Bust && PStatusEffect->GetSourceTypeParam() != m_POwner->id))
-                {
-                    numOfEffects++;
-                }
-
-                // Only consider rolls(Not Busts) for oldest roll tracking.
-                if (PEffect->GetStatusID() != xi::StatusEffect::Bust)
-                {
-                    if (oldestRoll == nullptr)
-                    {
-                        oldestRoll = PEffect.get();
-                    }
-                    else if (PEffect->GetStartTime() + PEffect->GetDuration() <
-                             oldestRoll->GetStartTime() + oldestRoll->GetDuration())
-                    {
-                        oldestRoll = PEffect.get();
-                    }
-                }
-            }
-        }
-    }
-
-    if (numOfEffects < maxRolls)
-    {
-        PStatusEffect->SetEffectSlot(GetLowestFreeSlot());
-        AddStatusEffect(std::unique_ptr<CStatusEffect>(PStatusEffect), EffectNotice::Silent);
-        return true;
-    }
-    else if (oldestRoll != nullptr)
-    {
-        // Overwrite the oldest roll
-        PStatusEffect->SetEffectSlot(oldestRoll->GetEffectSlot());
-        DelStatusEffect(oldestRoll->GetStatusID());
-        AddStatusEffect(std::unique_ptr<CStatusEffect>(PStatusEffect));
-        return true;
-    }
-    else
-    {
-        // Fallback: Shouldn't get here normally.
-        ShowWarning("CStatusEffectContainer::ApplyCorsairEffect reached fallback condition");
-        return false;
-    }
-}
-
-bool CStatusEffectContainer::HasCorsairEffect(uint32 charid)
-{
-    for (const auto& PStatusEffect : m_StatusEffectSet)
-    {
-        if ((PStatusEffect->GetStatusID() >= xi::StatusEffect::FightersRoll && PStatusEffect->GetStatusID() <= xi::StatusEffect::NaturalistsRoll) ||
-            PStatusEffect->GetStatusID() == xi::StatusEffect::RuneistsRoll || PStatusEffect->GetStatusID() == xi::StatusEffect::Bust) // is a cor effect
-        {
-            if (PStatusEffect->GetSourceTypeParam() == charid || PStatusEffect->GetStatusID() == xi::StatusEffect::Bust)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-void CStatusEffectContainer::Fold(uint32 charid)
-{
-    CStatusEffect* oldestRoll = nullptr;
-    for (const auto& PStatusEffect : m_StatusEffectSet)
-    {
-        if ((PStatusEffect->GetStatusID() >= xi::StatusEffect::FightersRoll && PStatusEffect->GetStatusID() <= xi::StatusEffect::NaturalistsRoll) ||
-            PStatusEffect->GetStatusID() == xi::StatusEffect::RuneistsRoll || PStatusEffect->GetStatusID() == xi::StatusEffect::Bust) // is a cor effect
-        {
-            if (PStatusEffect->GetSourceTypeParam() == charid || PStatusEffect->GetStatusID() == xi::StatusEffect::Bust)
-            {
-                if (oldestRoll == nullptr)
-                {
-                    oldestRoll = PStatusEffect.get();
-                }
-                else if (PStatusEffect->GetStatusID() == xi::StatusEffect::Bust)
-                {
-                    if (oldestRoll->GetStatusID() == xi::StatusEffect::Bust)
-                    {
-                        oldestRoll = PStatusEffect->GetStartTime() > oldestRoll->GetStartTime() ? PStatusEffect.get() : oldestRoll;
-                    }
-                    else
-                    {
-                        oldestRoll = PStatusEffect.get();
-                    }
-                }
-                else if (oldestRoll->GetStatusID() != xi::StatusEffect::Bust && PStatusEffect->GetStartTime() > oldestRoll->GetStartTime())
-                {
-                    oldestRoll = PStatusEffect.get();
-                }
-            }
-        }
-    }
-    if (oldestRoll != nullptr)
-    {
-        RemoveStatusEffect(oldestRoll);
-        DelStatusEffectSilent(xi::StatusEffect::DoubleUpChance);
-    }
-}
-
 uint8 CStatusEffectContainer::GetActiveManeuverCount()
 {
     return GetStatusEffectCountInIDRange(xi::StatusEffect::FireManeuver, xi::StatusEffect::DarkManeuver);
@@ -1283,7 +1106,7 @@ uint8 CStatusEffectContainer::GetActiveRuneCount()
 
 auto CStatusEffectContainer::GetHighestRuneEffect() -> xi::StatusEffect
 {
-    std::unordered_map<xi::StatusEffect, uint8> runeEffects;
+    HashMap<xi::StatusEffect, uint8> runeEffects;
 
     for (const auto& PStatusEffect : m_StatusEffectSet)
     {
@@ -1642,9 +1465,8 @@ auto CStatusEffectContainer::SetEffectParams(CStatusEffect* StatusEffect) -> voi
                 // get the item lua script and check if it has valid functions
                 auto itemName     = "items/" + PItem->getName();
                 auto itemFullName = fmt::format("./scripts/{}.lua", itemName);
-                auto cacheEntry   = luautils::GetCacheEntryFromFilename(itemFullName);
-                auto onEffectGain = cacheEntry["onEffectGain"].get<sol::function>();
-                auto onEffectLose = cacheEntry["onEffectLose"].get<sol::function>();
+                auto onEffectGain = luautils::getCachedFileFunction(itemFullName, "onEffectGain");
+                auto onEffectLose = luautils::getCachedFileFunction(itemFullName, "onEffectLose");
 
                 effectFromItemEnchant = onEffectGain.valid() && onEffectLose.valid();
 
@@ -1663,9 +1485,8 @@ auto CStatusEffectContainer::SetEffectParams(CStatusEffect* StatusEffect) -> voi
                 // get the item lua script and check if it has valid functions
                 auto itemName     = "items/" + PItem->getName();
                 auto itemFullName = fmt::format("./scripts/{}.lua", itemName);
-                auto cacheEntry   = luautils::GetCacheEntryFromFilename(itemFullName);
-                auto onEffectGain = cacheEntry["onEffectGain"].get<sol::function>();
-                auto onEffectLose = cacheEntry["onEffectLose"].get<sol::function>();
+                auto onEffectGain = luautils::getCachedFileFunction(itemFullName, "onEffectGain");
+                auto onEffectLose = luautils::getCachedFileFunction(itemFullName, "onEffectLose");
 
                 effectFromItemFood = onEffectGain.valid() && onEffectLose.valid();
 
@@ -2233,12 +2054,12 @@ void CStatusEffectContainer::TickRegen(timer::time_point tick)
                     petElementIdx = static_cast<uint8>(petElement) - 1;
                 }
 
-                static const Mod     strong[8]        = { Mod::FIRE_AFFINITY_PERP, Mod::ICE_AFFINITY_PERP, Mod::WIND_AFFINITY_PERP, Mod::EARTH_AFFINITY_PERP, Mod::THUNDER_AFFINITY_PERP, Mod::WATER_AFFINITY_PERP, Mod::LIGHT_AFFINITY_PERP, Mod::DARK_AFFINITY_PERP };
-                static const Weather weatherStrong[8] = { Weather::HotSpell, Weather::Snow, Weather::Wind, Weather::DustStorm, Weather::Thunder, Weather::Rain, Weather::Auroras, Weather::Gloom };
+                static const Mod         strong[8]        = { Mod::FIRE_AFFINITY_PERP, Mod::ICE_AFFINITY_PERP, Mod::WIND_AFFINITY_PERP, Mod::EARTH_AFFINITY_PERP, Mod::THUNDER_AFFINITY_PERP, Mod::WATER_AFFINITY_PERP, Mod::LIGHT_AFFINITY_PERP, Mod::DARK_AFFINITY_PERP };
+                static const xi::Weather weatherStrong[8] = { xi::Weather::HotSpell, xi::Weather::Snow, xi::Weather::Wind, xi::Weather::DustStorm, xi::Weather::Thunder, xi::Weather::Rain, xi::Weather::Auroras, xi::Weather::Gloom };
 
                 // Day / Weather elemental matches.
                 bool dayMatch     = elementValid && dayElement == petElement;
-                bool weatherMatch = elementValid && (weather == weatherStrong[petElementIdx] || weather == static_cast<Weather>(static_cast<uint16_t>(weatherStrong[petElementIdx]) + 1));
+                bool weatherMatch = elementValid && (weather == weatherStrong[petElementIdx] || weather == static_cast<xi::Weather>(static_cast<uint16_t>(weatherStrong[petElementIdx]) + 1));
 
                 // Halve perpetuation cost before all regular reductions.
                 bool halfFromCarby   = PChar->getMod(Mod::HALF_PERPETUATION_CARBUNCLE) != 0 && PPet->petID() == PETID_CARBUNCLE;
@@ -2341,6 +2162,19 @@ uint16 CStatusEffectContainer::GetConfrontationEffect()
             return PEffect->GetPower();
         }
     }
+    return 0;
+}
+
+auto CStatusEffectContainer::GetConfrontationSubPower() const -> uint16
+{
+    for (const auto& PEffect : m_StatusEffectSet)
+    {
+        if (PEffect->HasEffectFlag(xi::StatusEffectFlag::Confrontation))
+        {
+            return PEffect->GetSubPower();
+        }
+    }
+
     return 0;
 }
 

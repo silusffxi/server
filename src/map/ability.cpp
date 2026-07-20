@@ -21,7 +21,6 @@
 
 #include "ability.h"
 
-#include "common/database.h"
 #include "enums/recast.h"
 
 #include "lua/luautils.h"
@@ -360,7 +359,7 @@ void LoadAbilitiesList()
             {
                 filename = fmt::format("./scripts/actions/abilities/pets/{}.lua", PAbility->getName());
             }
-            luautils::CacheLuaObjectFromFile(filename);
+            luautils::LoadLuaObjectFromFile(filename);
         }
     }
 

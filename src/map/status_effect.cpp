@@ -19,15 +19,13 @@
 ===========================================================================
 */
 
-#include "common/utils.h"
-
-#include "entities/battle_entity.h"
 #include "status_effect.h"
+#include "entities/battle_entity.h"
 
 #include "status_effect_container.h"
 #include <utility>
 
-CStatusEffect::CStatusEffect(xi::StatusEffect id, uint16 icon, uint16 power, timer::duration tick, timer::duration duration, uint32 subid, uint16 subPower, uint16 subIcon, uint16 tier, xi::StatusEffectFlag flags, uint16 sourceType, uint32 sourceTypeParam, uint32 originID)
+CStatusEffect::CStatusEffect(xi::StatusEffect id, uint16 icon, uint16 power, timer::duration tick, timer::duration duration, uint32 subid, uint16 subPower, uint16 subIcon, uint16 tier, xi::StatusEffectFlag flags, uint16 sourceType, uint32 sourceTypeParam, uint32 originID, uint8 slot)
 : statusID_(id)
 , subID_(subid)
 , icon_(icon)
@@ -39,6 +37,7 @@ CStatusEffect::CStatusEffect(xi::StatusEffect id, uint16 icon, uint16 power, tim
 , originID_(originID)
 , sourceType_(sourceType)
 , sourceTypeParam_(sourceTypeParam)
+, slot_(slot)
 , tickTime_(tick)
 , duration_(duration)
 {

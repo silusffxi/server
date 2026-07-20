@@ -21,9 +21,10 @@
 
 #pragma once
 
-#include <unordered_map>
-
 #include "common/cbasetypes.h"
+
+#include <common/types/hash_map.h>
+
 #include "entities/mob_entity.h"
 #include "modifier.h"
 
@@ -47,7 +48,7 @@ enum class WeaknessType
     WHITE  = 3
 };
 
-typedef std::unordered_map<uint32, ModsList_t*> ModsMap_t;
+typedef HashMap<uint32, ModsList_t*> ModsMap_t;
 
 namespace mobutils
 {
@@ -63,7 +64,7 @@ void SetupPetSkills(CMobEntity* PMob);
 
 uint8 JobSkillRankToBaseEvaRank(JOBTYPE mjob, JOBTYPE sjob);
 
-uint16 GetWeaponDamage(CMobEntity* PMob, uint16 slot);
+uint16 GetBaseWeaponDamage(CMobEntity* PMob, uint16 slot);
 uint16 GetMagicEvasion(CMobEntity* PMob);
 uint16 GetBaseDefEva(CMobEntity* PMob, uint8 rank);
 uint16 GetBaseSkill(CMobEntity* PMob, uint8 rank);

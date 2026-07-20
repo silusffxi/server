@@ -15,6 +15,7 @@ set(COMMON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/blowfish.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/blowfish.h
     ${CMAKE_CURRENT_SOURCE_DIR}/cbasetypes.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/enum_traits.h
     ${CMAKE_CURRENT_SOURCE_DIR}/console_service.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/console_service.h
     ${CMAKE_CURRENT_SOURCE_DIR}/database.h
@@ -33,15 +34,6 @@ set(COMMON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/database/result_set.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/database/result_set.h
     ${CMAKE_CURRENT_SOURCE_DIR}/database/traits.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_include.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_connection.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_connection.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_database.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_database.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_prepared_statement.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_prepared_statement.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_result_set.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/database/mariadb_cpp/mariadb_cpp_result_set.h
     ${CMAKE_CURRENT_SOURCE_DIR}/database/libmariadb/libmariadb_connection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/database/libmariadb/libmariadb_connection.h
     ${CMAKE_CURRENT_SOURCE_DIR}/database/libmariadb/libmariadb_include.h
@@ -51,6 +43,12 @@ set(COMMON_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/database/libmariadb/libmariadb_prepared_statement.h
     ${CMAKE_CURRENT_SOURCE_DIR}/database/libmariadb/libmariadb_result_set.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/database/libmariadb/libmariadb_result_set.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/types/error_or.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/types/flat_hash_map.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/types/hash_map.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/types/heap.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/types/maybe.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/types/variant.h
     ${CMAKE_CURRENT_SOURCE_DIR}/debug.h
     $<$<PLATFORM_ID:Linux>:${CMAKE_CURRENT_SOURCE_DIR}/debug_linux.cpp>
     $<$<PLATFORM_ID:Darwin>:${CMAKE_CURRENT_SOURCE_DIR}/debug_osx.cpp>
