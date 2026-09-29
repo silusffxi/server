@@ -130,7 +130,7 @@ void LoadAutomaton(CCharEntity* PChar)
     {
         db::extractFromBlob(rset, "unlocked_attachments", PChar->m_unlockedAttachments);
 
-        if (PChar->GetMJob() == JOB_PUP || PChar->GetSJob() == JOB_PUP)
+        if (PChar->GetMJob() == xi::Job::PUP || PChar->GetSJob() == xi::Job::PUP)
         {
             if (const auto name = rset->get<std::string>("name"); !name.empty())
             {
@@ -172,7 +172,7 @@ void LoadAutomaton(CCharEntity* PChar)
             }
 
             // Add the elemental bonus before we set the head and frame
-            PChar->setAutomatonElementalCapacityBonus(PChar->getMod(Mod::AUTO_ELEM_CAPACITY));
+            PChar->setAutomatonElementalCapacityBonus(PChar->getMod(xi::Mod::AUTO_ELEM_CAPACITY));
 
             setHead(PChar, tempEquip.head);
             setFrame(PChar, tempEquip.frame);
@@ -212,7 +212,7 @@ void SaveAttachments(CCharEntity* PChar)
 
 void SaveAutomaton(CCharEntity* PChar)
 {
-    if (PChar->GetMJob() == JOBTYPE::JOB_PUP || PChar->GetSJob() == JOBTYPE::JOB_PUP)
+    if (PChar->GetMJob() == xi::Job::PUP || PChar->GetSJob() == xi::Job::PUP)
     {
         db::preparedStmt("UPDATE char_pet SET "
                          "equipped_attachments = ? "
@@ -560,7 +560,7 @@ void TrySkillUP(CAutomatonEntity* PAutomaton, xi::SkillType SkillID, uint8 lvl)
             SkillUpChance = 0.5;
         }
 
-        SkillUpChance *= ((100.0f + PAutomaton->getMod(Mod::COMBAT_SKILLUP_RATE)) / 100.0f);
+        SkillUpChance *= ((100.0f + PAutomaton->getMod(xi::Mod::COMBAT_SKILLUP_RATE)) / 100.0f);
 
         if (Diff > 0 && random < SkillUpChance)
         {
@@ -768,6 +768,43 @@ void PostLevelRestriction(const CCharEntity* PChar)
         // Now re-run the maneuvers apply logic on all attachments
         UpdateAttachments(PChar);
     }
+}
+
+auto CalculateAutomatonSkills(CCharEntity* PMaster, uint8 mlvl) -> skills_t&
+{
+    auto& tempSkills = PMaster->automatonInfo_.automatonSkills;
+
+    tempSkills.automaton_melee  = std::min(puppetutils::getSkillCap(PMaster, xi::SkillType::AutomatonMelee, mlvl), PMaster->GetSkill(xi::SkillType::AutomatonMelee));
+    tempSkills.automaton_ranged = std::min(puppetutils::getSkillCap(PMaster, xi::SkillType::AutomatonRanged, mlvl), PMaster->GetSkill(xi::SkillType::AutomatonRanged));
+    tempSkills.automaton_magic  = std::min(puppetutils::getSkillCap(PMaster, xi::SkillType::AutomatonMagic, mlvl), PMaster->GetSkill(xi::SkillType::AutomatonMagic));
+
+    // Set capped flags
+    for (int i = 22; i <= 24; ++i)
+    {
+        if ((tempSkills.skill[i] & 0x7FFF) == (puppetutils::getSkillCap(PMaster, (xi::SkillType)i, mlvl)))
+        {
+            tempSkills.skill[i] |= 0x8000;
+        }
+    }
+
+    const auto meritbonus  = PMaster->PMeritPoints->GetMeritValue(xi::Merit::AutomatonSkills, PMaster);
+    const auto magicBonus  = PMaster->getMod(xi::Mod::AUTO_MAGIC_SKILL);
+    const auto meleeBonus  = PMaster->getMod(xi::Mod::AUTO_MELEE_SKILL);
+    const auto rangedBonus = PMaster->getMod(xi::Mod::AUTO_RANGED_SKILL);
+
+    tempSkills.automaton_magic = tempSkills.automaton_magic + magicBonus + meritbonus;
+
+    // copy magic skills into generic skills
+    tempSkills.healing    = tempSkills.automaton_magic;
+    tempSkills.enhancing  = tempSkills.automaton_magic;
+    tempSkills.enfeebling = tempSkills.automaton_magic;
+    tempSkills.elemental  = tempSkills.automaton_magic;
+    tempSkills.dark       = tempSkills.automaton_magic;
+
+    tempSkills.automaton_ranged = tempSkills.automaton_ranged + meritbonus + rangedBonus;
+    tempSkills.automaton_melee  = tempSkills.automaton_melee + meritbonus + meleeBonus;
+
+    return tempSkills;
 }
 
 } // namespace puppetutils

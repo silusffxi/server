@@ -38,10 +38,10 @@ local attohwaChasmGlobal =
         local newTimer = math.randomInt(30, 40)
 
         if GetSystemTime() >= timer then
-            if npc:getAnimation() == xi.anim.CLOSE_DOOR then
-                npc:setAnimation(xi.anim.OPEN_DOOR)
+            if npc:getAnimation() == xi.animation.CLOSE_DOOR then
+                npc:setAnimation(xi.animation.OPEN_DOOR)
             else
-                npc:setAnimation(xi.anim.CLOSE_DOOR)
+                npc:setAnimation(xi.animation.CLOSE_DOOR)
             end
 
             npc:setLocalVar('timer', GetSystemTime() + newTimer)
@@ -71,14 +71,14 @@ local attohwaChasmGlobal =
     end,
 
     removeMimeoKIs = function(player)
-        if player:hasKeyItem(xi.ki.MIMEO_STONE) then
-            player:delKeyItem(xi.ki.MIMEO_STONE)
-            player:messageSpecial(ID.text.MIMEO_JEWEL_OFFSET + 4, xi.ki.MIMEO_STONE)
+        if player:hasKeyItem(xi.keyItem.MIMEO_STONE) then
+            player:delKeyItem(xi.keyItem.MIMEO_STONE)
+            player:messageSpecial(ID.text.MIMEO_JEWEL_OFFSET + 4, xi.keyItem.MIMEO_STONE)
         end
 
-        if player:hasKeyItem(xi.ki.MIMEO_JEWEL) then
-            player:delKeyItem(xi.ki.MIMEO_JEWEL)
-            player:messageSpecial(ID.text.MIMEO_JEWEL_OFFSET + 4, xi.ki.MIMEO_JEWEL)
+        if player:hasKeyItem(xi.keyItem.MIMEO_JEWEL) then
+            player:delKeyItem(xi.keyItem.MIMEO_JEWEL)
+            player:messageSpecial(ID.text.MIMEO_JEWEL_OFFSET + 4, xi.keyItem.MIMEO_JEWEL)
         end
     end,
 }

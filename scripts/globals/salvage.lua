@@ -63,7 +63,7 @@ xi.salvage.instanceRegister = function(player, fireFlies)
     player:addStatusEffect(xi.effect.IMPAIRMENT, { power = 3, duration = 6000, origin = player })
     player:addStatusEffect(xi.effect.DEBILITATION, { power = 511, duration = 6000, origin = player })
     player:addTempItem(fireFlies)
-    player:delKeyItem(xi.ki.REMNANTS_PERMIT)
+    player:delKeyItem(xi.keyItem.REMNANTS_PERMIT)
 end
 
 xi.salvage.onFailure = function(instance)
@@ -190,7 +190,7 @@ xi.salvage.unsealDoors = function(instance, indexID)
 end
 
 xi.salvage.openBossDoor = function(npc)
-    if npc:getAnimation() == xi.anim.CLOSE_DOOR then
+    if npc:getAnimation() == xi.animation.CLOSE_DOOR then
         local instance = npc:getInstance()
 
         npc:openDoor(15)

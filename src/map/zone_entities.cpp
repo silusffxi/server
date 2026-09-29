@@ -22,10 +22,11 @@
 #include "zone_entities.h"
 
 #include "common/logging_context.h"
+#include "data/enums/detects.h"
+#include "data/enums/mob_mod.h"
 #include "enmity_container.h"
 #include "instance.h"
 #include "latent_effect_container.h"
-#include "mob_modifier.h"
 #include "party.h"
 #include "recast_container.h"
 #include "spawn_handler.h"
@@ -82,7 +83,6 @@ constexpr auto CHARACTER_SYNC_LIMIT_MAX               = 32U;
 constexpr auto CHARACTER_SYNC_DISTANCE_SWAP_THRESHOLD = 30U;
 constexpr auto CHARACTER_SYNC_PARTY_SIGNIFICANCE      = 100000U;
 constexpr auto CHARACTER_SYNC_ALLI_SIGNIFICANCE       = 10000U;
-constexpr auto PERSIST_CHECK_CHARACTERS               = 20U;
 constexpr auto INTERMEDIATE_CONTAINER_RESERVE_SIZE    = 16U;
 
 inline bool isWithinVerticalDistance(CBaseEntity* source, CBaseEntity* target)
@@ -375,7 +375,7 @@ void CZoneEntities::FindPartyForMob(CBaseEntity* PEntity)
 
     bool forceLink = PMob->ShouldForceLink();
     // check for sublinks even if a family doesn't link with itself
-    int16 sublink = PMob->getMobMod(MOBMOD_SUBLINK);
+    int16 sublink = PMob->getMobMod(xi::MobMod::Sublink);
     if ((forceLink || PMob->m_Link || sublink) && PMob->PParty == nullptr)
     {
         FOR_EACH_PAIR_CAST_SECOND(CMobEntity*, PCurrentMob, m_mobList)
@@ -395,10 +395,10 @@ void CZoneEntities::FindPartyForMob(CBaseEntity* PEntity)
             // If no SUPERLINK then check if forceLink is enabled and the mob should force link.
             // Otherwise, mobs link by family or sublink as normal.
             bool  match     = false;
-            int16 superlink = PMob->getMobMod(MOBMOD_SUPERLINK);
+            int16 superlink = PMob->getMobMod(xi::MobMod::Superlink);
             if (superlink)
             {
-                match = PCurrentMob->getMobMod(MOBMOD_SUPERLINK) == superlink;
+                match = PCurrentMob->getMobMod(xi::MobMod::Superlink) == superlink;
             }
             else if (forceLink)
             {
@@ -407,7 +407,7 @@ void CZoneEntities::FindPartyForMob(CBaseEntity* PEntity)
             else
             {
                 match = (PCurrentMob->m_Link && PCurrentMob->m_Family == PMob->m_Family) ||
-                        (sublink && sublink == PCurrentMob->getMobMod(MOBMOD_SUBLINK));
+                        (sublink && sublink == PCurrentMob->getMobMod(xi::MobMod::Sublink));
             }
 
             if (match && (PCurrentMob->PMaster == nullptr || PCurrentMob->PMaster->objtype == TYPE_MOB))
@@ -420,33 +420,60 @@ void CZoneEntities::FindPartyForMob(CBaseEntity* PEntity)
     }
 }
 
-void CZoneEntities::TransportDepart(uint16 boundary, uint16 prevZoneId, uint16 transport)
+namespace
+{
+
+void sendTransportEvent(CCharEntity* PChar, const xi::ZoneId prevZoneId, const std::string_view transport)
+{
+    if (PChar->eventPreparation->targetEntity != nullptr)
+    {
+        // The player talked to one of the guys on the boat, and the event target is wrong.
+        // This leads to the wrong script being loaded and you get stuck on a black screen
+        // instead of loading into the port.
+
+        // Attempt to load the proper script
+        PChar->eventPreparation->targetEntity = nullptr;
+        size_t deleteStart                    = PChar->eventPreparation->scriptFile.find("npcs/");
+        size_t deleteEnd                      = PChar->eventPreparation->scriptFile.find(".lua");
+
+        if (deleteStart != std::string::npos && deleteEnd != std::string::npos)
+        {
+            PChar->eventPreparation->scriptFile.replace(deleteStart, deleteEnd - deleteStart, "Zone");
+        }
+    }
+
+    luautils::OnTransportEvent(PChar, prevZoneId, transport);
+}
+
+} // namespace
+
+void CZoneEntities::TransportDepart(const uint16 boundary, const xi::ZoneId prevZoneId, const std::string_view transport)
 {
     TracyZoneScoped;
 
     FOR_EACH_PAIR_CAST_SECOND(CCharEntity*, PCurrentChar, m_charList)
     {
-        if (PCurrentChar->loc.boundary == boundary)
+        if (PCurrentChar->isInTriggerArea(boundary))
         {
-            if (PCurrentChar->eventPreparation->targetEntity != nullptr)
-            {
-                // The player talked to one of the guys on the boat, and the event target is wrong.
-                // This leads to the wrong script being loaded and you get stuck on a black screen
-                // instead of loading into the port.
-
-                // Attempt to load the proper script
-                PCurrentChar->eventPreparation->targetEntity = nullptr;
-                size_t deleteStart                           = PCurrentChar->eventPreparation->scriptFile.find("npcs/");
-                size_t deleteEnd                             = PCurrentChar->eventPreparation->scriptFile.find(".lua");
-
-                if (deleteStart != std::string::npos && deleteEnd != std::string::npos)
-                {
-                    PCurrentChar->eventPreparation->scriptFile.replace(deleteStart, deleteEnd - deleteStart, "Zone");
-                }
-            }
-
-            luautils::OnTransportEvent(PCurrentChar, prevZoneId, transport);
+            sendTransportEvent(PCurrentChar, prevZoneId, transport);
         }
+    }
+}
+
+void CZoneEntities::DisembarkAll()
+{
+    TracyZoneScoped;
+
+    FOR_EACH_PAIR_CAST_SECOND(CCharEntity*, PCurrentChar, m_charList)
+    {
+        // This runs every tick until the zone is empty.
+        // Anyone already watching the event is on their way out, and restarting it would mean they never land.
+        if (PCurrentChar->isNpcLocked())
+        {
+            continue;
+        }
+
+        sendTransportEvent(PCurrentChar, m_zone->GetID(), "");
     }
 }
 
@@ -460,7 +487,7 @@ void CZoneEntities::WeatherChange(xi::Weather weather)
     {
         PCurrentMob->PAI->EventHandler.triggerListener("WEATHER_CHANGE", CLuaBaseEntity(PCurrentMob), static_cast<int>(weather), element);
 
-        if ((static_cast<xi::Detects>(PCurrentMob->getMobMod(MOBMOD_DETECTION)) & xi::Detects::Scent) != xi::Detects::None)
+        if ((static_cast<xi::Detects>(PCurrentMob->getMobMod(xi::MobMod::Detection)) & xi::Detects::Scent) != xi::Detects::None)
         {
             PCurrentMob->m_disableScent = (weather == xi::Weather::Rain || weather == xi::Weather::Squall || weather == xi::Weather::Blizzards);
         }
@@ -475,7 +502,7 @@ void CZoneEntities::WeatherChange(xi::Weather weather)
     }
 }
 
-void CZoneEntities::MusicChange(MusicSlot slotId, uint16 trackId)
+void CZoneEntities::MusicChange(xi::MusicSlot slotId, uint16 trackId)
 {
     TracyZoneScoped;
 
@@ -519,7 +546,7 @@ void CZoneEntities::DecreaseZoneCounter(CCharEntity* PChar)
             PChar->PPet->status = xi::Status::Disappear;
             if (static_cast<CPetEntity*>(PChar->PPet)->getPetType() == PET_TYPE::AVATAR)
             {
-                PChar->setModifier(Mod::AVATAR_PERPETUATION, 0);
+                PChar->setModifier(xi::Mod::AVATAR_PERPETUATION, 0);
             }
         }
 
@@ -564,14 +591,14 @@ void CZoneEntities::DecreaseZoneCounter(CCharEntity* PChar)
     FOR_EACH_PAIR_CAST_SECOND(CMobEntity*, PCurrentMob, m_mobList)
     {
         PCurrentMob->PEnmityContainer->LogoutReset(PChar->id);
-        if (PCurrentMob->m_OwnerID.id == PChar->id)
+        if (PCurrentMob->m_OwnerID.UniqueNo == PChar->id)
         {
             PCurrentMob->m_OwnerID.clean();
             PCurrentMob->updatemask |= UPDATE_STATUS;
         }
-        if (PCurrentMob->GetBattleTargetID() == PChar->targid)
+        if (PCurrentMob->battleTarget() == PChar)
         {
-            PCurrentMob->SetBattleTargetID(0);
+            PCurrentMob->setBattleTarget(std::nullopt);
         }
     }
 
@@ -581,7 +608,7 @@ void CZoneEntities::DecreaseZoneCounter(CCharEntity* PChar)
         charutils::forceSynthCritFail("DecreaseZoneCounter", PChar);
     }
 
-    if (PChar->animation == ANIMATION_SYNTH)
+    if (PChar->animation == xi::Animation::Synth)
     {
         synthutils::sendSynthDone(PChar);
     }
@@ -660,7 +687,7 @@ void CZoneEntities::AssignDynamicTargIDandLongID(CBaseEntity* PEntity)
     // We found our targid, the next dynamic entity will want to start searching at +1 of this.
     m_nextDynamicTargID = targid + 1;
 
-    auto id = 0x01000000 | (m_zone->GetID() << 0x0C) | (targid + 0x0100);
+    auto id = 0x01000000 | (static_cast<uint32>(m_zone->GetID()) << 0x0C) | (targid + 0x0100);
 
     m_dynamicTargIds.insert(targid);
 
@@ -844,10 +871,10 @@ void CZoneEntities::tapMobAggro(CCharEntity* PChar, CMobEntity* PCurrentMob)
         return;
     }
 
-    bool validAggro = mobCheck > EMobDifficulty::TooWeak || PChar->isSitting() || PCurrentMob->getMobMod(MOBMOD_ALWAYS_AGGRO);
+    bool validAggro = mobCheck > EMobDifficulty::TooWeak || PChar->isSitting() || PCurrentMob->getMobMod(xi::MobMod::AlwaysAggro);
     if (validAggro && PController->CanAggroTarget(PChar))
     {
-        PCurrentMob->PAI->Engage(PChar->targid);
+        PCurrentMob->PAI->Engage(PChar->entityId());
     }
 }
 
@@ -973,7 +1000,7 @@ void CZoneEntities::SpawnNPCs(CCharEntity* PChar)
 
     // NPCs and transports are both objtype TYPE_NPC and share SpawnNPCList. One combined predicate
     // covers their differing rules: a transport (ship model) spawns by proximity unless it's
-    // alwaysRelevant (those are driven by SpawnTransport/TransportTimer, not this proximity sync);
+    // alwaysRelevant (those are driven by SpawnTransport/ShipTimer, not this proximity sync);
     // a regular NPC spawns when in range OR alwaysRelevant. The alwaysRelevant NPCs - which a 3x3
     // range query can't reach - are passed in via alwaysRelevantNpcs_ (collected each rebuild).
     syncSpawnListWithGrid(
@@ -1045,7 +1072,7 @@ void CZoneEntities::SpawnPCs(CCharEntity* PChar)
     TracyZoneScoped;
 
     // TODO: This is a temporary fix so that Feretory and Mog Garden _seem_ like a solo zones.
-    if (PChar->loc.zone->GetID() == ZONE_FERETORY || PChar->loc.zone->GetID() == ZONE_MOG_GARDEN)
+    if (PChar->loc.zone->GetID() == xi::ZoneId::Feretory || PChar->loc.zone->GetID() == xi::ZoneId::MogGarden)
     {
         return;
     }
@@ -1061,7 +1088,7 @@ void CZoneEntities::SpawnPCs(CCharEntity* PChar)
             continue;
         }
 
-        CBaseEntity* PTarget = PState->GetTarget();
+        CBaseEntity* PTarget = PState->target().resolve();
         if (PTarget && PTarget->objtype == TYPE_PC && PTarget->id != PChar->id)
         {
             scoreBonus[PTarget->id] += CHARACTER_SYNC_DISTANCE_SWAP_THRESHOLD;
@@ -1300,8 +1327,6 @@ void CZoneEntities::SpawnTransport(CCharEntity* PChar)
 
 CBaseEntity* CZoneEntities::GetEntity(uint16 targid, uint8 filter)
 {
-    TracyZoneScoped;
-
     const auto findEntity = [&](const EntityList_t& entityList) -> CBaseEntity*
     {
         const auto it = entityList.find(targid);
@@ -1411,8 +1436,6 @@ CCharEntity* CZoneEntities::GetCharByName(const std::string& name)
 
 CCharEntity* CZoneEntities::GetCharByID(uint32 id)
 {
-    TracyZoneScoped;
-
     FOR_EACH_PAIR_CAST_SECOND(CCharEntity*, PCurrentChar, m_charList)
     {
         if (PCurrentChar->id == id)
@@ -1425,7 +1448,7 @@ CCharEntity* CZoneEntities::GetCharByID(uint32 id)
 
 void CZoneEntities::UpdateEntityPacket(CBaseEntity* PEntity, ENTITYUPDATE type, uint8 updatemask, bool alwaysInclude)
 {
-    TracyZoneScoped;
+    TracyZoneScopedN("CZoneEntities::UpdateEntityPacket");
 
     // Do not send packets that are updates of a hidden GM
     if (PEntity->objtype == TYPE_PC)
@@ -1486,7 +1509,7 @@ void CZoneEntities::UpdateEntityPacket(CBaseEntity* PEntity, ENTITYUPDATE type, 
 
 void CZoneEntities::PushPacket(CBaseEntity* PEntity, GLOBAL_MESSAGE_TYPE message_type, const std::unique_ptr<CBasicPacket>& packet)
 {
-    TracyZoneScoped;
+    TracyZoneScopedN("CZoneEntities::PushPacket");
     TracyZoneHex16(packet->getType());
 
     if (!packet)
@@ -1659,9 +1682,9 @@ void CZoneEntities::WideScan(CCharEntity* PChar, uint16 radius)
     };
 
     PChar->pushPacket<GP_SERV_COMMAND_TRACKING_STATE>(GP_TRACKING_STATE::ListStart);
-    for (const auto& entityList : { m_npcList, m_mobList })
+    for (const EntityList_t* entityList : { &m_npcList, &m_mobList })
     {
-        for (const auto& [_, PEntity] : entityList)
+        for (const auto& [_, PEntity] : *entityList)
         {
             if (PEntity->isWideScannable() && isWithinDistance(PChar->loc.p, PEntity->loc.p, radius) && isSameFloor(PEntity))
             {
@@ -1720,11 +1743,6 @@ auto CZoneEntities::mobTick(CMobEntity* PMob, timer::time_point tick) -> Task<vo
                 PChar->PClaimedMob = nullptr;
             }
 
-            if (PChar->currentEvent && PChar->currentEvent->targetEntity == PMob)
-            {
-                PChar->currentEvent->targetEntity = nullptr;
-            }
-
             if (PChar->SpawnMOBList.find(PMob->id) != PChar->SpawnMOBList.end())
             {
                 PChar->SpawnMOBList.erase(PMob->id);
@@ -1760,7 +1778,7 @@ auto CZoneEntities::mobAggroCheck(CMobEntity* PMob, timer::time_point tick) -> T
             CMobController* PController = static_cast<CMobController*>(PCurrentMob->PAI->GetController());
             if (PController != nullptr && PController->CanAggroTarget(PMob))
             {
-                PCurrentMob->PAI->Engage(PMob->targid);
+                PCurrentMob->PAI->Engage(PMob->entityId());
             }
         }
     };
@@ -1917,7 +1935,7 @@ auto CZoneEntities::charTick(CCharEntity* PChar, timer::time_point tick) -> Task
         }
     }
 
-    if (PChar->requestedZoneChange || PChar->requestedWarp || PChar->status == xi::Status::Shutdown)
+    if (PChar->requestedZoneChange || PChar->requestedWarp != WarpRequest::None || PChar->status == xi::Status::Shutdown)
     {
         m_charsToChangeZone.insert(PChar);
     }
@@ -1927,7 +1945,7 @@ auto CZoneEntities::charTick(CCharEntity* PChar, timer::time_point tick) -> Task
 
 auto CZoneEntities::ZoneServer(timer::time_point tick) -> Task<void>
 {
-    TracyZoneScoped;
+    TracyZoneScopedN("CZoneEntities::ZoneServer");
     TracyZoneString(m_zone->getName());
     LogWith({ "zone", { { "name", m_zone->getName() }, { "id", m_zone->GetID() } } });
 
@@ -2023,10 +2041,27 @@ auto CZoneEntities::ZoneServer(timer::time_point tick) -> Task<void>
     // Cleanup logic
     //
 
+    auto forgetEventTarget = [&](const CBaseEntity* PEntity)
+    {
+        FOR_EACH_PAIR_CAST_SECOND(CCharEntity*, PChar, m_charList)
+        {
+            if (PChar->currentEvent->targetEntity == PEntity)
+            {
+                PChar->currentEvent->targetEntity = nullptr;
+            }
+
+            if (PChar->eventPreparation->targetEntity == PEntity)
+            {
+                PChar->eventPreparation->targetEntity = nullptr;
+            }
+        }
+    };
+
     for (const auto* PMob : m_mobsToDelete)
     {
         if (auto itr = m_mobList.find(PMob->targid); itr != m_mobList.end())
         {
+            forgetEventTarget(PMob);
             onEntityDespawned(itr->second);
             m_mobList.erase(itr);
             m_dynamicTargIdsToDelete.emplace_back(PMob->targid, timer::now());
@@ -2038,6 +2073,7 @@ auto CZoneEntities::ZoneServer(timer::time_point tick) -> Task<void>
     {
         if (auto itr = m_npcList.find(PNpc->targid); itr != m_npcList.end())
         {
+            forgetEventTarget(PNpc);
             onEntityDespawned(itr->second);
             m_npcList.erase(itr);
             m_dynamicTargIdsToDelete.emplace_back(PNpc->targid, timer::now());
@@ -2096,19 +2132,21 @@ auto CZoneEntities::ZoneServer(timer::time_point tick) -> Task<void>
             charutils::ForceLogout(PChar);
             shouldErase = true;
         }
-        else if (PChar->requestedWarp)
+        else if (PChar->requestedWarp != WarpRequest::None)
         {
             const bool ready = co_await zoneutils::IsZoneReady(scheduler_, config_, PChar->profile.home_point.destination);
             if (ready)
             {
                 PChar->clearPacketList();
-                if (charutils::HomePoint(PChar, PChar->isDead()))
+
+                const bool revive = PChar->requestedWarp == WarpRequest::HomePoint && PChar->isDead();
+                if (charutils::HomePoint(PChar, revive))
                 {
                     shouldErase = true;
                 }
             }
         }
-        else if (PChar->loc.destination != 0xFFFF)
+        else if (PChar->loc.destination != ZONE_NO_DESTINATION)
         {
             const bool ready = co_await zoneutils::IsZoneReady(scheduler_, config_, PChar->loc.destination);
             if (ready)
@@ -2152,39 +2190,8 @@ auto CZoneEntities::ZoneServer(timer::time_point tick) -> Task<void>
         m_EffectCheckTime = m_EffectCheckTime + 3s > tick ? m_EffectCheckTime + 3s : tick + 3s;
     }
 
-    if (tick > m_charPersistTime && !m_charTargIds.empty())
-    {
-        m_charPersistTime = tick + 1s;
-
-        std::set<uint16>::iterator charTargIdIter = m_charTargIds.lower_bound(m_lastCharPersistTargId);
-        if (charTargIdIter == m_charTargIds.end())
-        {
-            charTargIdIter = m_charTargIds.begin();
-        }
-
-        size_t maxChecks = std::min<size_t>(m_charTargIds.size(), PERSIST_CHECK_CHARACTERS);
-
-        for (size_t i = 0; i < maxChecks; i++)
-        {
-            CCharEntity* PChar = static_cast<CCharEntity*>(m_charList[*charTargIdIter]);
-            ++charTargIdIter;
-            if (charTargIdIter == m_charTargIds.end())
-            {
-                charTargIdIter = m_charTargIds.begin();
-            }
-
-            if (PChar && PChar->PersistData(tick))
-            {
-                // We only want to persist at most 1 character per zone tick
-                break;
-            }
-        }
-        m_lastCharPersistTargId = *charTargIdIter;
-    }
-
     if (tick > m_computeTime && !m_charTargIds.empty())
     {
-        // Tick time is irregular to avoid consistently happening at the same time as char persistence
         m_computeTime = tick + 567ms;
 
         std::set<uint16>::iterator charTargIdIter = m_charTargIds.lower_bound(m_lastCharComputeTargId);

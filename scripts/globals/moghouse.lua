@@ -27,7 +27,6 @@ xi.moghouse.moghouseZones =
     xi.zone.SOUTHERN_SAN_DORIA_S, -- 80
     xi.zone.BASTOK_MARKETS_S,     -- 87
     xi.zone.WINDURST_WATERS_S,    -- 94
-    xi.zone.RESIDENTIAL_AREA,     -- 219
     xi.zone.SOUTHERN_SAN_DORIA,   -- 230
     xi.zone.NORTHERN_SAN_DORIA,   -- 231
     xi.zone.PORT_SAN_DORIA,       -- 232
@@ -176,7 +175,7 @@ xi.moghouse.set2ndFloorStyle = function(player, style)
 end
 
 xi.moghouse.getAvailableMusic = function(player)
-    -- See documentation/songdata.txt or documentation/MusicIDs.txt for song data.
+    -- See docs/songdata.txt or docs/MusicIDs.txt for song data.
     local possibleSongs = {}
 
     local orchestrion  = player:findItem(xi.item.ORCHESTRION)
@@ -231,7 +230,7 @@ xi.moghouse.trySetMusic = function(player)
     if #possibleSongs > 0 then
         -- This needs a moment before music changes can take effect
         player:timer(1000, function(playerArg)
-            playerArg:changeMusic(6, utils.randomEntry(possibleSongs))
+            playerArg:changeMusic(xi.musicSlot.MOG_HOUSE, utils.randomEntry(possibleSongs))
         end)
     end
 end

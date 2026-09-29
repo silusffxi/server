@@ -83,7 +83,7 @@ void CLuaClientEntityPair::tick()
  *  Notes   : Will error if player is in an event during zoning
  ************************************************************************/
 
-void CLuaClientEntityPair::gotoZone(ZONEID zoneId, sol::optional<sol::table> pos)
+void CLuaClientEntityPair::gotoZone(xi::ZoneId zoneId, sol::optional<sol::table> pos)
 {
     doGotoZone(zoneId, std::move(pos), false);
 }
@@ -95,12 +95,12 @@ void CLuaClientEntityPair::gotoZone(ZONEID zoneId, sol::optional<sol::table> pos
  *  Notes   : Errors if the player is in an event.
  ************************************************************************/
 
-void CLuaClientEntityPair::gotoMogHouse(ZONEID zoneId)
+void CLuaClientEntityPair::gotoMogHouse(xi::ZoneId zoneId)
 {
     doGotoZone(zoneId, sol::nullopt, true);
 }
 
-void CLuaClientEntityPair::doGotoZone(ZONEID zoneId, sol::optional<sol::table> pos, bool mogHouse)
+void CLuaClientEntityPair::doGotoZone(xi::ZoneId zoneId, sol::optional<sol::table> pos, bool mogHouse)
 {
     // Check if player is in an event
     if (testChar_->entity()->isInEvent())
@@ -160,6 +160,17 @@ void CLuaClientEntityPair::doGotoZone(ZONEID zoneId, sol::optional<sol::table> p
 auto CLuaClientEntityPair::isPendingZone() const -> bool
 {
     return testChar_->entity()->requestedZoneChange;
+}
+
+/************************************************************************
+ *  Function: getSearchMessage()
+ *  Purpose : Returns the search comment the server currently holds for the player
+ *  Example : assert(player:getSearchMessage() == 'LFP')
+ ************************************************************************/
+
+auto CLuaClientEntityPair::getSearchMessage() const -> std::string
+{
+    return testChar_->entity()->search.message;
 }
 
 /************************************************************************
@@ -363,6 +374,7 @@ void CLuaClientEntityPair::Register()
     SOL_REGISTER("gotoZone", CLuaClientEntityPair::gotoZone);
     SOL_REGISTER("gotoMogHouse", CLuaClientEntityPair::gotoMogHouse);
     SOL_REGISTER("isPendingZone", CLuaClientEntityPair::isPendingZone);
+    SOL_REGISTER("getSearchMessage", CLuaClientEntityPair::getSearchMessage);
     SOL_REGISTER("getItemInvSlot", CLuaClientEntityPair::getItemInvSlot);
     SOL_REGISTER("claimAndKillMob", CLuaClientEntityPair::claimAndKillMob);
     SOL_REGISTER("claimAndKillMobs", CLuaClientEntityPair::claimAndKillMobs);

@@ -28,6 +28,8 @@
 #include "common/cbasetypes.h"
 #include "common/timer.h"
 
+#include "data/enums/zone.h"
+
 #include <common/types/fn.h>
 #include <common/types/hash_map.h>
 
@@ -133,7 +135,7 @@ public:
 
     uint16                        GetID() const;
     CZone*                        GetZone() const;
-    uint16                        GetZoneID() const;
+    auto                          GetZoneID() const -> xi::ZoneId;
     const std::string&            GetName() const;
     const BattlefieldInitiator_t& GetInitiator() const;
     uint8                         GetArea() const;
@@ -142,7 +144,6 @@ public:
     uint16                        GetRuleMask() const;
     timer::time_point             GetStartTime() const;
     timer::duration               GetTimeInside() const;
-    timer::time_point             GetFightTime() const;
     timer::duration               GetTimeLimit() const;
     timer::time_point             GetWipeTime() const;
     size_t                        GetMaxParticipants() const;
@@ -183,6 +184,9 @@ public:
     bool         InsertEntity(CBaseEntity* PEntity, bool inBattlefield = false, BATTLEFIELDMOBCONDITION conditions = CONDITION_NONE, bool ally = false);
     CBaseEntity* GetEntity(CBaseEntity* PEntity);
     bool         IsRegistered(CCharEntity* PChar);
+    bool         HasClearance(CCharEntity* PChar) const;
+    void         RemoveRegistration(CCharEntity* PChar);
+    void         GrantClearance(CCharEntity* PChar);
     bool         RemoveEntity(CBaseEntity* PEntity, uint8 leavecode = 0);
     void         onTick(timer::time_point time);
     bool         CanCleanup(bool cleanup = false);

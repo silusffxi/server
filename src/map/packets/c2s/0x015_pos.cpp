@@ -21,6 +21,8 @@
 
 #include "0x015_pos.h"
 
+#include <cmath>
+
 #include "entities/char_entity.h"
 #include "packets/s2c/0x0f5_tracking_pos.h"
 
@@ -34,6 +36,11 @@ auto GP_CLI_COMMAND_POS::validate(MapSession* PSession, const CCharEntity* PChar
 void GP_CLI_COMMAND_POS::process(MapSession* PSession, CCharEntity* PChar) const
 {
     if (PChar->pendingPositionUpdate)
+    {
+        return;
+    }
+
+    if (!std::isfinite(this->x) || !std::isfinite(this->y) || !std::isfinite(this->z))
     {
         return;
     }
@@ -66,11 +73,15 @@ void GP_CLI_COMMAND_POS::process(MapSession* PSession, CCharEntity* PChar) const
         PChar->loc.p.rotation = newRotation;
 
         PChar->m_TargID = newTargID;
+
+        PChar->m_lastMoveDistance = distance(PChar->m_previousLocation.p, PChar->loc.p, true);
     }
 
     if (moved)
     {
         PChar->updatemask |= UPDATE_POS; // Indicate that we want to update this PChar's PChar->loc or targID
+
+        PChar->setPersist(CharPersist::Position);
 
         if (PChar->loc.zone != nullptr)
         {
@@ -96,7 +107,7 @@ void GP_CLI_COMMAND_POS::process(MapSession* PSession, CCharEntity* PChar) const
         PChar->WideScanTarget,
         [&](const auto& wideScanTarget)
         {
-            if (const auto* PWideScanEntity = PChar->GetEntity(wideScanTarget.targid, TYPE_MOB | TYPE_NPC))
+            if (const auto* PWideScanEntity = wideScanTarget.resolve())
             {
                 PChar->pushPacket<GP_SERV_COMMAND_TRACKING_POS>(PWideScanEntity);
 

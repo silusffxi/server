@@ -42,7 +42,6 @@
 #include "packets/s2c/0x029_battle_message.h"
 #include "packets/s2c/0x076_group_effects.h"
 #include "packets/s2c/0x0ac_command_data.h"
-#include "packets/s2c/0x0b4_config.h"
 #include "packets/s2c/0x0c8_group_tbl.h"
 #include "packets/s2c/0x0dd_group_list.h"
 
@@ -54,8 +53,8 @@ struct CParty::partyInfo_t
     uint32      allianceid = {};
     std::string name       = {};
     uint16      flags      = {};
-    uint16      zone       = {};
-    uint16      prev_zone  = {};
+    xi::ZoneId  zone       = {};
+    xi::ZoneId  prev_zone  = {};
 };
 
 // Constructor
@@ -123,7 +122,7 @@ void CParty::DisbandParty(bool playerInitiated)
     {
         SetQuarterMaster("");
 
-        this->PushPacket(0, 0, std::make_unique<GP_SERV_COMMAND_GROUP_TBL>(nullptr));
+        this->PushPacket(0, xi::ZoneId::Unknown, std::make_unique<GP_SERV_COMMAND_GROUP_TBL>(nullptr));
 
         for (auto& member : members)
         {
@@ -230,7 +229,7 @@ void CParty::AssignPartyRole(const std::string& MemberName, const GP_CLI_COMMAND
 }
 
 // get number of members in specified zone
-uint8 CParty::MemberCount(uint16 ZoneID)
+auto CParty::MemberCount(const xi::ZoneId ZoneID) -> uint8
 {
     uint8 count = 0;
 
@@ -475,6 +474,21 @@ void CParty::PopMember(CBattleEntity* PEntity)
         members.erase(memberToDelete);
     }
 
+    if (m_PLeader == PEntity)
+    {
+        m_PLeader = nullptr;
+    }
+
+    if (m_PQuarterMaster == PEntity)
+    {
+        m_PQuarterMaster = nullptr;
+    }
+
+    if (m_PSyncTarget == PEntity)
+    {
+        m_PSyncTarget = nullptr;
+    }
+
     // free memory, party will re reinsatiated when they zone back in
     if (members.empty())
     {
@@ -494,6 +508,11 @@ void CParty::PopMember(CBattleEntity* PEntity)
                     continue;
                 }
                 it++;
+            }
+
+            if (m_PAlliance->partyList.empty())
+            {
+                delete m_PAlliance; // cpp.sh allow
             }
         }
         delete this; // cpp.sh allow
@@ -576,8 +595,8 @@ std::vector<CParty::partyInfo_t> CParty::GetPartyInfo() const
                 .allianceid = rset->get<uint32>("allianceid"),
                 .name       = rset->get<std::string>("charname"),
                 .flags      = rset->get<uint16>("partyflag"),
-                .zone       = rset->get<uint16>("pos_zone"),
-                .prev_zone  = rset->get<uint16>("pos_prevzone"),
+                .zone       = rset->get<xi::ZoneId>("pos_zone"),
+                .prev_zone  = rset->get<xi::ZoneId>("pos_prevzone"),
             });
         }
     }
@@ -663,15 +682,7 @@ void CParty::AddMember(CBattleEntity* PEntity)
 
         if (PChar->isSeekingParty())
         {
-            PChar->playerConfig.InviteFlg = false;
-            PChar->updatemask |= UPDATE_HP;
-
-            charutils::SaveCharStats(PChar);
-            charutils::SavePlayerSettings(PChar);
-
-            PChar->pushPacket<GP_SERV_COMMAND_CONFIG>(PChar);
-            PChar->pushPacket<CCharStatusPacket>(PChar);
-            PChar->pushPacket<CCharSyncPacket>(PChar);
+            charutils::RemoveSeekFlag(PChar);
         }
 
         PChar->PTreasurePool->updatePool(PChar);
@@ -683,6 +694,8 @@ void CParty::AddMember(CBattleEntity* PEntity)
             {
                 PChar->pushPacket<GP_SERV_COMMAND_BATTLE_MESSAGE>(PChar, PChar, 0, m_PSyncTarget->GetMLevel(), MsgStd::LevelSyncActivated);
                 PChar->StatusEffectContainer->DelStatusEffectsByFlag(xi::StatusEffectFlag::Dispelable | xi::StatusEffectFlag::OnZone);
+                PChar->health.tp = 0;
+                PChar->updatemask |= UPDATE_HP;
                 PChar->StatusEffectContainer->AddStatusEffectSilent(xi::StatusEffect::LevelSync, static_cast<uint16>(xi::StatusEffect::LevelSync), m_PSyncTarget->GetMLevel(), 0s, 0s);
                 PChar->loc.zone->PushPacket(PChar, CHAR_INRANGE, std::make_unique<CCharSyncPacket>(PChar));
             }
@@ -744,20 +757,6 @@ void CParty::AddMember(uint32 id)
                 .partyId = m_PartyID,
             });
         }
-
-        /*if (PChar->nameflags.flags & FLAG_INVITE)
-        {
-            PChar->nameflags.flags ^= FLAG_INVITE;
-            PChar->updatemask |= UPDATE_HP;
-
-            charutils::SaveCharStats(PChar);
-
-            PChar->status = STATUS_UPDATE;
-            PChar->pushPacket<GP_SERV_COMMAND_CONFIG>(PChar);
-            PChar->pushPacket<CCharStatusPacket>(PChar);
-            PChar->pushPacket<CCharSyncPacket>(PChar);
-        }
-        PChar->PTreasurePool->UpdatePool(PChar);*/
     }
 }
 
@@ -904,7 +903,7 @@ void CParty::ReloadParty()
                     }
                     else
                     {
-                        uint16 zoneid = memberinfo.zone == 0 ? memberinfo.prev_zone : memberinfo.zone;
+                        const auto zoneid = memberinfo.zone == xi::ZoneId::Unknown ? memberinfo.prev_zone : memberinfo.zone;
                         PChar->pushPacket<GP_SERV_COMMAND_GROUP_LIST>(memberinfo.id, memberinfo.name, memberinfo.flags, j, zoneid);
                     }
                     j++;
@@ -957,7 +956,7 @@ void CParty::ReloadParty()
                 }
                 else
                 {
-                    uint16 zoneid = memberinfo.zone == 0 ? memberinfo.prev_zone : memberinfo.zone;
+                    const auto zoneid = memberinfo.zone == xi::ZoneId::Unknown ? memberinfo.prev_zone : memberinfo.zone;
                     PChar->pushPacket<GP_SERV_COMMAND_GROUP_LIST>(memberinfo.id, memberinfo.name, memberinfo.flags, j, zoneid);
                 }
                 j++;
@@ -997,7 +996,7 @@ void CParty::ReloadPartyMembers(CCharEntity* PChar)
         }
         else
         {
-            uint16 zoneid = memberinfo.zone == 0 ? memberinfo.prev_zone : memberinfo.zone;
+            const auto zoneid = memberinfo.zone == xi::ZoneId::Unknown ? memberinfo.prev_zone : memberinfo.zone;
             PChar->pushPacket<GP_SERV_COMMAND_GROUP_LIST>(memberinfo.id, memberinfo.name, memberinfo.flags, j, zoneid);
         }
         j++;
@@ -1120,7 +1119,7 @@ void CParty::SetSyncTarget(const std::string& MemberName, MsgStd message)
 
     if (settings::get<bool>("map.LEVEL_SYNC_ENABLE"))
     {
-        if (PEntity && PEntity->objtype == TYPE_PC)
+        if (PEntity && PEntity->objtype == TYPE_PC && GetLeader() != nullptr)
         {
             CCharEntity* PChar = (CCharEntity*)PEntity;
             // enable level sync
@@ -1158,6 +1157,8 @@ void CParty::SetSyncTarget(const std::string& MemberName, MsgStd message)
                     {
                         member->pushPacket<GP_SERV_COMMAND_MESSAGE>(PChar->GetMLevel(), 0, 0, 0, message);
                         member->StatusEffectContainer->DelStatusEffectsByFlag(xi::StatusEffectFlag::Dispelable | xi::StatusEffectFlag::OnZone);
+                        member->health.tp = 0;
+                        member->updatemask |= UPDATE_HP;
                         member->StatusEffectContainer->AddStatusEffectSilent(xi::StatusEffect::LevelSync, static_cast<uint16>(xi::StatusEffect::LevelSync), PChar->GetMLevel(), 0s, 0s);
                         member->loc.zone->PushPacket(member, CHAR_INRANGE, std::make_unique<CCharSyncPacket>(member));
                     }
@@ -1228,7 +1229,7 @@ void CParty::SetQuarterMaster(const std::string& MemberName)
 // Send a packet to all members of the group if the zone is specified as 0
 // or to the party members in the specified zone.
 // Packet for PPartyMember is not sent in both cases
-void CParty::PushPacket(uint32 senderID, uint16 ZoneID, const std::unique_ptr<CBasicPacket>& packet)
+void CParty::PushPacket(uint32 senderID, xi::ZoneId ZoneID, const std::unique_ptr<CBasicPacket>& packet)
 {
     for (auto& i : members)
     {
@@ -1241,7 +1242,7 @@ void CParty::PushPacket(uint32 senderID, uint16 ZoneID, const std::unique_ptr<CB
 
         if (member->id != senderID && member->status != xi::Status::Disappear && !jailutils::InPrison(member))
         {
-            if (ZoneID == 0 || member->getZone() == ZoneID)
+            if (ZoneID == xi::ZoneId::Unknown || member->getZone() == ZoneID)
             {
                 member->pushPacket(packet->copy());
             }
@@ -1293,7 +1294,7 @@ void CParty::DisableSync()
 void CParty::RefreshSync()
 {
     CCharEntity* sync      = (CCharEntity*)m_PSyncTarget;
-    uint8        syncLevel = sync->jobs.job[sync->GetMJob()];
+    uint8        syncLevel = sync->jobs.job[static_cast<uint8>(sync->GetMJob())];
     if (syncLevel < 10)
     {
         SetSyncTarget("", MsgStd::LevelSyncRemoveLowLevel);
@@ -1309,13 +1310,13 @@ void CParty::RefreshSync()
 
         uint8 NewMLevel = 0;
 
-        if (syncLevel < member->jobs.job[member->GetMJob()])
+        if (syncLevel < member->jobs.job[static_cast<uint8>(member->GetMJob())])
         {
             NewMLevel = syncLevel;
         }
         else
         {
-            NewMLevel = member->jobs.job[member->GetMJob()];
+            NewMLevel = member->jobs.job[static_cast<uint8>(member->GetMJob())];
         }
 
         CStatusEffect* syncEffect = member->StatusEffectContainer->GetStatusEffect(xi::StatusEffect::LevelSync);
@@ -1324,12 +1325,14 @@ void CParty::RefreshSync()
             syncEffect->SetPower(syncLevel);
         }
 
+        // Members below the sync keep their level but must track the new cap or their own next level up stays capped at the old one
+        member->m_LevelRestriction = syncLevel;
+
         if (member->GetMLevel() != NewMLevel)
         {
             charutils::RemoveAllEquipMods(member);
-            member->m_LevelRestriction = NewMLevel;
             member->SetMLevel(NewMLevel);
-            member->SetSLevel(member->jobs.job[member->GetSJob()]);
+            member->SetSLevel(member->jobs.job[static_cast<uint8>(member->GetSJob())]);
             charutils::ApplyAllEquipMods(member);
 
             blueutils::ValidateBlueSpells(member);
@@ -1416,6 +1419,16 @@ bool CParty::HasTrusts()
         }
     }
     return false;
+}
+
+void CParty::MarkFormedByTrusts()
+{
+    m_FormedByTrusts = true;
+}
+
+bool CParty::IsFormedByTrusts() const
+{
+    return m_FormedByTrusts;
 }
 
 void CParty::RefreshFlags(std::vector<partyInfo_t>& info)

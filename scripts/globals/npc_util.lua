@@ -496,9 +496,9 @@ end
     Message is displayed showing key items obtained.
 
     Examples of valid keyitems parameter:
-        xi.ki.ZERUHN_REPORT
-        { xi.ki.PALBOROUGH_MINES_LOGS }
-        { xi.ki.BLUE_ACIDITY_TESTER, xi.ki.RED_ACIDITY_TESTER }
+        xi.keyItem.ZERUHN_REPORT
+        { xi.keyItem.PALBOROUGH_MINES_LOGS }
+        { xi.keyItem.BLUE_ACIDITY_TESTER, xi.keyItem.RED_ACIDITY_TESTER }
 --]]
 ---@param player CBaseEntity
 ---@param keyitems xi.keyItem|{ [integer]: xi.keyItem }
@@ -536,7 +536,7 @@ end
             itemParams = {              -- see npcUtil.giveItem for formats
                 fromTrade = true,
             },
-            keyItem = xi.ki.ZERUHN_REPORT,           -- see npcUtil.giveKeyItem for formats
+            keyItem = xi.keyItem.ZERUHN_REPORT,           -- see npcUtil.giveKeyItem for formats
             fameArea = xi.fameArea.NORG, -- Required for Fame to be applied
             fame = 120,                         -- fame defaults to 30 if not set
             bayld = 500,
@@ -582,7 +582,7 @@ function npcUtil.giveReward(player, params)
     end
 
     if params['fame'] == nil then
-        params['fame'] = 30
+        params['fame'] = 20
     end
 
     if
@@ -639,7 +639,7 @@ end
             itemParams = {              -- see npcUtil.giveItem for formats
                 fromTrade = true,
             },
-            keyItem = xi.ki.ZERUHN_REPORT,           -- see npcUtil.giveKeyItem for formats
+            keyItem = xi.keyItem.ZERUHN_REPORT,           -- see npcUtil.giveKeyItem for formats
             fameArea = xi.fameArea.NORG, -- Required for Fame to be applied
             fame = 120,                         -- fame defaults to 30 if not set
             bayld = 500,
@@ -743,7 +743,7 @@ end
             itemParams = {              -- see npcUtil.giveItem for formats
                 fromTrade = true,
             },
-            keyItem = xi.ki.ZERUHN_REPORT,   -- see npcUtil.giveKeyItem for formats
+            keyItem = xi.keyItem.ZERUHN_REPORT,   -- see npcUtil.giveKeyItem for formats
             bayld = 500,
             gil   = 200,
             exp   = 1000,
@@ -1045,27 +1045,27 @@ function npcUtil.fishingAnimation(npc, phaseDuration, func)
     npc:timer(phaseDuration * 1000, function(npcArg)
         local anims =
         {
-            [xi.anim.FISHING_NPC] = { duration = 5, nextAnim = { xi.anim.FISHING_START } },
-            [xi.anim.FISHING_START] = { duration = 10, nextAnim = { xi.anim.FISHING_FISH } },
-            [xi.anim.FISHING_FISH] =
+            [xi.animation.FISHING_NPC] = { duration = 5, nextAnim = { xi.animation.FISHING_START } },
+            [xi.animation.FISHING_START] = { duration = 10, nextAnim = { xi.animation.FISHING_FISH } },
+            [xi.animation.FISHING_FISH] =
             {
                 duration = 10,
                 nextAnim =
                 {
-                    xi.anim.FISHING_CAUGHT,
-                    xi.anim.FISHING_ROD_BREAK,
-                    xi.anim.FISHING_LINE_BREAK,
+                    xi.animation.FISHING_CAUGHT,
+                    xi.animation.FISHING_ROD_BREAK,
+                    xi.animation.FISHING_LINE_BREAK,
                 }
             },
 
-            [xi.anim.FISHING_ROD_BREAK] = { duration = 3, nextAnim = { xi.anim.FISHING_NPC } },
-            [xi.anim.FISHING_LINE_BREAK] = { duration = 3, nextAnim = { xi.anim.FISHING_NPC } },
-            [xi.anim.FISHING_CAUGHT] = { duration = 5, nextAnim = { xi.anim.FISHING_NPC } },
-            [xi.anim.FISHING_STOP] = { duration = 3, nextAnim = { xi.anim.FISHING_NPC } },
+            [xi.animation.FISHING_ROD_BREAK] = { duration = 3, nextAnim = { xi.animation.FISHING_NPC } },
+            [xi.animation.FISHING_LINE_BREAK] = { duration = 3, nextAnim = { xi.animation.FISHING_NPC } },
+            [xi.animation.FISHING_CAUGHT] = { duration = 5, nextAnim = { xi.animation.FISHING_NPC } },
+            [xi.animation.FISHING_STOP] = { duration = 3, nextAnim = { xi.animation.FISHING_NPC } },
         }
 
         local anim = anims[npcArg:getAnimation()]
-        local nextAnimationId = xi.anim.FISHING_NPC
+        local nextAnimationId = xi.animation.FISHING_NPC
         local nextAnimationDuration = 10
         local nextAnim = nil
         if anim then

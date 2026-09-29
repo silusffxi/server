@@ -23,11 +23,16 @@
 
 #include "common/tracy.h"
 
+#include <atomic>
+
 #include "ai/ai_container.h"
 
 #include "battlefield.h"
 #include "instance.h"
+#include "lua/luautils.h"
+#include "utils/zoneutils.h"
 #include "zone.h"
+#include "zone_instance.h"
 
 CBaseEntity::CBaseEntity()
 : id(0)
@@ -35,7 +40,7 @@ CBaseEntity::CBaseEntity()
 , objtype(ENTITYTYPE::TYPE_NONE)
 , status(xi::Status::Disappear)
 , m_TargID(0)
-, animation(0)
+, animation(xi::Animation::None)
 , animationsub(0)
 , baseSpeed(settings::get<uint8>("map.BASE_SPEED"))
 , namevis(xi::NameVis::None)
@@ -52,6 +57,10 @@ CBaseEntity::CBaseEntity()
 {
     TracyZoneScoped;
 
+    static std::atomic<uint64> nextSerial{ 1 };
+
+    serial_ = nextSerial.fetch_add(1, std::memory_order_relaxed);
+
     speed          = baseSpeed;
     animationSpeed = static_cast<uint8>(std::clamp<float>((baseSpeed / settings::get<float>("map.ANIMATION_SPEED_DIVISOR")), std::numeric_limits<uint8>::min(), std::numeric_limits<uint8>::max()));
 }
@@ -64,13 +73,23 @@ CBaseEntity::~CBaseEntity()
     {
         PBattlefield->RemoveEntity(this, BATTLEFIELD_LEAVE_CODE_WARPDC);
     }
+
+    // Serials are never reused, so nothing can read this table again. Dropping it is what stops
+    // xi.entityData growing with every entity the process ever made.
+    luautils::resetEntityData(this);
 }
 
 void CBaseEntity::Spawn()
 {
     status = allegiance == xi::Allegiance::Mob ? xi::Status::Update : xi::Status::Normal;
     updatemask |= UPDATE_HP;
+
     ResetLocalVars();
+
+    // Drop the previous life's data before any spawn script runs. CAutomatonEntity::Spawn does
+    // not chain here, but it only ever runs on a freshly allocated entity.
+    luautils::resetEntityData(this);
+
     PAI->Reset();
 }
 
@@ -90,9 +109,9 @@ const std::string& CBaseEntity::getPacketName()
     return packetName;
 }
 
-uint16 CBaseEntity::getZone() const
+auto CBaseEntity::getZone() const -> xi::ZoneId
 {
-    return loc.zone != nullptr ? (uint16)loc.zone->GetID() : (uint16)loc.destination;
+    return loc.zone != nullptr ? loc.zone->GetID() : loc.destination;
 }
 
 float CBaseEntity::GetXPos() const
@@ -215,6 +234,16 @@ CBaseEntity* CBaseEntity::GetEntity(uint16 targid, uint8 filter) const
     }
 }
 
+auto CBaseEntity::serial() const -> uint64
+{
+    return serial_;
+}
+
+auto CBaseEntity::entityId() const -> EntityId
+{
+    return EntityId{ this };
+}
+
 void CBaseEntity::SendZoneUpdate()
 {
     loc.zone->UpdateEntityPacket(this, ENTITY_SPAWN, UPDATE_ALL_MOB, true);
@@ -225,9 +254,15 @@ void CBaseEntity::ResetLocalVars()
     localVars_.clear();
 }
 
-uint32 CBaseEntity::GetLocalVar(const std::string& var)
+uint32 CBaseEntity::GetLocalVar(const std::string& var) const
 {
-    return localVars_[var];
+    const auto it = localVars_.find(var);
+    if (it != localVars_.end())
+    {
+        return it->second;
+    }
+
+    return 0;
 }
 
 std::map<std::string, uint32>& CBaseEntity::GetLocalVars()

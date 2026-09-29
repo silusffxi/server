@@ -22,6 +22,7 @@
 #include "common/utils.h"
 
 #include "common/logging.h"
+#include "common/macros.h"
 #include "common/md52.h"
 #include "common/stdext.h"
 
@@ -104,20 +105,6 @@ void getMSB(uint32* result, uint32 value)
         (*result)++;
     }
 #endif
-}
-
-/*
-Rotations of entities are saved in uint8s, which can only hold up to a value of 255. In order to properly calculate rotations you'll need these methods to
-convert back and forth.
-*/
-float rotationToRadian(uint8 rotation)
-{
-    return (float)((rotation / 256.0f) * 2 * M_PI);
-}
-
-uint8 radianToRotation(float radian)
-{
-    return (uint8)((radian / (2 * M_PI)) * 256);
 }
 
 /****************************************************************************
@@ -230,6 +217,28 @@ position_t nearPosition(const position_t& A, float offset, float radian)
     B.moving   = A.moving;
 
     return B;
+}
+
+auto sidestepPosition(const position_t& from, const position_t& referencePoint, float offset) -> position_t
+{
+    // Adding 64 (a quarter turn in the 0..255 rotation byte) gives a vector perpendicular to from -> referencePoint.
+    const auto perpendicularAngle = worldAngle(from, referencePoint) + 64;
+    const auto radians            = rotationToRadian(perpendicularAngle);
+
+    return position_t{
+        from.x - std::cosf(radians) * offset,
+        referencePoint.y,
+        from.z + std::sinf(radians) * offset,
+        0,
+        0,
+    };
+}
+
+auto isNear(const position_t& a, const position_t& b) -> bool
+{
+    // Below this, positions are effectively co-located and a path query would be trivial/empty.
+    constexpr float kNearThreshold = 1.0f;
+    return distance(a, b) < kNearThreshold;
 }
 
 /************************************************************************
@@ -891,14 +900,14 @@ bool definitelyLessThan(float a, float b)
     return (b - a) > ((fabs(a) < fabs(b) ? fabs(b) : fabs(a)) * epsilon);
 }
 
-void crash()
+XI_NOINLINE void crash()
 {
     unsigned long long* volatile ptr = nullptr;
     // cppcheck-suppress nullPointer
     *ptr = 0xDEADBEEF;
 }
 
-void hang()
+XI_NOINLINE void hang()
 {
     // NOLINTNEXTLINE(bugprone-infinite-loop): the hang is deliberate.
     for (volatile bool spin = true; spin;)

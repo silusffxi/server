@@ -19,8 +19,8 @@ entity.onTrigger = function(player, npc)
         if VanadielDayOfTheYear() % 2 == 0 then
             if
                 brassDoor and
-                brassDoor:getAnimation() == xi.anim.CLOSE_DOOR and
-                npc:getAnimation() == xi.anim.CLOSE_DOOR
+                brassDoor:getAnimation() == xi.animation.CLOSE_DOOR and
+                npc:getAnimation() == xi.animation.CLOSE_DOOR
             then
                 npc:openDoor(8)
                 npc:timer(1500, function(npcArg)
@@ -30,8 +30,8 @@ entity.onTrigger = function(player, npc)
         else
             if
                 trapDoor and
-                trapDoor:getAnimation() == xi.anim.CLOSE_DOOR and
-                npc:getAnimation() == xi.anim.CLOSE_DOOR
+                trapDoor:getAnimation() == xi.animation.CLOSE_DOOR and
+                npc:getAnimation() == xi.animation.CLOSE_DOOR
             then
                 npc:openDoor(8)
                 npc:timer(1500, function(npcArg)
@@ -47,7 +47,7 @@ entity.onTrigger = function(player, npc)
             end
         end
     else
-        player:messageSpecial(ID.text.CANNOT_REACH_TARGET)
+        player:messageText(npc, ID.text.CANNOT_REACH_TARGET, false, 6)
     end
 end
 

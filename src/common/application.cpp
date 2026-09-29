@@ -21,6 +21,8 @@
 
 #include "application.h"
 
+#include "common/database.h"
+
 #include "arguments.h"
 #include "console_service.h"
 #include "debug.h"
@@ -29,7 +31,6 @@
 #include "settings.h"
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 #include <timeapi.h>
@@ -39,6 +40,7 @@
 #endif
 
 #include <csignal>
+#include <string_view>
 #include <thread>
 
 namespace
@@ -78,16 +80,16 @@ Application::Application(const ApplicationConfig& appConfig, int argc, char** ar
     // It is safe to use the logging macros and settings from this point on
     //
 
+    debug::setCoreDumpsEnabled(settings::get<bool>("main.GENERATE_CORE_DUMP"));
+
     ShowInfoFmt("=======================================================================");
     ShowInfoFmt("Begin {}-server init...", serverName_);
 
-#ifdef ENV64BIT
-    ShowInfo("64-bit environment detected");
-#else
-    ShowInfo("32-bit environment detected");
-#endif
+    ShowInfoFmt("Build type: {}", XI_BUILD_TYPE);
 
     consoleService_ = std::make_unique<ConsoleService>(*this);
+
+    statementUsageToken_.emplace(scheduler_.intervalOnMainThread(std::chrono::hours(1), db::checkStatementUsage));
 }
 
 Application::~Application()
@@ -136,7 +138,7 @@ void Application::registerSignalHandlers()
 #ifdef _WIN32
     signals_.add(SIGBREAK);
     // Don't register crash signals with ASIO on Windows - they need to reach SEH
-    // for WheatyExceptionReport to generate crash dumps
+    // for our unhandled-exception filter to write the tombstone and minidump
 #endif
 #ifndef _WIN32
     signals_.add(SIGXFSZ);
@@ -281,7 +283,10 @@ void Application::markLoaded()
     if (Application::isRunningInCI())
     {
         ShowInfo("CI mode enabled: exiting after successful initialization");
-        std::exit(0);
+
+        // Unwind through main() rather than std::exit() so that luautils::cleanup()
+        // is properly called.
+        requestExit();
     }
 }
 

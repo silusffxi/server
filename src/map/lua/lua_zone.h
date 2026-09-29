@@ -48,7 +48,7 @@ public:
     void setLocalVar(const char* key, uint32 value);
     void resetLocalVars();
 
-    void registerCuboidTriggerArea(uint32 triggerAreaID, float xMin, float yMin, float zMin, float xMax, float yMax, float zMax);
+    void registerCuboidTriggerArea(uint32 triggerAreaID, float xMin, float yMin, float zMin, float xMax, float yMax, float zMax, sol::optional<float> rotation);
     void registerCylindricalTriggerArea(uint32 triggerAreaID, float xPos, float zPos, float radius);
     void registerSphericalTriggerArea(uint32 triggerAreaID, float xPos, float yPos, float zPos, float radius);
 
@@ -56,7 +56,7 @@ public:
     auto         getPlayers() -> sol::table;
     auto         getNPCs() -> sol::table;
     auto         getMobs() -> sol::table;
-    ZONEID       getID();
+    auto         getID() -> xi::ZoneId;
     auto         getName() -> const std::string&;
     REGION_TYPE  getRegionID();
     xi::ZoneType getTypeMask();

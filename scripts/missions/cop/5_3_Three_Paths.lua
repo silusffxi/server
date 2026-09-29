@@ -219,7 +219,7 @@ mission.sections =
                 onTrade = function(player, npc, trade)
                     if
                         player:getMissionStatus(mission.areaId, xi.mission.status.COP.LOUVERANCE) == 11 and
-                        npcUtil.tradeHasExactly(trade, xi.item.GOLD_KEY)
+                        npcUtil.tradeMatches(trade, { { xi.item.GOLD_KEY, 1 } })
                     then
                         return mission:progressEvent(3)
                     end
@@ -229,7 +229,7 @@ mission.sections =
             onEventFinish =
             {
                 [3] = function(player, csid, option, npc)
-                    player:confirmTrade()
+                    player:tradeComplete()
                     -- NOTE: This event transports you to the BCNM exit, and is handled by the client.
                     -- POS: -87.410 180 499.929 127 13
                     player:setMissionStatus(mission.areaId, 12, xi.mission.status.COP.LOUVERANCE)
@@ -377,7 +377,7 @@ mission.sections =
             onEventFinish =
             {
                 [74] = function(player, csid, option, npc)
-                    npcUtil.giveKeyItem(player, xi.ki.ENVELOPE_FROM_MONBERAUX)
+                    npcUtil.giveKeyItem(player, xi.keyItem.ENVELOPE_FROM_MONBERAUX)
                     player:setMissionStatus(mission.areaId, 5, xi.mission.status.COP.TENZEN)
                 end,
             },
@@ -424,7 +424,7 @@ mission.sections =
                 end,
 
                 [1] = function(player, csid, option, npc)
-                    npcUtil.giveKeyItem(player, xi.ki.DELKFUTT_RECOGNITION_DEVICE)
+                    npcUtil.giveKeyItem(player, xi.keyItem.DELKFUTT_RECOGNITION_DEVICE)
                     mission:setVar(player, 'Option', 0)
                     player:setMissionStatus(mission.areaId, 8, xi.mission.status.COP.TENZEN)
                 end,
@@ -440,7 +440,7 @@ mission.sections =
 
                     if
                         missionStatus == 8 and
-                        player:hasKeyItem(xi.ki.DELKFUTT_RECOGNITION_DEVICE)
+                        player:hasKeyItem(xi.keyItem.DELKFUTT_RECOGNITION_DEVICE)
                     then
                         if
                             mission:getLocalVar(player, 'hasKilled') == 0 and

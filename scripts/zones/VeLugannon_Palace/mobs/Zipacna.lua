@@ -7,7 +7,7 @@ local entity = {}
 
 local ID = zones[xi.zone.VELUGANNON_PALACE]
 
--- Spawn points from nm_spawn_points.sql
+-- Spawn points, kept here since nm_spawn_points.sql was retired
 local spawnPoints =
 {
     blueShort   = { x = -196, y = 0,  z = 389 },
@@ -272,7 +272,7 @@ local pathNodes =
 
 local setZipPath = function(mob, door, currPath)
     if door then
-        if door:getAnimation() == xi.anim.OPEN_DOOR then
+        if door:getAnimation() == xi.animation.OPEN_DOOR then
             if currentDirection == pathingDirection.TO_EAST then
                 mob:pathThrough(pathNodes[currPath + 1], xi.path.flag.COORDS)
                 if currPath + 1 == paths.YELLOW_TO_BASEMENT then
