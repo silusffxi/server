@@ -28,6 +28,7 @@
 #include "common/types/error_or.h"
 #include "common/types/maybe.h"
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -44,6 +45,12 @@ auto freshness(const Credential& credential) -> Maybe<bool>; // nothing if the h
 
 // no-op if a newer login replaced the hash
 void refresh(uint32 accountId, const SessionHash& sessionHash);
+
+// 0 if the session is gone
+auto udpPortSlot(const Credential& credential) -> uint16;
+
+// md5 of the session hash, the lobby derives the same bytes into accounts_sessions.session_key at character select; zeros if the session is gone
+auto keyValue(uint32 accountId) -> std::array<uint8, 16>;
 
 auto exists(uint32 accountId) -> bool;
 

@@ -27,6 +27,8 @@
 #include "entities/base_entity.h"
 #include "entities/battle_entity.h"
 #include "entities/char_entity.h"
+#include "entities/pet_entity.h"
+#include "lua/luautils.h"
 #include "states/ability_state.h"
 #include "states/attack_state.h"
 #include "states/death_state.h"
@@ -281,7 +283,7 @@ auto CAIContainer::Internal_WeaponSkill(const EntityId& target, uint16 wsid) -> 
     return false;
 }
 
-auto CAIContainer::Internal_MobSkill(const EntityId& target, uint16 wsid, Maybe<timer::duration> castTimeOverride) -> bool
+auto CAIContainer::Internal_MobSkill(const EntityId& target, uint16 wsid, Maybe<timer::duration> castTimeOverride, Maybe<uint16> tpCostOverride) -> bool
 {
     auto* entity = dynamic_cast<CBattleEntity*>(PEntity);
     if (entity)
@@ -291,7 +293,7 @@ auto CAIContainer::Internal_MobSkill(const EntityId& target, uint16 wsid, Maybe<
             return false;
         }
 
-        return ChangeState<CMobSkillState>(entity, target, wsid, castTimeOverride);
+        return ChangeState<CMobSkillState>(entity, target, wsid, castTimeOverride, tpCostOverride);
     }
     return false;
 }

@@ -23,6 +23,7 @@
 
 #include "common/database.h"
 #include "common/macros.h"
+#include "common/md52.h"
 
 namespace profile::accounts
 {
@@ -51,6 +52,33 @@ void refresh(const uint32 accountId, const SessionHash& sessionHash)
     // blobs bind from a mutable value
     auto hash = sessionHash;
     db::preparedStmt("UPDATE accounts_profile SET refreshed = NOW() WHERE accid = ? AND session_hash = ?", accountId, hash);
+}
+
+auto udpPortSlot(const Credential& credential) -> uint16
+{
+    auto hash = credential.sessionHash;
+
+    const auto rset = db::preparedStmt("SELECT udp_port_slot FROM accounts_profile WHERE accid = ? AND session_hash = ?", credential.accountId, hash);
+    FOR_DB_SINGLE_RESULT(rset)
+    {
+        return rset->get<uint16>("udp_port_slot");
+    }
+
+    return 0;
+}
+
+auto keyValue(const uint32 accountId) -> std::array<uint8, 16>
+{
+    auto value = std::array<uint8, 16>{};
+
+    const auto rset = db::preparedStmt("SELECT session_hash FROM accounts_profile WHERE accid = ?", accountId);
+    FOR_DB_SINGLE_RESULT(rset)
+    {
+        auto hash = rset->get<SessionHash>("session_hash");
+        md5(hash.data(), value.data(), sizeof(hash));
+    }
+
+    return value;
 }
 
 auto exists(const uint32 accountId) -> bool

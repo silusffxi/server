@@ -26,10 +26,12 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "entities/char_entity.h"
 #include "persist_batch.h"
+#include "zone.h"
 
 using Recalculate       = xi::Flag<struct RecalculateTag>;
 using IncludeRecycleBin = xi::Flag<struct IncludeRecycleBinTag>;
@@ -108,6 +110,7 @@ EMobDifficulty CheckMob(uint8 charlvl, CBattleEntity* PMob);
 
 uint32 GetBaseExp(uint8 charlvl, int16 moblvl);
 uint32 GetExpNEXTLevel(uint8 charlvl);
+auto   GetExpNEXTLevelForChar(const CCharEntity* PChar, uint8 charlvl) -> uint32;
 uint8  GetExpLevel(CBattleEntity* PMember);
 
 void DelExperiencePoints(CCharEntity* PChar, float retainpct, uint16 forcedXpLoss);
@@ -255,6 +258,7 @@ void RemoveAllEquipMods(CCharEntity* PChar);
 void ApplyAllEquipMods(CCharEntity* PChar);
 
 void ClearTempItems(CCharEntity* PChar);
+void LeaveParty(CCharEntity* PChar);
 void ReloadParty(CCharEntity* PChar);
 void RemoveSeekFlag(CCharEntity* PChar);
 
@@ -320,6 +324,7 @@ void updateSession(MapSession* PSession, CCharEntity* PChar, CZone* currentZone)
 void loadDeathTimestamp(CCharEntity* PChar);
 void loadZoningFlag(CCharEntity* PChar);
 
+auto IsHomeNation(uint8 nation, REGION_TYPE region) -> bool;
 bool isOrchestrionPlaced(CCharEntity* PChar);
 void updateMannequins(CCharEntity* PChar);
 

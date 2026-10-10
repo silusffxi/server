@@ -24,6 +24,7 @@
 #include "ability.h"
 #include "ai/ai_container.h"
 #include "entities/char_entity.h"
+#include "enums/msg_basic.h"
 #include "items/item_weapon.h"
 #include "latent_effect_container.h"
 #include "packets/s2c/0x029_battle_message.h"
@@ -76,7 +77,7 @@ auto CPlayerController::Engage(const EntityId& target) -> bool
     {
         if (distance(PChar->loc.p, PTarget->loc.p) < 30)
         {
-            if (m_lastAttackTime + std::chrono::milliseconds(PChar->GetWeaponDelay(false)) < timer::now())
+            if (timer::now() >= m_engageLockedUntil)
             {
                 if (CController::Engage(target))
                 {
@@ -271,6 +272,11 @@ auto CPlayerController::getLastAttackTime() -> timer::time_point
 void CPlayerController::setLastAttackTime(timer::time_point _lastAttackTime)
 {
     m_lastAttackTime = _lastAttackTime;
+}
+
+void CPlayerController::setEngageLockedUntil(const timer::time_point engageLockedUntil)
+{
+    m_engageLockedUntil = engageLockedUntil;
 }
 
 auto CPlayerController::getLastSpellFinishedTime() -> timer::time_point

@@ -34,7 +34,10 @@
 #include <common/vana_time.h>
 #include <common/version.h>
 
+#include <map/lua/lua_ability.h>
 #include <map/lua/lua_action.h>
+#include <map/lua/lua_attack.h>
+#include <map/lua/lua_base_entity.h>
 #include <map/lua/lua_battlefield.h>
 #include <map/lua/lua_cache.h>
 #include <map/lua/lua_instance.h>
@@ -85,6 +88,7 @@
 #include "data/datasets/zones/npcs/dataset.h"
 #include "data/enums/mob_mod.h"
 #include "data/loader.h"
+#include "enums/msg_basic.h"
 #include "fishingcontest.h"
 #include "instance.h"
 #include "ipc_client.h"
@@ -107,8 +111,10 @@
 
 #include <common/types/hash_map.h>
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
+#include <functional>
 #include <limits>
 #include <ranges>
 #include <string>
@@ -1093,7 +1099,7 @@ sol::table GetLuaObjectFromFilename(const std::string& filename)
         parts.emplace_back(part.string());
     }
 
-    auto it = std::find(parts.begin(), parts.end(), "scripts");
+    auto it = std::ranges::find(parts, "scripts");
     if (it == parts.end())
     {
         ShowError("luautils::GetLuaObjectFromFilename: Invalid filename: %s", filename);
@@ -1207,13 +1213,7 @@ void LoadExpDifficultyCurves(const sol::table& expToDifficultyTable, const uint8
     }
 
     // Sort highest to lowest
-    std::sort(
-        expDifficultyTable.begin(),
-        expDifficultyTable.end(),
-        [](const std::pair<uint16, EMobDifficulty>& a, const std::pair<uint16, EMobDifficulty>& b)
-        {
-            return a.first > b.first;
-        });
+    std::ranges::sort(expDifficultyTable, std::greater{}, &std::pair<uint16, EMobDifficulty>::first);
 
     std::pair<uint16, uint8> iep = { incrediblyEasyPreyLevel, incrediblyEasyPreyMinExp };
 
@@ -1372,7 +1372,7 @@ void PopulateIDLookups(const xi::ZoneId zoneId, const std::string& zoneName, con
         "GetFirstID",
         [&](const std::string& name) -> Maybe<uint32>
         {
-            if (lookup.find(name) != lookup.end())
+            if (lookup.contains(name))
             {
                 return lookup[name].front();
             }
@@ -1390,13 +1390,13 @@ void PopulateIDLookups(const xi::ZoneId zoneId, const std::string& zoneName, con
         [&](const std::string& name) -> sol::table
         {
             // Is it already built and cached: return it
-            if (idLuaTables.find(name) != idLuaTables.end())
+            if (idLuaTables.contains(name))
             {
                 return idLuaTables[name];
             }
 
             // If we have no entries, bail out and return nil
-            if (lookup.find(name) == lookup.end())
+            if (!lookup.contains(name))
             {
                 ShowError(fmt::format("GetTableOfIDs({}) in zone {}: Returning nil", name, zoneName));
                 return sol::lua_nil;
@@ -2921,7 +2921,7 @@ int32 additionalEffectAttack(CBattleEntity* PAttacker, CBattleEntity* PDefender,
     TracyZoneScoped;
 
     sol::function additionalEffectAttack;
-    if (PAttacker->objtype == TYPE_PC)
+    if (dynamic_cast<const CCharEntity*>(PAttacker) != nullptr)
     {
         additionalEffectAttack = lua[sol::create_if_nil]["xi"]["additionalEffect"]["attack"];
     }
@@ -3304,7 +3304,7 @@ void CheckForGearSet(CBaseEntity* PTarget)
     }
 }
 
-int32 OnSpellCast(CBattleEntity* PCaster, CBattleEntity* PTarget, CSpell* PSpell)
+int32 OnSpellCast(CBattleEntity* PCaster, CBattleEntity* PTarget, CSpell* PSpell, action_t* action)
 {
     TracyZoneScoped;
 
@@ -3320,7 +3320,7 @@ int32 OnSpellCast(CBattleEntity* PCaster, CBattleEntity* PTarget, CSpell* PSpell
         return 0;
     }
 
-    auto result = onSpellCast(PCaster, PTarget, PSpell);
+    auto result = onSpellCast(PCaster, PTarget, PSpell, action);
     if (!result.valid())
     {
         sol::error err = result;
@@ -3337,7 +3337,7 @@ void OnSpellPrecast(CBattleEntity* PCaster, CSpell* PSpell)
 {
     TracyZoneScoped;
 
-    if (PCaster->objtype == TYPE_PC)
+    if (dynamic_cast<const CCharEntity*>(PCaster) != nullptr)
     {
         return;
     }
@@ -3361,7 +3361,7 @@ void OnSpellCastStart(CBattleEntity* PCaster, CBattleEntity* PTarget, CSpell* PS
 {
     TracyZoneScoped;
 
-    if (PCaster->objtype == TYPE_PC)
+    if (dynamic_cast<const CCharEntity*>(PCaster) != nullptr)
     {
         return;
     }
@@ -3657,7 +3657,7 @@ void OnPath(CBaseEntity* PEntity)
 {
     TracyZoneScoped;
 
-    if (PEntity == nullptr || PEntity->objtype == TYPE_PC)
+    if (PEntity == nullptr || dynamic_cast<const CCharEntity*>(PEntity) != nullptr)
     {
         return;
     }
@@ -3680,7 +3680,7 @@ void OnPathPoint(CBaseEntity* PEntity)
 {
     TracyZoneScoped;
 
-    if (PEntity == nullptr || PEntity->objtype == TYPE_PC)
+    if (PEntity == nullptr || dynamic_cast<const CCharEntity*>(PEntity) != nullptr)
     {
         return;
     }
@@ -3703,7 +3703,7 @@ void OnPathComplete(CBaseEntity* PEntity)
 {
     TracyZoneScoped;
 
-    if (PEntity == nullptr || PEntity->objtype == TYPE_PC)
+    if (PEntity == nullptr || dynamic_cast<const CCharEntity*>(PEntity) != nullptr)
     {
         return;
     }
@@ -3719,6 +3719,24 @@ void OnPathComplete(CBaseEntity* PEntity)
     {
         sol::error err = result;
         ShowError("luautils::OnPathComplete: %s", err.what());
+    }
+}
+
+void OnShopBuy(CCharEntity* PChar, CBaseEntity* PNpc, uint16 itemId, uint32 quantity, uint32 gil)
+{
+    TracyZoneScoped;
+
+    sol::function onShopBuy = getEntityCachedFunction(PNpc, "onShopBuy");
+    if (!onShopBuy.valid())
+    {
+        return;
+    }
+
+    auto result = onShopBuy(PChar, PNpc, itemId, quantity, gil);
+    if (!result.valid())
+    {
+        sol::error err = result;
+        ShowError("luautils::OnShopBuy: %s", err.what());
     }
 }
 
@@ -3814,10 +3832,10 @@ void OnMobEngage(CBaseEntity* PMob, CBaseEntity* PTarget)
         filename = fmt::format("./scripts/zones/{}/mobs/{}.lua", PMob->loc.zone->getName(), PMob->getName());
     }
 
-    if (PTarget->objtype == TYPE_PC)
+    if (auto* PChar = dynamic_cast<CCharEntity*>(PTarget))
     {
-        ((CCharEntity*)PTarget)->eventPreparation->targetEntity = PMob;
-        ((CCharEntity*)PTarget)->eventPreparation->scriptFile   = filename;
+        PChar->eventPreparation->targetEntity = PMob;
+        PChar->eventPreparation->scriptFile   = filename;
     }
 
     sol::function onMobEngage = getEntityCachedFunction(PMob, "onMobEngage");
@@ -4555,115 +4573,63 @@ int32 OnAutomatonAbility(CBaseEntity* PTarget, CBaseEntity* PMob, CMobSkill* PMo
     return result.get_type(0) == sol::type::number ? result.get<int32>(0) : 0;
 }
 
-auto GetMonstrosityLuaTable(CCharEntity* PChar) -> sol::table
+auto GetMonstrosityLuaTable(const monstrosity::MonstrosityData_t& data) -> sol::table
 {
     TracyZoneScoped;
 
     // TODO: lua_monstrosity.cpp?
     auto table = lua.create_table();
 
-    table["monstrosityId"] = PChar->m_PMonstrosity->MonstrosityId;
-    table["species"]       = PChar->m_PMonstrosity->Species;
-    table["flags"]         = PChar->m_PMonstrosity->Flags;
-    table["entry_x"]       = PChar->m_PMonstrosity->EntryPos.x;
-    table["entry_y"]       = PChar->m_PMonstrosity->EntryPos.y;
-    table["entry_z"]       = PChar->m_PMonstrosity->EntryPos.z;
-    table["entry_rot"]     = PChar->m_PMonstrosity->EntryPos.rotation;
-    table["entry_zone_id"] = PChar->m_PMonstrosity->EntryZoneId;
-    table["entry_mjob"]    = PChar->m_PMonstrosity->EntryMainJob;
-    table["entry_sjob"]    = PChar->m_PMonstrosity->EntrySubJob;
+    table["monstrosityId"] = data.MonstrosityId;
+    table["species"]       = data.Species;
+    table["flags"]         = data.Flags;
+    table["entry_x"]       = data.EntryPos.x;
+    table["entry_y"]       = data.EntryPos.y;
+    table["entry_z"]       = data.EntryPos.z;
+    table["entry_rot"]     = data.EntryPos.rotation;
+    table["entry_zone_id"] = data.EntryZoneId;
+    table["entry_mjob"]    = data.EntryMainJob;
+    table["entry_sjob"]    = data.EntrySubJob;
 
+    // Keys stay 0-based to match the C++ arrays.
+    const auto toTable = [](const auto& values) -> sol::table
     {
-        std::size_t idx = 0;
-        table["levels"] = lua.create_table();
-        for (auto entry : PChar->m_PMonstrosity->levels)
+        auto out = lua.create_table();
+        for (std::size_t idx = 0; idx < values.size(); ++idx)
         {
-            table["levels"][idx++] = entry;
+            out[idx] = values[idx];
         }
-    }
 
-    {
-        std::size_t idx    = 0;
-        table["instincts"] = lua.create_table();
-        for (auto entry : PChar->m_PMonstrosity->instincts)
-        {
-            table["instincts"][idx++] = entry;
-        }
-    }
+        return out;
+    };
 
-    {
-        std::size_t idx   = 0;
-        table["variants"] = lua.create_table();
-        for (auto entry : PChar->m_PMonstrosity->variants)
-        {
-            table["variants"][idx++] = entry;
-        }
-    }
+    table["levels"]    = toTable(data.levels);
+    table["instincts"] = toTable(data.instincts);
+    table["variants"]  = toTable(data.variants);
 
     return table;
 }
 
-void SetMonstrosityLuaTable(CCharEntity* PChar, sol::table table)
+void SetMonstrosityLuaTable(monstrosity::MonstrosityData_t& data, sol::table table)
 {
     TracyZoneScoped;
 
-    if (table["monstrosityId"].valid())
-    {
-        PChar->m_PMonstrosity->MonstrosityId = table.get<uint8>("monstrosityId");
-    }
-
-    if (table["species"].valid())
-    {
-        PChar->m_PMonstrosity->Species = table.get<uint16>("species");
-    }
-
-    if (table["flags"].valid())
-    {
-        PChar->m_PMonstrosity->Flags = table.get<uint16>("flags");
-    }
-
-    if (table["entry_x"].valid())
-    {
-        PChar->m_PMonstrosity->EntryPos.x = table.get<float>("entry_x");
-    }
-
-    if (table["entry_y"].valid())
-    {
-        PChar->m_PMonstrosity->EntryPos.y = table.get<float>("entry_y");
-    }
-
-    if (table["entry_z"].valid())
-    {
-        PChar->m_PMonstrosity->EntryPos.z = table.get<float>("entry_z");
-    }
-
-    if (table["entry_rot"].valid())
-    {
-        PChar->m_PMonstrosity->EntryPos.rotation = table.get<uint8>("entry_rot");
-    }
-
-    if (table["entry_zone_id"].valid())
-    {
-        PChar->m_PMonstrosity->EntryZoneId = table.get<uint16>("entry_zone_id");
-    }
-
-    if (table["entry_mjob"].valid())
-    {
-        PChar->m_PMonstrosity->EntryMainJob = table.get<uint8>("entry_mjob");
-    }
-
-    if (table["entry_sjob"].valid())
-    {
-        PChar->m_PMonstrosity->EntrySubJob = table.get<uint8>("entry_sjob");
-    }
+    data.MonstrosityId     = table.get_or<uint8>("monstrosityId", data.MonstrosityId);
+    data.Species           = table.get_or<uint16>("species", data.Species);
+    data.Flags             = table.get_or<uint16>("flags", data.Flags);
+    data.EntryPos.x        = table.get_or<float>("entry_x", data.EntryPos.x);
+    data.EntryPos.y        = table.get_or<float>("entry_y", data.EntryPos.y);
+    data.EntryPos.z        = table.get_or<float>("entry_z", data.EntryPos.z);
+    data.EntryPos.rotation = table.get_or<uint8>("entry_rot", data.EntryPos.rotation);
+    data.EntryZoneId       = table.get_or<uint16>("entry_zone_id", data.EntryZoneId);
+    data.EntryMainJob      = table.get_or<uint8>("entry_mjob", data.EntryMainJob);
+    data.EntrySubJob       = table.get_or<uint8>("entry_sjob", data.EntrySubJob);
 
     if (table["levels"].valid())
     {
         for (const auto& [keyObj, valObj] : table.get<sol::table>("levels"))
         {
-            uint8 key = keyObj.as<uint8>();
-            uint8 val = valObj.as<uint8>();
-            PChar->m_PMonstrosity->levels[key] |= val;
+            data.levels.at(keyObj.as<uint8>()) = valObj.as<uint8>();
         }
     }
 
@@ -4671,9 +4637,7 @@ void SetMonstrosityLuaTable(CCharEntity* PChar, sol::table table)
     {
         for (const auto& [keyObj, valObj] : table.get<sol::table>("instincts"))
         {
-            uint8 key = keyObj.as<uint8>();
-            uint8 val = valObj.as<uint8>();
-            PChar->m_PMonstrosity->instincts[key] |= val;
+            data.instincts.at(keyObj.as<uint8>()) |= valObj.as<uint8>();
         }
     }
 
@@ -4681,30 +4645,8 @@ void SetMonstrosityLuaTable(CCharEntity* PChar, sol::table table)
     {
         for (const auto& [keyObj, valObj] : table.get<sol::table>("variants"))
         {
-            uint8 key = keyObj.as<uint8>();
-            uint8 val = valObj.as<uint8>();
-            PChar->m_PMonstrosity->variants[key] |= val;
+            data.variants.at(keyObj.as<uint8>()) |= valObj.as<uint8>();
         }
-    }
-}
-
-void OnMonstrosityUpdate(CCharEntity* PChar)
-{
-    TracyZoneScoped;
-
-    sol::function onMonstrosityUpdate = lua["xi"]["monstrosity"]["onMonstrosityUpdate"];
-    if (!onMonstrosityUpdate.valid())
-    {
-        ShowError("luautils::OnMonstrosityUpdate");
-        return;
-    }
-
-    auto result = onMonstrosityUpdate(PChar, GetMonstrosityLuaTable(PChar));
-    if (!result.valid())
-    {
-        sol::error err = result;
-        ShowError("luautils::OnMonstrosityUpdate: %s", err.what());
-        return;
     }
 }
 
@@ -4715,7 +4657,7 @@ void OnMonstrosityReturnToEntrance(CCharEntity* PChar)
     sol::function onMonstrosityReturnToEntrance = lua["xi"]["monstrosity"]["onMonstrosityReturnToEntrance"];
     if (!onMonstrosityReturnToEntrance.valid())
     {
-        ShowError("luautils::retuonMonstrosityReturnToEntrancernToEntrance");
+        ShowError("luautils::onMonstrosityReturnToEntrance: function not found");
         return;
     }
 
@@ -4821,9 +4763,8 @@ int32 OnPetAbility(CBaseEntity* PTarget, CBaseEntity* PMob, CMobSkill* PMobSkill
     if (PMob->objtype == TYPE_PET && settings::get<bool>("map.SKILLUP_BLOODPACT"))
     {
         CPetEntity* PPet = (CPetEntity*)PMob;
-        if (PPet->getPetType() == PET_TYPE::AVATAR && PPet->PMaster->objtype == TYPE_PC)
+        if (auto* PMaster = dynamic_cast<CCharEntity*>(PPet->PMaster); PPet->getPetType() == PET_TYPE::AVATAR && PMaster)
         {
-            CCharEntity* PMaster = (CCharEntity*)PPet->PMaster;
             if (PMaster->GetMJob() == xi::Job::SMN)
             {
                 charutils::TrySkillUP(PMaster, xi::SkillType::SummoningMagic, PMaster->GetMLevel());
@@ -4854,9 +4795,8 @@ int32 OnPetAbility(CBaseEntity* PTarget, CPetEntity* PPet, CPetSkill* PPetSkill,
         return 0;
     }
 
-    if (PPet->getPetType() == PET_TYPE::AVATAR && PPet->PMaster->objtype == TYPE_PC)
+    if (auto* PMaster = dynamic_cast<CCharEntity*>(PPet->PMaster); PPet->getPetType() == PET_TYPE::AVATAR && PMaster)
     {
-        CCharEntity* PMaster = (CCharEntity*)PPet->PMaster;
         if (PMaster->GetMJob() == xi::Job::SMN)
         {
             charutils::TrySkillUP(PMaster, xi::SkillType::SummoningMagic, PMaster->GetMLevel());
@@ -5301,6 +5241,26 @@ void OnTransportEvent(CCharEntity* PChar, xi::ZoneId prevZoneId, std::string_vie
     {
         sol::error err = result;
         ShowError("luautils::onTransportEvent: %s", err.what());
+    }
+}
+
+void OnTransportVoyageEnd(CZone* PZone)
+{
+    TracyZoneScoped;
+
+    auto name = PZone->getName();
+
+    auto onTransportVoyageEnd = lua["xi"]["zones"][name]["Zone"]["onTransportVoyageEnd"];
+    if (!onTransportVoyageEnd.valid())
+    {
+        return;
+    }
+
+    auto result = onTransportVoyageEnd(PZone);
+    if (!result.valid())
+    {
+        sol::error err = result;
+        ShowError("luautils::onTransportVoyageEnd: %s", err.what());
     }
 }
 
@@ -5881,16 +5841,18 @@ void HandleCustomMenu(CCharEntity* PChar, const std::string& selection)
         "\x3A\x20\x52\x65\x73\x75\x6C\x74\x20\x28\x43\x61\x6E\x63\x65\x6C\x65\x64\x20\x64\x75\x65\x20\x74\x6F\x20\x65\x76\x65\x6E\x74\x20\x61\x63\x74\x69\x76\x61\x74\x69\x6F\x6E\x2E\x29",
     };
 
-    const auto wasCancelled = std::any_of(
-        cancelMsgs.begin(), cancelMsgs.end(), [&selection](const auto& s)
+    const auto wasCancelled = std::ranges::any_of(
+        cancelMsgs,
+        [&selection](const auto& s)
         {
-            return selection.find(s) != selection.npos;
+            return selection.contains(s);
         });
 
-    const auto wasCancelledEvent = std::any_of(
-        eventCancelMsgs.begin(), eventCancelMsgs.end(), [&selection](const auto& s)
+    const auto wasCancelledEvent = std::ranges::any_of(
+        eventCancelMsgs,
+        [&selection](const auto& s)
         {
-            return selection.find(s) != selection.npos;
+            return selection.contains(s);
         });
 
     const auto context = customMenuContext[PChar->id];
@@ -6392,7 +6354,7 @@ auto GetSynergyRecipeByTrade(CLuaTradeContainer luaTradeContainer) -> sol::table
     }
 
     // We will sort now, because we want to insert zeroes at the end of the vector for lookup
-    std::sort(itemIds.begin(), itemIds.end());
+    std::ranges::sort(itemIds);
 
     // We will still need to fill out the call to GetSynergyRecipeByIngredients
     // with zeroes for empty slots.

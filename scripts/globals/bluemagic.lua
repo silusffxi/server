@@ -351,8 +351,9 @@ end
 ---@param params physicalMobSkillHitParams
 ---@param isSneakAttack boolean
 ---@param critChance number
+---@param action CAction
 ---@return physicalHitInfo
-local handleSinglePhysicalHit = function(caster, target, baseHitDamage, params, isSneakAttack, critChance)
+local handleSinglePhysicalHit = function(caster, target, baseHitDamage, params, isSneakAttack, critChance, action)
     local hitParried               = xi.combat.physical.isParried(target, caster) and not params.skipParry
     local hitGuarded               = xi.combat.physical.isGuarded(target, caster) and not params.skipGuard
     local isCritical               = isSneakAttack or math.randomFloat(0, 1) < critChance -- TODO: check if ranged can crit with SA
@@ -376,11 +377,12 @@ local handleSinglePhysicalHit = function(caster, target, baseHitDamage, params, 
     local pDif             = xi.combat.physical.calculateMeleePDIF(caster, target, xi.skill.BLUE_MAGIC, params.attackMultiplier, isCritical, params.applyLevelCorrection, params.ignoreDefense, params.ignoreDefenseFactor, false, xi.slot.MAIN, params.isCannonball)
     local hitDamage        = 0
 
-    -- TODO: is this true of blue magic too?
     -- Guard does work and isnt a miss like mobskills
     if hitGuarded then
         hitInfo.hitGuarded = true
-        pDif = pDif - 1
+        pDif               = math.max(pDif - 1, 0)
+
+        action:resolution(target:getID(), xi.action.resolution.GUARD)
     end
 
     hitDamage = math.floor(baseHitDamage * pDif)
@@ -396,6 +398,8 @@ local handleSinglePhysicalHit = function(caster, target, baseHitDamage, params, 
         if target:getMod(xi.mod.SHIELD_MASTERY_TP) > 0 then
             blockedWithShieldMastery = true
         end
+
+        action:resolution(target:getID(), xi.action.resolution.BLOCK)
     end
 
     hitDamage = math.floor(hitDamage * xi.combat.damage.physicalElementSDT(target, params.damageType))
@@ -628,8 +632,12 @@ end
 ---@param target CBaseEntity
 ---@param spell CSpell
 ---@param params blueSkillParams
+---@param action CAction
 ---@return number
-xi.spells.blue.usePhysicalSpell = function(caster, target, spell, params)
+-- TODO: Reduce complexity
+-- Disable cyclomatic complexity check for this function:
+-- luacheck: ignore 561
+xi.spells.blue.usePhysicalSpell = function(caster, target, spell, params, action)
     spell:setCritical(false)
 
     local isCannonball = spell:getID() == xi.magic.spell.CANNONBALL
@@ -659,12 +667,13 @@ xi.spells.blue.usePhysicalSpell = function(caster, target, spell, params)
     local potencyAttackMod  = 1 + (caster:getMerit(xi.merit.PHYSICAL_POTENCY) * 2) / 256 -- Each merit value is 2, but SE uses 4/256 for attack merit values.
     local spellAttackMod    = params.attackMult
     local attackMultiplier  = spellAttackMod * potencyAttackMod
-    local hitrate           = calculateHitrate(caster, target, params.bonusAcc)
+    local firstHitrate      = calculateHitrate(caster, target, params.bonusAcc + 100)
+    local subsequentHitrate = calculateHitrate(caster, target, params.bonusAcc)
     local finaldmg          = 0
     local sneakIsApplicable = false
     local trickAttackTarget = nil
     if
-        hitrate ~= -1 and -- -1 = PD/ALL_MISS
+        firstHitrate ~= -1 and -- -1 = PD/ALL_MISS
         spell:getAoE() == xi.aoeType.NONE and
         params.attackType ~= xi.attackType.RANGED
     then
@@ -694,6 +703,7 @@ xi.spells.blue.usePhysicalSpell = function(caster, target, spell, params)
         local attackAnticipated = false
         local attackYaegasumi   = false
         local chance            = math.randomFloat(0, 1)
+        local hitrate           = hitNumber == 1 and firstHitrate or subsequentHitrate
 
         ----------------------------------
         -- Handle Utsusemi and Blink
@@ -726,13 +736,15 @@ xi.spells.blue.usePhysicalSpell = function(caster, target, spell, params)
 
             local damageForThisHit = (hitNumber == 1) and firstHitDamage or subsequentDamage
 
-            hitInfo = handleSinglePhysicalHit(caster, target, damageForThisHit, hitParams, sneakIsApplicable, params.critChance)
+            hitInfo = handleSinglePhysicalHit(caster, target, damageForThisHit, hitParams, sneakIsApplicable, params.critChance, action)
 
             hitInfo.shadowsConsumed  = shadowsConsumed
 
             if hitInfo.hitDamage > 0 then
                 params.tpHitsLanded = params.tpHitsLanded + 1
             end
+
+            params.hitsLanded = params.hitsLanded + 1
         else
             hitInfo          = xi.mobskills.defaultHitInfo(hitNumber)
             hitInfo.missType = 'Evaded / Missed'

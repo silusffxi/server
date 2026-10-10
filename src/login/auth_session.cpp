@@ -65,7 +65,7 @@ void auth_session::start()
                     const auto errStr = fmt::format("Error from {}: (EC: {}), {}", ipAddress, ec.value(), ec.message());
                     ShowWarning(errStr);
                     ShowWarning("Failed to handshake!");
-                    if (errStr.find("wrong version number (SSL routines)") != std::string::npos)
+                    if (errStr.contains("wrong version number (SSL routines)"))
                     {
                         ShowWarning("This is likely due to the client using an outdated/incompatible version of xiloader.");
                         ShowWarning("Please make sure you're using the latest release: https://github.com/LandSandBoat/xiloader/releases");
@@ -306,11 +306,32 @@ void auth_session::read_func()
                 return;
             }
 
+            // clients behind the same address get different game udp ports, see profileAvailableNotice
+            uint16     udpPortSlot = 1;
+            const auto slots       = db::preparedStmt("SELECT udp_port_slot FROM accounts_profile "
+                                                      "WHERE client_addr = ? AND accid != ? AND refreshed > NOW() - INTERVAL 2 HOUR "
+                                                      "ORDER BY udp_port_slot",
+                                                      ipAddress,
+                                                      accountID);
+
+            FOR_DB_MULTIPLE_RESULTS(slots)
+            {
+                const auto taken = slots->get<uint16>("udp_port_slot");
+                if (taken > udpPortSlot)
+                {
+                    break;
+                }
+
+                udpPortSlot = taken + 1;
+            }
+
             // keeps the account's last open status
-            if (!db::preparedStmt("INSERT INTO accounts_profile(accid, session_hash) VALUES(?, ?) "
-                                  "ON DUPLICATE KEY UPDATE session_hash = VALUES(session_hash), refreshed = NOW()",
+            if (!db::preparedStmt("INSERT INTO accounts_profile(accid, session_hash, client_addr, udp_port_slot) VALUES(?, ?, ?, ?) "
+                                  "ON DUPLICATE KEY UPDATE session_hash = VALUES(session_hash), client_addr = VALUES(client_addr), udp_port_slot = VALUES(udp_port_slot), refreshed = NOW()",
                                   accountID,
-                                  hash))
+                                  hash,
+                                  ipAddress,
+                                  udpPortSlot))
             {
                 ShowErrorFmt("Failed to store the profile credential of account {}", accountID);
                 sendLoginResult(login_result::LOGIN_ERROR);
@@ -382,7 +403,7 @@ void auth_session::read_func()
                     return;
                 }
 
-                accid = (accid < 1000 ? 1000 : accid);
+                accid = std::max<uint32>(accid, 1000);
 
                 // creating new account
                 std::tm timecreateinfo = earth_time::to_local_tm();

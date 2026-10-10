@@ -23,7 +23,10 @@
 
 #include "common/ipc_structs.h"
 #include "entities/char_entity.h"
+#include "enums/msg_basic.h"
 #include "ipc_client.h"
+#include "monstrosity.h"
+#include "packets/c2s/validation.h"
 #include "packets/s2c/0x009_message.h"
 #include "packets/s2c/0x029_battle_message.h"
 #include "packets/s2c/0x053_systemmes.h"
@@ -55,6 +58,12 @@ void GP_CLI_COMMAND_GROUP_SOLICIT_REQ::process(MapSession* PSession, CCharEntity
     {
         // Initiator is in prison.  Send error message.
         PInviter->pushPacket<GP_SERV_COMMAND_BATTLE_MESSAGE>(PInviter, PInviter, 0, 0, MsgBasic::CannotUseInArea);
+        return;
+    }
+
+    if (!monstrosity::CanPartyWith(PInviter, inviteeCharId))
+    {
+        PInviter->pushPacket<GP_SERV_COMMAND_MESSAGE>(PInviter, 0, 0, MsgStd::CannotInvite);
         return;
     }
 
