@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -473,12 +473,12 @@ bool CAttack::CheckCounter()
         }
     }
 
-    // Do not counter if PD is up
-    if (!m_attacker->StatusEffectContainer->HasStatusEffect(xi::StatusEffect::PerfectDodge))
+    // Do not counter if PD is up or the attacker is behind
+    if (!m_attacker->StatusEffectContainer->HasStatusEffect(xi::StatusEffect::PerfectDodge) &&
+        facing(m_victim->loc.p, m_attacker->loc.p, 64))
     {
-        if ((xirand::GetRandomNumber(100) < std::clamp<uint16>(m_victim->getMod(xi::Mod::COUNTER) + meritCounter, 0, 80) ||
-             xirand::GetRandomNumber(100) < seiganChance) &&
-            facing(m_victim->loc.p, m_attacker->loc.p, 64))
+        if (xirand::GetRandomNumber(100) < std::clamp<uint16>(m_victim->getMod(xi::Mod::COUNTER) + meritCounter, 0, 80) ||
+            xirand::GetRandomNumber(100) < seiganChance)
         {
             if (xirand::GetRandomNumber(100) < battleutils::GetHitRate(m_victim, m_attacker))
             {
@@ -630,7 +630,8 @@ void CAttack::ProcessDamage()
         m_baseDamage     = m_attacker->GetMainWeaponDmg();
         int32 kickDamage = 0;
 
-        if (m_attacker->objtype == TYPE_MOB)
+        // Player pets assigned H2H damage type should also be penalized
+        if (m_attacker->objtype == TYPE_MOB || m_attacker->objtype == TYPE_PET)
         {
             // Mobs use a different base damage formula than players.
             // H2H attacks from mobs have a base damage penalty applied based on what zone they are in.

@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -65,6 +65,8 @@
 
 #include "packets/s2c/0x017_chat_std.h"
 #include "packets/s2c/0x05a_motionmes.h"
+#include "packets/s2c/0x069_chocobo_racing.h"
+#include "packets/s2c/0x073_chocobo_toteboard.h"
 
 #include "persist_batch.h"
 #include "utils/battleutils.h"
@@ -337,6 +339,10 @@ void init(IPP mapIPP, bool isRunningInCI)
     lua.set_function("SetLinkshellConciergeSlot", &luautils::SetLinkshellConciergeSlot);
     lua.set_function("DeleteLinkshellConciergeSlot", &luautils::DeleteLinkshellConciergeSlot);
     lua.set_function("DecrementLinkshellConciergeMembersGoal", &luautils::DecrementLinkshellConciergeMembersGoal);
+    lua.set_function("LoadChocoboRaceResult", &luautils::LoadChocoboRaceResult);
+    lua.set_function("SaveChocoboRaceResult", &luautils::SaveChocoboRaceResult);
+    lua.set_function("GetChocoboRaceQuills", &luautils::GetChocoboRaceQuills);
+    lua.set_function("AddChocoboRaceQuills", &luautils::AddChocoboRaceQuills);
     lua.set_function("JstMidnight", &luautils::JstMidnight);
     lua.set_function("JstDayOfTheYear", &luautils::JstDayOfTheYear);
     lua.set_function("JstDayOfTheMonth", &luautils::JstDayOfTheMonth);
@@ -370,6 +376,11 @@ void init(IPP mapIPP, bool isRunningInCI)
     lua.set_function("SetServerVariable", &luautils::SetServerVariable);
     lua.set_function("GetVolatileServerVariable", &luautils::GetVolatileServerVariable);
     lua.set_function("SetVolatileServerVariable", &luautils::SetVolatileServerVariable);
+    lua.set_function("GetActiveWorldPass", &luautils::GetActiveWorldPass);
+    lua.set_function("IssueWorldPass", &luautils::IssueWorldPass);
+    lua.set_function("GetWorldPassInvite", &luautils::GetWorldPassInvite);
+    lua.set_function("SetWorldPassClaims", &luautils::SetWorldPassClaims);
+    lua.set_function("CountWorldPassInvites", &luautils::CountWorldPassInvites);
     lua.set_function("GetCharVar", &luautils::GetCharVar);
     lua.set_function("SetCharVar", &luautils::SetCharVar);
     lua.set_function("ClearCharVarFromAll", &luautils::ClearCharVarFromAll);
@@ -1995,6 +2006,203 @@ void SetLinkshellConciergeSlot(uint16 zoneId, uint8 slotIndex, const sol::table&
                      data.get_or<uint8>("days", 0),
                      data.get_or<uint32>("times", 0),
                      data.get_or<uint32>("postedDate", 0));
+}
+
+auto LoadChocoboRaceResult(const uint32 raceNo) -> sol::object
+{
+    TracyZoneScoped;
+
+    const auto rset = db::preparedStmt(
+        "SELECT weather, places, run_at, intro_first, intro_second, chocobos, names, sections "
+        "FROM chocobo_race_results WHERE race_no = ? LIMIT 1",
+        raceNo);
+    FOR_DB_SINGLE_RESULT(rset)
+    {
+        GP_SERV_COMMAND_CHOCOBO_RACING::Chocobos                                     chocobos{};
+        std::array<std::array<char, 16>, GP_SERV_COMMAND_CHOCOBO_RACING::kNumRacers> names{};
+        GP_SERV_COMMAND_CHOCOBO_RACING::Sections                                     sections{};
+        db::extractFromBlob(rset, "chocobos", chocobos);
+        db::extractFromBlob(rset, "names", names);
+        db::extractFromBlob(rset, "sections", sections);
+
+        const auto packed = rset->get<uint32>("places");
+        sol::table places = lua.create_table();
+        for (std::size_t racer = 0; racer < GP_SERV_COMMAND_CHOCOBO_RACING::kNumRacers; ++racer)
+        {
+            places[racer + 1] = (packed >> (racer * 4)) & 0x0F;
+        }
+
+        sol::table chocoboTable = lua.create_table();
+        for (std::size_t racer = 0; racer < GP_SERV_COMMAND_CHOCOBO_RACING::kNumRacers; ++racer)
+        {
+            sol::table chocobo      = chocobos[racer].toLua();
+            chocobo["name"]         = std::string(names[racer].data(), strnlen(names[racer].data(), names[racer].size()));
+            chocoboTable[racer + 1] = chocobo;
+        }
+
+        sol::table sectionTable = lua.create_table();
+        for (std::size_t section = 0; section < GP_SERV_COMMAND_CHOCOBO_RACING::kMaxSections; ++section)
+        {
+            sectionTable[section + 1] = sections[section].toLua();
+        }
+
+        sol::table result  = lua.create_table();
+        result["raceNo"]   = raceNo;
+        result["weather"]  = rset->get<uint8>("weather");
+        result["places"]   = places;
+        result["runAt"]    = rset->get<uint32>("run_at");
+        result["intro"]    = lua.create_table_with(1, rset->get<uint8>("intro_first"), 2, rset->get<uint8>("intro_second"));
+        result["chocobos"] = chocoboTable;
+        result["sections"] = sectionTable;
+
+        return result;
+    }
+
+    return sol::lua_nil;
+}
+
+void SaveChocoboRaceResult(const sol::table& data)
+{
+    TracyZoneScoped;
+
+    const auto chocoboTable = data.get<sol::optional<sol::table>>("chocobos");
+
+    const auto places = [&]() -> uint32
+    {
+        uint32 packed = 0;
+        if (const auto placeTable = data.get<sol::optional<sol::table>>("places"))
+        {
+            for (std::size_t racer = 0; racer < GP_SERV_COMMAND_CHOCOBO_RACING::kNumRacers; ++racer)
+            {
+                packed |= (placeTable->get_or<uint32>(racer + 1, 0) & 0x0F) << (racer * 4);
+            }
+        }
+
+        return packed;
+    }();
+
+    auto chocobos = [&]() -> GP_SERV_COMMAND_CHOCOBO_RACING::Chocobos
+    {
+        GP_SERV_COMMAND_CHOCOBO_RACING::Chocobos entries{};
+        if (!chocoboTable)
+        {
+            return entries;
+        }
+
+        for (std::size_t racer = 0; racer < GP_SERV_COMMAND_CHOCOBO_RACING::kNumRacers; ++racer)
+        {
+            if (const auto chocobo = chocoboTable->get<sol::optional<sol::table>>(racer + 1))
+            {
+                entries[racer] = GP_SERV_COMMAND_CHOCOBO_RACING::ChocoboParam::fromLua(*chocobo);
+            }
+        }
+
+        return entries;
+    }();
+
+    auto names = [&]() -> std::array<std::array<char, 16>, GP_SERV_COMMAND_CHOCOBO_RACING::kNumRacers>
+    {
+        std::array<std::array<char, 16>, GP_SERV_COMMAND_CHOCOBO_RACING::kNumRacers> entries{};
+        if (!chocoboTable)
+        {
+            return entries;
+        }
+
+        for (std::size_t racer = 0; racer < GP_SERV_COMMAND_CHOCOBO_RACING::kNumRacers; ++racer)
+        {
+            if (const auto chocobo = chocoboTable->get<sol::optional<sol::table>>(racer + 1))
+            {
+                const std::string name = chocobo->get_or<std::string>("name", "");
+                std::memcpy(entries[racer].data(), name.data(), std::min(name.size(), entries[racer].size() - 1));
+            }
+        }
+
+        return entries;
+    }();
+
+    auto sections = [&]() -> GP_SERV_COMMAND_CHOCOBO_RACING::Sections
+    {
+        GP_SERV_COMMAND_CHOCOBO_RACING::Sections entries{};
+        if (const auto sectionTable = data.get<sol::optional<sol::table>>("sections"))
+        {
+            for (std::size_t section = 0; section < GP_SERV_COMMAND_CHOCOBO_RACING::kMaxSections; ++section)
+            {
+                if (const auto entry = sectionTable->get<sol::optional<sol::table>>(section + 1))
+                {
+                    entries[section] = GP_SERV_COMMAND_CHOCOBO_RACING::SectionParam::fromLua(*entry);
+                }
+            }
+        }
+
+        return entries;
+    }();
+
+    const auto [introFirst, introSecond] = [&]() -> std::pair<uint8, uint8>
+    {
+        if (const auto intro = data.get<sol::optional<sol::table>>("intro"))
+        {
+            return { intro->get_or<uint8>(1, 0), intro->get_or<uint8>(2, 0) };
+        }
+
+        return { 0, 0 };
+    }();
+
+    db::preparedStmt(
+        "INSERT INTO chocobo_race_results SET race_no = ?, weather = ?, places = ?, run_at = ?, "
+        "intro_first = ?, intro_second = ?, chocobos = ?, names = ?, sections = ? "
+        "ON DUPLICATE KEY UPDATE weather = VALUES(weather), places = VALUES(places), run_at = VALUES(run_at), "
+        "intro_first = VALUES(intro_first), intro_second = VALUES(intro_second), chocobos = VALUES(chocobos), "
+        "names = VALUES(names), sections = VALUES(sections)",
+        data.get_or<uint32>("raceNo", 0),
+        data.get_or<uint8>("weather", 0),
+        places,
+        data.get_or<uint32>("runAt", 0),
+        introFirst,
+        introSecond,
+        chocobos,
+        names,
+        sections);
+}
+
+auto GetChocoboRaceQuills(const uint32 raceNo) -> sol::table
+{
+    TracyZoneScoped;
+
+    sol::table quills = lua.create_table();
+    for (std::size_t pair = 0; pair < GP_SERV_COMMAND_CHOCOBO_TOTEBOARD::kNumOdds; ++pair)
+    {
+        quills[pair + 1] = 0;
+    }
+
+    const auto rset = db::preparedStmt("SELECT pair, quills FROM chocobo_race_quills WHERE race_no = ?", raceNo);
+    FOR_DB_MULTIPLE_RESULTS(rset)
+    {
+        const auto pair = rset->get<uint8>("pair");
+        if (pair < GP_SERV_COMMAND_CHOCOBO_TOTEBOARD::kNumOdds)
+        {
+            quills[pair + 1] = rset->get<uint32>("quills");
+        }
+    }
+
+    return quills;
+}
+
+void AddChocoboRaceQuills(const uint32 raceNo, const uint8 pair, const uint32 quills)
+{
+    TracyZoneScoped;
+
+    if (pair >= GP_SERV_COMMAND_CHOCOBO_TOTEBOARD::kNumOdds)
+    {
+        ShowWarningFmt("AddChocoboRaceQuills: pair {} is not on the toteboard", pair);
+        return;
+    }
+
+    db::preparedStmt(
+        "INSERT INTO chocobo_race_quills (race_no, pair, quills) VALUES (?, ?, ?) "
+        "ON DUPLICATE KEY UPDATE quills = quills + VALUES(quills)",
+        raceNo,
+        pair,
+        quills);
 }
 
 void DeleteLinkshellConciergeSlot(uint16 zoneId, uint8 slotIndex)
@@ -4670,6 +4878,48 @@ void OnMonstrosityReturnToEntrance(CCharEntity* PChar)
     }
 }
 
+auto OnWorldPassRequest(CCharEntity* PChar, const uint16 para) -> WorldPassReply
+{
+    TracyZoneScoped;
+
+    // the client shows "unable to connect" for these and never hangs waiting
+    WorldPassReply reply;
+    if (para & 1)
+    {
+        reply.type = 5; // unavailable
+    }
+
+    sol::function onRequest = lua["xi"]["worldPass"]["onRequest"];
+    if (!onRequest.valid())
+    {
+        ShowError("luautils::OnWorldPassRequest: function not found");
+        return reply;
+    }
+
+    auto result = onRequest(PChar, para, PChar->currentEvent->eventId);
+    if (!result.valid())
+    {
+        sol::error err = result;
+        ShowError("luautils::OnWorldPassRequest: %s", err.what());
+        return reply;
+    }
+
+    if (result.get_type() != sol::type::table)
+    {
+        return reply;
+    }
+
+    const sol::table table = result;
+
+    reply.type      = table.get_or<uint8>("type", reply.type);
+    reply.leftNum   = table.get_or<int32>("leftNum", reply.leftNum);
+    reply.leftHours = table.get_or<int32>("leftHours", reply.leftHours);
+    reply.price     = table.get_or<int32>("price", reply.price);
+    reply.code      = table.get_or<std::string>("code", reply.code);
+
+    return reply;
+}
+
 int32 OnMagicCastingCheck(CBaseEntity* PChar, CBaseEntity* PTarget, CSpell* PSpell)
 {
     TracyZoneScoped;
@@ -5198,6 +5448,65 @@ void SetVolatileServerVariable(const std::string& varName, int32 value, const so
     }
 
     serverutils::SetVolatileServerVar(varName, value, varTimestamp);
+}
+
+auto GetActiveWorldPass(const uint32 inviterId) -> sol::object
+{
+    const auto rset = db::preparedStmt("SELECT code, expiry FROM char_world_passes WHERE inviter = ? AND expiry > UNIX_TIMESTAMP() ORDER BY expiry DESC LIMIT 1", inviterId);
+    FOR_DB_SINGLE_RESULT(rset)
+    {
+        auto table      = lua.create_table();
+        table["code"]   = rset->get<uint32>("code");
+        table["expiry"] = rset->get<uint32>("expiry");
+
+        return table;
+    }
+
+    return sol::lua_nil;
+}
+
+auto IssueWorldPass(const uint32 inviterId, const uint32 expiry) -> uint32
+{
+    const auto code = xirand::GetRandomNumber<uint32>(1, std::numeric_limits<uint32>::max());
+    const auto rset = db::preparedStmt("INSERT IGNORE INTO char_world_passes (code, inviter, expiry) VALUES (?, ?, ?)", code, inviterId, expiry);
+    if (!rset || !rset->rowsAffected())
+    {
+        return 0;
+    }
+
+    return code;
+}
+
+auto GetWorldPassInvite(const uint32 inviterId, const uint32 inviteeId) -> sol::object
+{
+    const auto rset = db::preparedStmt("SELECT joined, invitee_claims, inviter_claims FROM char_world_passes WHERE inviter = ? AND invitee = ?", inviterId, inviteeId);
+    FOR_DB_SINGLE_RESULT(rset)
+    {
+        auto table             = lua.create_table();
+        table["joined"]        = rset->get<uint32>("joined");
+        table["inviteeClaims"] = rset->get<uint8>("invitee_claims");
+        table["inviterClaims"] = rset->get<uint8>("inviter_claims");
+
+        return table;
+    }
+
+    return sol::lua_nil;
+}
+
+void SetWorldPassClaims(const uint32 inviteeId, const uint8 inviteeClaims, const uint8 inviterClaims)
+{
+    db::preparedStmt("UPDATE char_world_passes SET invitee_claims = ?, inviter_claims = ? WHERE invitee = ?", inviteeClaims, inviterClaims, inviteeId);
+}
+
+auto CountWorldPassInvites(const uint32 inviterId) -> uint32
+{
+    const auto rset = db::preparedStmt("SELECT COUNT(*) AS invites FROM char_world_passes WHERE inviter = ? AND inviter_claims <> 0", inviterId);
+    FOR_DB_SINGLE_RESULT(rset)
+    {
+        return rset->get<uint32>("invites");
+    }
+
+    return 0;
 }
 
 int32 GetCharVar(uint32 charId, const std::string& varName)

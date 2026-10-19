@@ -1,4 +1,4 @@
-﻿/*
+/*
 ===========================================================================
 
   Copyright (c) 2010-2015 Darkstar Dev Teams
@@ -778,7 +778,8 @@ void CZone::SetWeather(const xi::Weather weather)
 
     m_zoneEntities->WeatherChange(weather);
 
-    const uint32 changeTime = earth_time::vanadiel_timestamp();
+    const auto   cycleTime  = vanadiel_time::now().time_since_epoch() % xi::vanadiel_clock::days(WeatherCycle);
+    const uint32 changeTime = static_cast<uint32>(std::chrono::floor<xi::vanadiel_clock::minutes>(cycleTime).count());
     weather_.set(weather, changeTime);
 
     m_zoneEntities->PushPacket(nullptr, CHAR_INZONE, std::make_unique<GP_SERV_COMMAND_WEATHER>(changeTime, weather, xirand::GetRandomNumber(4, 28)));
@@ -1194,7 +1195,19 @@ void CZone::CharZoneIn(CCharEntity* PChar)
         auto* PBattlefield = m_BattlefieldHandler->GetBattlefield(PChar, true);
         if (PBattlefield != nullptr && PChar->StatusEffectContainer->HasStatusEffectByFlag(xi::StatusEffectFlag::Confrontation))
         {
-            PBattlefield->InsertEntity(PChar, CBattlefield::hasPlayerEntered(PChar));
+            const bool entered = CBattlefield::hasPlayerEntered(PChar);
+
+            // Retail closes the fight once its last player has logged out
+            if (entered && !PBattlefield->IsOccupied() && PBattlefield->GetStatus() < BATTLEFIELD_STATUS_WON)
+            {
+                PBattlefield->RemoveRegistration(PChar);
+                PBattlefield->CanCleanup(true);
+                m_BattlefieldHandler->addOrphanedPlayer(PChar);
+            }
+            else
+            {
+                PBattlefield->InsertEntity(PChar, entered);
+            }
         }
         else if (PChar->StatusEffectContainer->HasStatusEffectByFlag(xi::StatusEffectFlag::Confrontation))
         {
